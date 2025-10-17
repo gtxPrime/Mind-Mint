@@ -1,0 +1,131 @@
+<resources>
+    <string name="app_name">Mind Mint</string>
+    <string name="packageName">packageName</string>
+    <string name="accessibility_service_description">
+    MindMint requires Accessibility permission to provide its core features.
+    With this access, the app can detect which application is currently on screen, count your scrolls,
+    and block distracting apps during Focus Mode.\n \nThis functionality is designed solely to help you stay focused and manage your screen time effectively.\n\nMindMint never records what you type or view inside apps, and no personal or sensitive data is collected or shared.
+</string>
+    <string name="total_usage">Total Usage</string>
+    <string name="time_wasted">Time Wasted</string>
+    <string name="time_focused">Time Focused</string>
+    <string name="demo_time">24h 24m</string>
+    <string name="grant_permission">Grant Accessibility Permission</string>
+    <string name="next">Next</string>
+    <string name="turn_off_battery_optimisation">Turn off battery optimisation</string>
+    <string name="heading1">Take Control of Your Time!</string>
+    <string name="heading2">Focus on What Matters!</string>
+    <string name="heading3">Grant Powers for Working</string>
+    <string name="desc1">Endless scrolling on reels and shorts can drain your time and focus. Our app helps you break free from the cycle.</string>
+    <string name="desc2">Set limits, get reminders, and take back your day. We\'ll help you spend your time more wisely.</string>
+    <string name="desc3">We need access to your app usage data to help you track and manage your time effectively. Your privacy is our priority.</string>
+    <string name="accessibility_more_info">
+    Mind Mint uses the Accessibility permission only to support Focus Mode and app usage tracking features.\n\n
+    1. Detecting App Screen – to know which app is currently in use so we can block selected apps when you try to open them.\n
+    2. Counting Scrolls – to measure how much you scroll inside apps and provide insights into your usage habits.\n
+    3. Blocking Apps – when Focus Mode is active, the service automatically returns you to the home screen if you try to open a blocked app.\n\n
+    🔒 Privacy Assurance:\n
+    • We do not record or collect what you type or view inside apps.\n
+    • No personal or sensitive information (like passwords, messages, or payment data) is stored, collected or shared.\n
+    • You can use our app offline completely as none data is collected everything stays on your device.\n
+    • The permission is used only on your device, to help you stay focused.
+</string>
+    <string name="ass_permission">Accessibility Permission Required</string>
+    <string name="batter_permission">Disable Battery Optimisation</string>
+    <string name="why_battery">Disable battery optimisation to keep Clean Mind running in the background.</string>
+    <string name="why_accessibility">MindMint needs Accessibility permission to work. We use it only to detect which app screen is open, count your scrolls, and block selected apps. We do not collect or share your personal data.</string>
+    <string name="click_on_proceed">1. Click on Proceed</string>
+    <string name="select_installed_apps">2. Select Installed Apps</string>
+    <string name="enableApp">3. Select Mind Mint</string>
+    <string name="data_note">Mind Mint is 100% safe. We do NOT collect any of your personal data.</string>
+    <string name="proceed">Proceed</string>
+    <string name="not_now">Not now</string>
+    <string name="step2allow">2. Click on Allow</string>
+    <string name="hello">Hello</string>
+    <string name="demo_coin">52</string>
+    <string name="focus_mode">Focus Mode</string>
+    <string name="work_mode">Work Mode</string>
+    <string name="youtube_shorts">YouTube Shorts</string>
+    <string name="instagram_reels">Instagram Reels</string>
+    <string name="snapchat_highlights">Snapchat Highlights</string>
+    <string name="block">Block</string>
+    <string name="instagram">Instagram</string>
+    <string name="snapchat">Snapchat</string>
+    <string name="youtube">YouTube</string>
+    <string name="placeHolder">--</string>
+    <string name="total_time_you_were_productive">Total time you were productive</string>
+    <string name="workCard">This Card displays total time you have been productive using our Work Mode. Looking at Stats you are doing great, Keep it Up.</string>
+    <string name="breathe_to_relax">Breathe to relax</string>
+    <string name="breathe_to_sleep">Breathe to sleep</string>
+    <string name="fpbe">FPBE</string>
+    <string name="start">Start</string>
+    <string name="start_breathing">Start Breathing</string>
+    <string name="timer">Timer</string>
+    <string name="mins">mins</string>
+    <string name="reset">Reset</string>
+    <string name="remind_me_after">Remind me after</string>
+    <string name="hour">hour</string>
+    <string name="notiHead">Notification Permission</string>
+    <string name="notiDesc">Notification Permission is required to show timer in notifications</string>
+    <string name="notiStep2">2. Click on allow</string>
+    <string name="stop">Stop</string>
+    <string name="demo_0_time">00:00:00</string>
+    <string name="demo0">00</string>
+    <string name="hours">Hours</string>
+    <string name="minutes">Minutes</string>
+    <string name="seconds">Seconds</string>
+    <string name="set_time_limit">Limit time for focus mode.</string>
+    <string name="use_mods">Use Mods</string>
+    <string name="youtube_mods">YouTube Mods</string>
+    <string name="instagram_mods">Instagram Mods</string>
+    <string name="snapchat_mods">Snapchat Mods</string>
+    <string name="permission_error_click_to_resolve">Permission Error: Click to resolve</string>
+    <string name="settings">Settings</string>
+    <string name="theme">Theme</string>
+    <string name="back">Back</string>
+    <string name="total_time_focused">Total time focused</string>
+    <string name="_50_min">50 min</string>
+    <string name="decor">decor</string>
+
+    <string name="cond1">Brain still fresh. Keep it up! 🧠</string>
+    <string name="cond2">Fatigue setting in. 😐</string>
+    <string name="cond3">Cracks forming on brain. ⚠️</string>
+    <string name="cond4">Early decay detected on brain. 🧪</string>
+    <string name="cond5">Mold is growing on brain. 🤢</string>
+    <string name="cond6">Severe rot setting in. 😵‍</string>
+    <string name="cond7">Brain is bubbling. 💥</string>
+    <string name="cond8">You are now 90% zombie. 🧟</string>
+    <string name="cond9">Brain liquefied. ☠️</string>
+    <string name="select_apps_to_block_during_focus_mode">Select apps to block during focus mode</string>
+    <string name="app_is_blocked">App is Blocked</string>
+    <string name="you_are_in_focus_mode_this_app_is_currently_restricted">You are in Focus Mode. This app is currently restricted.</string>
+    <string name="brain">Brain</string>
+    <string name="set_limit">Set Limit</string>
+    <string name="custom_app_blocking">Custom App Blocking</string>
+    <string name="blocking_popup_duration">Popup Duration</string>
+    <string name="min_5_seconds_in_seconds">Blocking popup duration</string>
+    <string name="sec">sec</string>
+    <string name="select_apps_to_block">Select apps to block</string>
+
+    <string name="minutes_unit">min</string>
+
+    <string name="summary_remind_doom_scrolling_minutes">Set minutes before initial reminder (e.g., 10).</string>
+
+    <string name="title_block_after_time">Block Content After Time</string>
+
+    <string name="overlayPermission">Overlay Permission</string>
+    <string name="overlayPermissionDesc">Overlay permission is required for app blocking.</string>
+    <string name="overlayPermissionStep2">2. Turn on the switch next to Mind Mint</string>
+    <string name="demo_hello">Hello, \ngtxPrime \uD83D\uDC4B</string>
+    <string name="hello_hand"> \uD83D\uDC4B</string>
+    <string name="pieRadius">Pie Radius</string>
+    <string name="pieGlow">Pie Glow</string>
+    <string name="daily_stats">Daily Stats</string>
+    <string name="more_apps_coming_soon">More apps coming soon!</string>
+    <string name="pause">Pause the blocking</string>
+    <string name="stay_focused">Stay focused, get back to your work</string>
+    <string name="set_your_focus_time">Set your focus time</string>
+    <string name="drag">Drag the circle to set time (10–180 min)</string>
+    <string name="congratulations">Congratulations!</string>
+
+</resources>

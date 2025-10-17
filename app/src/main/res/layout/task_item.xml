@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="5dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="@color/cardColor"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    app:strokeColor="#26FD7D81"
+    app:strokeWidth="0dp"
+    tools:ignore="HardcodedText">
+
+    <com.apachat.swipereveallayout.core.SwipeLayout
+        android:id="@+id/swipeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:dragEdge="right">
+
+        <LinearLayout
+            android:id="@+id/swipeActionsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <!-- Edit Button -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/editButton"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:background="#4CAF50">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_edit"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/white"
+                    tools:ignore="ContentDescription" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Delete Button -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/deleteButton"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:background="#F44336">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_delete"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/white"
+                    tools:ignore="ContentDescription" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/taskCardView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/cardColor"
+            android:padding="10dp">
+
+            <!-- Task Emoji -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/taskEmojiCard"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_marginEnd="12dp"
+                app:cardBackgroundColor="@color/transparent"
+                app:cardCornerRadius="22.5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/taskEmoji"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/icon_bg"
+                    android:gravity="center"
+                    android:text="✅"
+                    android:textSize="20sp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Task Name -->
+
+            <!-- Priority and Date Row -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/taskName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/poppins_semibold"
+                android:maxLines="1"
+                android:text="Sample Task Name"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/checkBox"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toEndOf="@+id/taskEmojiCard"
+                app:layout_constraintTop_toTopOf="@+id/taskEmojiCard"
+                tools:ignore="HardcodedText" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/taskEmojiCard"
+                app:layout_constraintEnd_toEndOf="@+id/taskName"
+                app:layout_constraintStart_toStartOf="@+id/taskName"
+                app:layout_constraintTop_toBottomOf="@+id/taskName">
+
+                <!-- Priority Label -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/priorityLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/count_pill_bg"
+                    android:fontFamily="sans-serif"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:text="Medium"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- Date Created -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/dateCreated"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:alpha="0.6"
+                    android:fontFamily="@font/inter18regular"
+                    android:text="Today"
+                    android:textColor="@color/textColor"
+                    android:textSize="11sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/priorityLabel"
+                    app:layout_constraintStart_toEndOf="@+id/priorityLabel"
+                    app:layout_constraintTop_toTopOf="@+id/priorityLabel"
+                    tools:ignore="HardcodedText" />
+
+                <!-- Recurring Indicator -->
+                <ImageView
+                    android:id="@+id/recurringIndicator"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_repeat"
+                    app:layout_constraintBottom_toBottomOf="@+id/priorityLabel"
+                    app:layout_constraintStart_toEndOf="@+id/dateCreated"
+                    app:layout_constraintTop_toTopOf="@+id/priorityLabel"
+                    app:tint="@color/brainColor"
+                    tools:ignore="ContentDescription" />
+
+                <!-- Habit badge -->
+                <ImageView
+                    android:id="@+id/habitBadge"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="6dp"
+                    android:src="@drawable/ic_habit"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="@+id/recurringIndicator"
+                    app:layout_constraintStart_toEndOf="@+id/recurringIndicator"
+                    app:layout_constraintTop_toTopOf="@+id/recurringIndicator"
+                    app:tint="@color/brainColor" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Checkbox -->
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/checkBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.apachat.swipereveallayout.core.SwipeLayout>
+
+</com.google.android.material.card.MaterialCardView>

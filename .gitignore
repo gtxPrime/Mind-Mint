@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+build/
+*/build/
+
+# Local configuration
+local.properties
+
+# IDE files
+.idea/
+*.iml
+
+# Android Studio
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Log files
+*.log
+
+# Keystore files
+*.jks
+*.keystore
+
+# Misc
+.DS_Store
+# Ignore gradle properties with sensitive info
+gradle.properties
+
+# Firebase config
+google-services.json
+
+# Release artifacts and archives
+app/release/
+*.apk
+*.aab
+*.apks
+*.ipa
+*.zip

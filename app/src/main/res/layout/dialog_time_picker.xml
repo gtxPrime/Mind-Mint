@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bottom_sheet_shape"
+    android:padding="20dp">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_semibold"
+        android:text="Select time"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Digital Time Display -->
+    <LinearLayout
+        android:id="@+id/digitalTimeDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/titleText">
+
+        <!-- Hour Display -->
+        <TextView
+            android:id="@+id/hourDisplay"
+            android:layout_width="80dp"
+            android:layout_height="60dp"
+            android:background="@drawable/time_picker_selected_bg"
+            android:fontFamily="@font/poppins_semibold"
+            android:gravity="center"
+            android:text="09"
+            android:textColor="@color/white"
+            android:textSize="32sp" />
+
+        <!-- Separator -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:text=":"
+            android:textColor="@color/white"
+            android:textSize="32sp" />
+
+        <!-- Minute Display -->
+        <TextView
+            android:id="@+id/minuteDisplay"
+            android:layout_width="80dp"
+            android:layout_height="60dp"
+            android:background="@drawable/background_outline"
+            android:fontFamily="@font/poppins_semibold"
+            android:gravity="center"
+            android:text="00"
+            android:textColor="@color/white"
+            android:textSize="32sp" />
+
+        <!-- AM/PM Toggle -->
+        <LinearLayout
+            android:id="@+id/amPmToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/amButton"
+                android:layout_width="40dp"
+                android:layout_height="30dp"
+                android:background="@drawable/background_outline"
+                android:clickable="true"
+                android:focusable="true"
+                android:fontFamily="@font/inter18regular"
+                android:gravity="center"
+                android:text="a.m."
+                android:textColor="@color/textColor"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/pmButton"
+                android:layout_width="40dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/time_picker_selected_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:fontFamily="@font/inter18regular"
+                android:gravity="center"
+                android:text="p.m."
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Analog Clock -->
+    <FrameLayout
+        android:id="@+id/analogClockContainer"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/digitalTimeDisplay">
+
+        <!-- Clock Background Circle -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/clock_background" />
+
+        <!-- Custom Clock View -->
+        <com.gxdevs.mindmint.Views.AnalogClockView
+            android:id="@+id/analogClock"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </FrameLayout>
+
+    <!-- Keyboard Toggle -->
+    <ImageView
+        android:id="@+id/keyboardToggle"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/background_outline"
+        android:padding="8dp"
+        android:src="@drawable/ic_keyboard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/analogClockContainer"
+        app:tint="@color/white" />
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/keyboardToggle">
+
+        <Button
+            android:id="@+id/cancelButton"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/background_outline"
+            android:fontFamily="@font/inter18regular"
+            android:text="Cancel"
+            android:textColor="@color/textColor"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/okButton"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/button_pill_bg"
+            android:fontFamily="@font/inter18regular"
+            android:text="OK"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

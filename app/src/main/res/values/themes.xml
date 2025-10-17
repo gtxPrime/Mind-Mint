@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.NoScroll" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.MyApp.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="materialSwitchStyle">@style/Widget.App.Switch</item>
+        <item name="android:windowBackground">@color/black</item>
+    </style>
+
+    <style name="circleImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20%</item>
+    </style>
+
+    <style name="NumberPickerTheme" parent="Theme.AppCompat.Light">
+        <item name="colorAccent">@android:color/white</item>
+        <item name="android:fontFamily">@font/baloo</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textSize">25sp</item>
+    </style>
+
+    <style name="Widget.App.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Switch</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Switch" parent="">
+        <item name="colorPrimary">@color/greenIcon</item>
+        <item name="colorSurfaceVariant">@color/yellow</item>
+    </style>
+
+    <!-- Add this custom theme for the Blocking Overlay Activity -->
+    <style name="Theme.MindMint.TransparentOverlay" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">true</item> <!-- This will dim the background -->
+        <item name="android:backgroundDimAmount">0.5</item> <!-- Adjust dim amount (0.0 to 1.0) -->
+    </style>
+
+    <style name="CustomTabText" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/baloo</item> <!-- optional custom font -->
+    </style>
+
+    <style name="CustomBottomSheetTheme" parent="Theme.Material3.DayNight.BottomSheetDialog"/>
+
+    <style name="AlertDialogTheme" parent="Theme.Material3.DayNight.Dialog.Alert">
+        <item name="android:background">@color/cardColor</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/textColor</item>
+        <item name="colorPrimary">@color/brainColor</item>
+        <item name="colorOnSurface">@color/white</item>
+    </style>
+
+    <style name="CalendarViewCustom" parent="android:Theme.Material">
+        <item name="android:colorAccent">@color/brainColor</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/textColor</item>
+        <item name="android:colorBackground">@color/cardColor</item>
+    </style>
+
+    <style name="SpinnerTheme" parent="android:Theme.Material">
+        <item name="android:colorAccent">@color/brainColor</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/textColor</item>
+        <item name="android:colorBackground">@color/cardColor</item>
+    </style>
+
+    <style name="DatePickerTheme" parent="android:Theme.Material.Dialog">
+        <item name="android:colorAccent">@color/brainColor</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/textColor</item>
+        <item name="android:colorBackground">@color/cardColor</item>
+    </style>
+
+</resources>

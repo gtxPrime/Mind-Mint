@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Permission to use the Internet, if needed -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Permission to draw over other apps (for overlay) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Optional feature for compatibility -->
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<!--    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />-->
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NoScroll"
+        tools:targetApi="31">
+        <activity
+            android:name=".Activities.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.TaskActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.FocusMode"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.HomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activities.OnBoarding"
+            android:exported="true"
+            android:theme="@style/Theme.MyApp.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".Activities.CustomAppSelectionActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".Activities.BlockingOverlayDisplayActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MindMint.TransparentOverlay"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity android:name="com.gxdevs.mindmint.Activities.HabitActivity" />
+        <activity android:name="com.gxdevs.mindmint.Activities.HabitDetailActivity" />
+        <activity android:name="com.gxdevs.mindmint.Activities.StatsActivity" />
+
+        <service
+            android:name=".Services.AppUsageAccessibilityService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <!-- Accessibility service metadata -->
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+        <service
+            android:name=".Services.FocusService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
+
+        <receiver
+            android:name=".Receivers.MidnightResetReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.gtxprime.mindmint.RESET_APP_TIMES" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".Receivers.ServiceResumeReceiver" android:exported="false"/>
+        <receiver 
+            android:name=".Receivers.TaskReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
+    </application>
+
+</manifest>

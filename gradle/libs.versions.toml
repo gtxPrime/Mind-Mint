@@ -1,0 +1,79 @@
+[versions]
+agp = "8.9.3"
+appUpdate = "2.1.0"
+balloon = "1.6.13"
+blurry = "4.0.0"
+blurview = "version-3.1.0"
+circularprogressindicator = "1.3.0"
+circularseekbarVersion = "1.4.1"
+coreSplashscreen = "1.0.1"
+dotlottieAndroid = "0.5.0"
+easyreveal = "1.2"
+gson = "2.13.2"
+kotlin = "1.9.0"
+coreKtx = "1.16.0"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+lifecycleRuntimeKtx = "2.9.4"
+activityCompose = "1.10.1"
+composeBom = "2025.05.01"
+appcompat = "1.7.1"
+localbroadcastmanagerVersion = "1.1.0"
+lottie = "3.4.1"
+material = "1.13.0"
+activity = "1.10.1"
+constraintlayout = "2.2.1"
+mpandroidchart = "v3.1.0"
+preference = "1.2.1"
+progressview = "1.1.3"
+review = "2.0.2"
+firebaseCrashlytics = "20.0.2"
+googleGmsGoogleServices = "4.4.3"
+googleFirebaseCrashlytics = "3.0.6"
+swipereveallayoutAndroid = "1.1.2"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
+app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
+balloon = { module = "com.github.skydoves:balloon", version.ref = "balloon" }
+blurry = { module = "jp.wasabeef:blurry", version.ref = "blurry" }
+blurview = { module = "com.github.Dimezis:BlurView", version.ref = "blurview" }
+circularprogressindicator = { module = "com.github.antonKozyriatskyi:CircularProgressIndicator", version.ref = "circularprogressindicator" }
+dotlottie-android = { module = "com.github.LottieFiles:dotlottie-android", version.ref = "dotlottieAndroid" }
+easyreveal = { module = "com.github.Chrisvin:EasyReveal", version.ref = "easyreveal" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+lib-circularseekbar = { module = "me.tankery.lib:circularSeekBar", version.ref = "circularseekbarVersion" }
+localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "localbroadcastmanagerVersion" }
+lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
+progressview = { module = "com.github.skydoves:progressview", version.ref = "progressview" }
+review = { module = "com.google.android.play:review", version.ref = "review" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }
+swipereveallayout-android = { module = "com.apachat:swipereveallayout-android", version.ref = "swipereveallayoutAndroid" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
+

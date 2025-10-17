@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CustomPieChart">
+        <attr name="pieRadius" format="dimension" />
+        <attr name="pieGlow" format="dimension" />
+        <attr name="pieThickness" format="dimension" />
+        <attr name="pieTextSize" format="dimension" />
+        <attr name="pieStartAngle" format="float" />
+        <attr name="pieEndAngle" format="float" />
+        <attr name="pieGapDegree" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="RoundedBarChart">
+        <attr name="radius" format="dimension" />
+    </declare-styleable>
+</resources>

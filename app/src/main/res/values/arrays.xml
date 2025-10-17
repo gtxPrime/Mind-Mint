@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="gradient_progress_colors">
+        <item>@color/brainColor</item>
+        <item>#FF7AD1</item>
+        <item>#FFD36E</item>
+    </array>
+</resources>
+
+

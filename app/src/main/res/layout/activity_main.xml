@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/mainBgColor"
+    tools:context=".Activities.HomeActivity"
+    tools:ignore="ContentDescription">
+
+    <eightbitlab.com.blurview.BlurTarget
+        android:id="@+id/blurTarget"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:layout_width="550dp"
+                android:layout_height="550dp"
+                android:layout_marginStart="-200dp"
+                android:layout_marginTop="-200dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/main_bg_gradient"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#59FD7D81" />
+
+            <ImageView
+                android:layout_width="550dp"
+                android:layout_height="550dp"
+                android:layout_marginEnd="-200dp"
+                android:layout_marginBottom="-200dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/main_bg_gradient"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:tint="#2614B8A6" />
+
+            <ImageView
+                android:layout_width="550dp"
+                android:layout_height="550dp"
+                android:layout_marginStart="-350dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/main_bg_gradient"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:tint="#33A78BFA" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </eightbitlab.com.blurview.BlurTarget>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="46dp"
+        android:background="@color/transparent"
+        android:elevation="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/coinImg"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="20dp"
+            android:elevation="2dp"
+            android:src="@drawable/sack"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/mintCrystals"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-20dp"
+            android:alpha="0.8"
+            android:background="@drawable/pill_bg"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/demo_coin"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@+id/coinImg"
+            app:layout_constraintStart_toEndOf="@+id/coinImg"
+            app:layout_constraintTop_toTopOf="@+id/coinImg" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/store"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="15dp"
+            android:src="@drawable/ic_store"
+            android:tint="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/playPause"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/circleImageView" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/playPause"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="15dp"
+            android:src="@drawable/ic_pause"
+            android:tint="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/settings"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/circleImageView" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/settings"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="25dp"
+            android:src="@drawable/settings"
+            android:tint="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/circleImageView" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/greetings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="5dp"
+        android:fontFamily="@font/baloo"
+        android:lineSpacingMultiplier="0.8"
+        android:text="@string/demo_hello"
+        android:textColor="@color/white"
+        android:textSize="45sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+    <ScrollView
+        android:id="@+id/rootHolder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:padding="20dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@+id/greetings"
+        tools:ignore="HardcodedText">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/mindCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:elevation="8dp"
+                app:cardBackgroundColor="@color/cardColor"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:strokeColor="#26FD7D81"
+                app:strokeWidth="1dp">
+
+                <eightbitlab.com.blurview.BlurView
+                    android:id="@+id/brainBlur"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/contentHolder"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/transparent">
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/countStats"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:layout_marginBottom="20dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/pieChartContainer"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/count"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:layout_marginStart="20dp"
+                                android:background="@drawable/count_pill_bg"
+                                android:fontFamily="sans-serif"
+                                android:gravity="start"
+                                android:minWidth="20dp"
+                                android:text="1500"
+                                android:textColor="@color/white"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/countTxt"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="5dp"
+                                android:fontFamily="@font/poppins_semibold"
+                                android:gravity="start"
+                                android:minWidth="20dp"
+                                android:text="scrolls"
+                                android:textColor="@color/white"
+                                android:textSize="18sp"
+                                app:layout_constraintBottom_toBottomOf="@id/count"
+                                app:layout_constraintStart_toEndOf="@id/count"
+                                app:layout_constraintTop_toTopOf="@id/count" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/totalWastedTime"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="20dp"
+                                android:layout_marginTop="5dp"
+                                android:alpha="0.8"
+                                android:elevation="5dp"
+                                android:fontFamily="@font/poppins_semibold"
+                                android:maxWidth="200dp"
+                                android:text="@string/cond9"
+                                android:textColor="@color/white"
+                                android:textSize="12sp"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@id/count" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <FrameLayout
+                            android:id="@+id/pieChartContainer"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            app:layout_constraintBottom_toTopOf="@+id/tap"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/countStats"
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <antonkozyriatskyi.circularprogressindicator.CircularProgressIndicator
+                                android:id="@+id/circularProgress"
+                                android:layout_width="120dp"
+                                android:layout_height="120dp"
+                                android:layout_gravity="center"
+                                android:layout_margin="20dp"
+                                app:direction="counterclockwise"
+                                app:drawDot="false"
+                                app:enableProgressAnimation="true"
+                                app:progressBackgroundColor="#414650"
+                                app:progressBackgroundStrokeWidth="12dp"
+                                app:progressCap="round"
+                                app:progressColor="#FC8388"
+                                app:progressStrokeWidth="12dp" />
+
+                            <ImageView
+                                android:id="@+id/brainHolder"
+                                android:layout_width="80dp"
+                                android:layout_height="80dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@string/app_name"
+                                android:elevation="2dp"
+                                android:src="@drawable/brain1" />
+
+                            <ImageView
+                                android:id="@+id/brainGlowHolder"
+                                android:layout_width="150dp"
+                                android:layout_height="150dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@string/app_name"
+                                android:src="@drawable/brain_glow" />
+                        </FrameLayout>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tap"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="20dp"
+                            android:layout_marginBottom="5dp"
+                            android:alpha="0.3"
+                            android:fontFamily="@font/poppins_semibold"
+                            android:text="Tap for details"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </eightbitlab.com.blurview.BlurView>
+
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/focusCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:elevation="4dp"
+                app:cardBackgroundColor="@color/cardColor"
+                app:cardCornerRadius="16dp"
+                app:layout_constraintTop_toBottomOf="@+id/mindCard"
+                app:strokeColor="#26FD7D81"
+                app:strokeWidth="1dp">
+
+                <eightbitlab.com.blurview.BlurView
+                    android:id="@+id/focusBlur"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/timeHolder"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_marginStart="15dp"
+                            android:layout_marginTop="15dp"
+                            android:layout_marginBottom="15dp"
+                            android:src="@drawable/circle_gra"
+                            android:visibility="invisible"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:shapeAppearance="@style/circleImageView" />
+
+                        <ImageView
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:contentDescription="@string/decor"
+                            android:src="@drawable/focus_clock"
+                            app:layout_constraintBottom_toBottomOf="@+id/timeHolder"
+                            app:layout_constraintEnd_toEndOf="@+id/timeHolder"
+                            app:layout_constraintStart_toStartOf="@+id/timeHolder"
+                            app:layout_constraintTop_toTopOf="@+id/timeHolder" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/focus_mode"
+                            android:textColor="@color/white"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/timeHolder"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/minuteHolder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="120m"
+                            android:textColor="#A998FD"
+                            android:textSize="16sp"
+                            app:layout_constraintBottom_toBottomOf="@+id/focusArrow"
+                            app:layout_constraintEnd_toStartOf="@+id/focusArrow"
+                            app:layout_constraintTop_toTopOf="@+id/focusArrow" />
+
+                        <ImageView
+                            android:id="@+id/focusArrow"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_marginStart="25dp"
+                            android:layout_marginEnd="30dp"
+                            android:contentDescription="@string/decor"
+                            android:rotation="180"
+                            android:src="@drawable/ic_arrow_back"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:tint="@color/white" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </eightbitlab.com.blurview.BlurView>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/blockerCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:elevation="4dp"
+                app:cardBackgroundColor="@color/cardColor"
+                app:cardCornerRadius="15dp"
+                app:layout_constraintTop_toBottomOf="@+id/focusCard"
+                app:strokeColor="#26FD7D81"
+                app:strokeWidth="1dp">
+
+                <eightbitlab.com.blurview.BlurView
+                    android:id="@+id/blockerBlur"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/blockHolder"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_marginStart="15dp"
+                            android:layout_marginTop="15dp"
+                            android:layout_marginBottom="15dp"
+                            android:src="@drawable/circle_gra"
+                            android:visibility="invisible"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:shapeAppearance="@style/circleImageView" />
+
+                        <ImageView
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:contentDescription="@string/decor"
+                            android:src="@drawable/ic_app_block"
+                            app:layout_constraintBottom_toBottomOf="@+id/blockHolder"
+                            app:layout_constraintEnd_toEndOf="@+id/blockHolder"
+                            app:layout_constraintStart_toStartOf="@+id/blockHolder"
+                            app:layout_constraintTop_toTopOf="@+id/blockHolder" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Blocker"
+                            android:textColor="@color/white"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/blockHolder"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/activeHolder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Active \u2022"
+                            android:textColor="@color/greenIcon"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="@+id/blockerArrow"
+                            app:layout_constraintEnd_toStartOf="@+id/blockerArrow"
+                            app:layout_constraintTop_toTopOf="@+id/blockerArrow" />
+
+                        <ImageView
+                            android:id="@+id/blockerArrow"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_marginStart="25dp"
+                            android:layout_marginEnd="30dp"
+                            android:contentDescription="@string/decor"
+                            android:rotation="180"
+                            android:src="@drawable/ic_arrow_back"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:tint="@color/white" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </eightbitlab.com.blurview.BlurView>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/taskCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:elevation="4dp"
+                app:cardBackgroundColor="@color/cardColor"
+                app:cardCornerRadius="15dp"
+                app:layout_constraintTop_toBottomOf="@+id/blockerCard"
+                app:strokeColor="#26FD7D81"
+                app:strokeWidth="1dp">
+
+                <eightbitlab.com.blurview.BlurView
+                    android:id="@+id/taskBlur"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/taskHolder"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_marginStart="15dp"
+                            android:layout_marginTop="15dp"
+                            android:layout_marginBottom="15dp"
+                            android:src="@drawable/circle_gra"
+                            android:visibility="invisible"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:shapeAppearance="@style/circleImageView" />
+
+                        <ImageView
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:contentDescription="@string/decor"
+                            android:src="@drawable/todo"
+                            app:layout_constraintBottom_toBottomOf="@+id/taskHolder"
+                            app:layout_constraintEnd_toEndOf="@+id/taskHolder"
+                            app:layout_constraintStart_toStartOf="@+id/taskHolder"
+                            app:layout_constraintTop_toTopOf="@+id/taskHolder" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Today's tasks"
+                            android:textColor="@color/white"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/taskHolder"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/countHolder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="5/8"
+                            android:textColor="#E2E2FD"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="@+id/taskArrow"
+                            app:layout_constraintEnd_toStartOf="@+id/taskArrow"
+                            app:layout_constraintTop_toTopOf="@+id/taskArrow" />
+
+                        <ImageView
+                            android:id="@+id/taskArrow"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_marginStart="25dp"
+                            android:layout_marginEnd="30dp"
+                            android:contentDescription="@string/decor"
+                            android:rotation="180"
+                            android:src="@drawable/ic_arrow_back"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:tint="@color/white" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </eightbitlab.com.blurview.BlurView>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/habitCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="20dp"
+                android:elevation="4dp"
+                app:cardBackgroundColor="@color/cardColor"
+                app:cardCornerRadius="15dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/taskCard"
+                app:strokeColor="#26FD7D81"
+                app:strokeWidth="1dp">
+
+                <eightbitlab.com.blurview.BlurView
+                    android:id="@+id/habitBlur"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/habitHolder"
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:layout_marginStart="15dp"
+                            android:layout_marginTop="15dp"
+                            android:layout_marginBottom="15dp"
+                            android:src="@drawable/circle_gra"
+                            android:visibility="invisible"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:shapeAppearance="@style/circleImageView" />
+
+                        <ImageView
+                            android:layout_width="45dp"
+                            android:layout_height="45dp"
+                            android:contentDescription="@string/decor"
+                            android:src="@drawable/habit"
+                            app:layout_constraintBottom_toBottomOf="@+id/habitHolder"
+                            app:layout_constraintEnd_toEndOf="@+id/habitHolder"
+                            app:layout_constraintStart_toStartOf="@+id/habitHolder"
+                            app:layout_constraintTop_toTopOf="@+id/habitHolder" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Habit"
+                            android:textColor="@color/white"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@+id/habitHolder"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/streakHolder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="15dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Streak 3"
+                            android:textColor="#EE4B37"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="@+id/habitArrow"
+                            app:layout_constraintEnd_toStartOf="@+id/habitArrow"
+                            app:layout_constraintTop_toTopOf="@+id/habitArrow" />
+
+                        <ImageView
+                            android:id="@+id/habitArrow"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_marginStart="25dp"
+                            android:layout_marginEnd="30dp"
+                            android:contentDescription="@string/decor"
+                            android:rotation="180"
+                            android:src="@drawable/ic_arrow_back"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:tint="@color/white" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </eightbitlab.com.blurview.BlurView>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

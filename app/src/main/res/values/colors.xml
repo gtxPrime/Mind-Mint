@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="cyan">#0cedda</color>
+    <color name="magenta">#ed0cde</color>
+    <color name="yellow">#FFEB3B</color>
+    <color name="light_black">#151515</color>
+    <color name="transparent">#00000000</color>
+    <color name="track_checked_color">#00D6C4</color>
+    <color name="track_unchecked_color">#3A3A3A</color>
+    <color name="redIcon">#FF0000</color>
+    <color name="greenIcon">#9900FF0A</color>
+
+    <color name="instaColor">#d62976</color>
+    <color name="youtubeColor">#FF0000</color>
+    <color name="snapColor">#FFFC00</color>
+    <color name="primaryColor">#184B50</color>
+    <color name="accentColor">#0FB198</color>
+<!--    <color name="secondaryColor">#1E1E1E</color>-->
+    <color name="secondaryColor">#243546</color>
+<!--    <color name="mainBgColor">#121212</color>-->
+
+    <color name="textColor">#9EABB8</color>
+    <color name="sexyGrey">#283039</color>
+
+    <color name="sexyInsta">#E1306C</color>
+    <color name="sexyYt">#FF0000</color>
+    <color name="sexySnap">#FFFC00</color>
+
+<!--    <color name="sexyInsta">#6E8295</color>-->
+<!--    <color name="sexyYt">#8799AC</color>-->
+<!--    <color name="sexySnap">#A1B1C3</color>-->
+
+    <!-- Final colors -->
+<!--    <color name="cardColor">#252A34</color>-->
+<!--    <color name="cardColor">#1A1A1A</color>-->
+    <color name="cardColor">#1E1E2A</color>
+<!--    <color name="mainBgColor">#181920</color>-->
+    <color name="mainBgColor">#0D0D0D</color>
+    <color name="bgGradientColor">#1A192E</color>
+    <color name="brainColor">#FD7D81</color>
+
+    <color name="barGradient1">#A998FD</color>
+    <color name="barGradient2">#8000FF</color>
+    <color name="barGradient4">#331E1E2A</color>
+
+    <!--Crystal colors-->
+    <color name="ruby">#DE2542</color>
+    <color name="emerald">#00BF7B</color>
+    <color name="amethyst">#7E2AB1</color>
+    <color name="moonstone">#A3D9FF</color>
+    <color name="aquamarine">#53C9ED</color>
+    <color name="amber">#F5AF04</color>
+
+
+    <color name="test">#FFEFCA</color>
+
+
+
+</resources>

@@ -35,4 +35,4 @@ To contribute, please fork the repository and submit a pull request. If you have
 
 ## License
 
-This project is licensed under a modified MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under a modified MIT License - see the [LICENSE](LICENSE) file for details." " 

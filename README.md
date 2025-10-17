@@ -1,6 +1,6 @@
 # Mind Mint: Reclaim Your Focus
 
-![GitHub stars](https://img.shields.io/github/stars/gtxprime/mind-mint?style=social) ![GitHub forks](https://img.shields.io/github/forks/gtxprime/mind-mint?style=social) ![GitHub last commit](https://img.shields.io/github/last-commit/gtxprime/mind-mint) ![GitHub license](https://img.shields.io/github/license/gtxprime/mind-mint)
+![GitHub stars](https://img.shields.io/github/stars/gtxprime/mind-mint?style=social) ![GitHub forks](https://img.shields.io/github/forks/gtxprime/mind-mint?style=social) ![GitHub last commit](https://img.shields.io/github/last-commit/gtxprime/mind-mint) ![License](https://img.shields.io/badge/license-Custom-brightgreen)
 
 **Mind Mint** is an Android application designed to help you stop doomscrolling and boost your productivity. Take control of your digital life and focus on what truly matters.
 

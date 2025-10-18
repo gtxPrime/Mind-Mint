@@ -166,7 +166,7 @@ public class FocusService extends Service {
             // Deduct 3 coins if user stopped early in a time-limited session
             if (stoppedEarly) {
                 mintCrystals.subtractCoins(3);
-                Toast.makeText(this, "You stopped Focus Mode early. 3 PeaceCoins deducted.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "3 MintCrystals deducted.", Toast.LENGTH_SHORT).show();
                 Log.i(TAG, "PeaceCoins: Deducted 3 coins for stopping early in time-limited Focus Mode.");
             }
 

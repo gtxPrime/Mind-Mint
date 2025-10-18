@@ -604,7 +604,7 @@
                             android:layout_marginTop="8dp"
                             android:fontFamily="sans-serif"
                             android:lineSpacingMultiplier="1.3"
-                            android:text="⚠️ Stopped timer before limit: −3\n⚠️ Ignored 5 scroll remders in a day: −3"
+                            android:text="⚠️ Stopped timer before limit: −3\n⚠️ Ignored 5 scroll reminders in a day: −2"
                             android:textColor="@color/white"
                             android:textSize="11sp" />
 
@@ -633,7 +633,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
-                            android:text="🛍️  Comg soon"
+                            android:text="🛍️  Coming soon"
                             android:textColor="@color/white"
                             android:textSize="16sp" />
 

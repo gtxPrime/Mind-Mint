@@ -3,9 +3,7 @@ package com.gxdevs.mindmint.Activities;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.Outline;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
@@ -70,11 +69,9 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
     private HabitManager habitManager;
     private StreakManager streakManager;
     private MintCrystals mintCrystals;
-    private BlurView searchBlur, chipBlur;
+    private BlurView searchBlur;
     private BlurTarget blurTarget;
-    private Drawable windowBackground;
     private LinearLayout filterChipContainer;
-    private BlurView blurTemplate;
 
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
 
@@ -84,7 +81,6 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
-
         taskManager = new TaskManager(this);
         habitManager = new HabitManager(this);
         notificationManager = new TaskNotificationManager(this);
@@ -95,8 +91,6 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         setupClickListeners();
         checkNotificationPermission();
         loadTasks();
-
-        windowBackground = getWindow().getDecorView().getBackground();
 
         searchBlur.setupWith(blurTarget).setBlurRadius(5f);
 
@@ -261,15 +255,6 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
     private void loadTasks() {
         taskList = taskManager.loadTasks();
-
-        // Add sample tasks if list is empty (first time)
-        if (taskList.isEmpty()) {
-            taskList.add(new Task("Review Code", "Review the new feature implementation", R.drawable.todo, Task.Priority.HIGH));
-            taskList.add(new Task("Daily Workout", "30 minutes cardio session", R.drawable.habit, Task.Priority.MEDIUM));
-            taskList.add(new Task("Team Meeting", "Weekly standup with the development team", R.drawable.focus_clock, Task.Priority.MEDIUM));
-            taskManager.saveTasks(taskList);
-        }
-
         // Schedule notifications for existing tasks with scheduled dates
         for (Task task : taskList) {
             if (task.getScheduledDate() != null && !task.isCompleted()) {
@@ -515,7 +500,7 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

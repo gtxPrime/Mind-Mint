@@ -199,7 +199,6 @@ public class FocusMode extends AppCompatActivity {
     }
 
     private void updateThemeForDuration(int minutes) {
-        // Consolidate all time-based visual updates: crystal, lottie, colors
         int crystalResource;
         String lottieResource;
         int progressColor;
@@ -231,6 +230,7 @@ public class FocusMode extends AppCompatActivity {
         }
 
         if (crystalBase != null) crystalBase.setImageResource(crystalResource);
+        if (crystalColor != null) crystalColor.setImageResource(crystalResource);
         if (lottieAnimation != null) {
             lottieAnimation.setAnimation(lottieResource);
             lottieAnimation.playAnimation();

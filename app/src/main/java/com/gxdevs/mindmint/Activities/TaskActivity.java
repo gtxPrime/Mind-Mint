@@ -231,11 +231,12 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
         if (isEmpty) {
             if (!currentSearchQuery.isEmpty()) {
-                emptyStateText.setText("No tasks match your search");
+                emptyStateText.setText(R.string.no_tasks_match_your_search);
             } else if (!currentFilter.equals("All")) {
-                emptyStateText.setText("No " + currentFilter.toLowerCase() + " tasks");
+                String curTxt = "No " + currentFilter.toLowerCase() + " tasks";
+                emptyStateText.setText(curTxt);
             } else {
-                emptyStateText.setText("No tasks found");
+                emptyStateText.setText(R.string.no_tasks_found);
             }
         }
     }
@@ -416,32 +417,6 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         Toast.makeText(this, "Task updated successfully", Toast.LENGTH_SHORT).show();
     }
 
-    private void deleteTask(Task task, int position) {
-        new AlertDialog.Builder(this, R.style.AlertDialogTheme)
-                .setTitle("Delete Task")
-                .setMessage("Are you sure you want to delete this task?")
-                .setPositiveButton("Delete", (dialog, which) -> {
-                    // Cancel any scheduled notifications for this task
-                    notificationManager.cancelTaskReminder(task);
-
-                    // Remove from main task list using task ID
-                    taskList.removeIf(t -> t.getId().equals(task.getId()));
-
-                    // Update adapter with new task list
-                    taskAdapter.updateTaskList(taskList);
-
-                    // Re-apply current filter
-                    filterTasks();
-
-                    // Save to persistent storage
-                    saveTasks();
-                    updateEmptyState();
-                    Toast.makeText(this, "Task deleted", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -456,12 +431,6 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         saveTasks();
     }
 
-    private boolean shouldCreateNextRecurringTask(Task task) {
-        // For now, always create next recurring task if the task is recurring
-        // In the future, this could check repeat options JSON for end conditions
-        return task.isRecurring();
-    }
-
     private String getNextRepeatDateString(Task task) {
         if (!task.isRecurring()) {
             return "never";
@@ -470,9 +439,6 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         Calendar nextDate = Calendar.getInstance();
 
         switch (task.getRecurringType()) {
-            case DAILY:
-                nextDate.add(Calendar.DAY_OF_MONTH, 1);
-                break;
             case WEEKLY:
                 nextDate.add(Calendar.WEEK_OF_YEAR, 1);
                 break;

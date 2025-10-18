@@ -127,5 +127,7 @@
     <string name="set_your_focus_time">Set your focus time</string>
     <string name="drag">Drag the circle to set time (10–180 min)</string>
     <string name="congratulations">Congratulations!</string>
+    <string name="no_tasks_match_your_search">No tasks match your search</string>
+    <string name="no_tasks_found">No tasks found</string>
 
 </resources>

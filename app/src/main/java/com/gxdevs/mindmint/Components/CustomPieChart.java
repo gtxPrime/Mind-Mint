@@ -2,15 +2,15 @@ package com.gxdevs.mindmint.Components;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
-import android.graphics.Color;
-import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +19,7 @@ import com.gxdevs.mindmint.R;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CustomPieChart extends View {
 
@@ -51,6 +52,8 @@ public class CustomPieChart extends View {
 
     private static final int DIMMED_ALPHA = 100;
     private static final int FULL_ALPHA = 255;
+
+    private final Paint placeholderPaint = new Paint();
 
     public CustomPieChart(Context context) {
         super(context);
@@ -142,9 +145,7 @@ public class CustomPieChart extends View {
         List<Integer> filteredDataInMinutes = new ArrayList<>();
         List<String> filteredNames = new ArrayList<>();
 
-        if (dataInMinutes == null) {
-            dataInMinutes = new ArrayList<>();
-        }
+        if (dataInMinutes == null) dataInMinutes = new ArrayList<>();
 
         for (int i = 0; i < dataInMinutes.size(); i++) {
             int minutes = dataInMinutes.get(i);
@@ -234,6 +235,12 @@ public class CustomPieChart extends View {
 
         if (data == null || data.isEmpty()) {
             String placeholder = "empty";
+
+            placeholderPaint.setColor(Color.BLACK);
+            placeholderPaint.setTextSize(50f);
+            placeholderPaint.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText("empty", getWidth() / 2f, getHeight() / 2f, placeholderPaint);
+
             Paint simplePaint = new Paint();
             simplePaint.setColor(Color.BLACK);
             simplePaint.setTextSize(50f);
@@ -268,6 +275,7 @@ public class CustomPieChart extends View {
                     currentSegmentAlpha = DIMMED_ALPHA;
                 }
             }
+
             paint.setStrokeWidth(currentSegmentArcWidth);
             int segmentColorWithAlpha = Color.argb(currentSegmentAlpha, Color.red(currentColor), Color.green(currentColor), Color.blue(currentColor));
             paint.setColor(segmentColorWithAlpha);
@@ -279,22 +287,24 @@ public class CustomPieChart extends View {
             canvas.drawArc(rectF, newStartAngle, currentArcSweepAngle, false, paint);
             paint.setShadowLayer(0, 0, 0, 0);
 
+            // --- TEXT + ICON RENDERING ---
             if (currentArcSweepAngle > 0.1f && currentSegmentAlpha == FULL_ALPHA) {
                 float percentage = (float) data.get(i) / currentTotalDataSum * 100f;
                 String percentText = String.format(Locale.getDefault(), "%.0f%%", percentage);
                 float arcCenterAngleDegrees = newStartAngle + currentArcSweepAngle / 2f;
                 float arcCenterAngleRadians = (float) Math.toRadians(arcCenterAngleDegrees);
 
-                float textRadius = radius - (maxPossibleArcWidth - defaultArcWidth)/2f;
+                float textRadius = radius - (maxPossibleArcWidth - defaultArcWidth) / 2f;
+                float centerX = chartCenterX + (float) (textRadius * Math.cos(arcCenterAngleRadians));
+                float centerY = chartCenterY + (float) (textRadius * Math.sin(arcCenterAngleRadians));
 
-                float textX = chartCenterX + (float) (textRadius * Math.cos(arcCenterAngleRadians));
-                float textY = chartCenterY + (float) (textRadius * Math.sin(arcCenterAngleRadians));
-
+                // Text color based on background brightness
                 double brightness = Color.red(currentColor) * 0.299 +
                         Color.green(currentColor) * 0.587 +
                         Color.blue(currentColor) * 0.114;
                 textPaint.setColor(brightness < 128 ? Color.WHITE : Color.BLACK);
-                canvas.drawText(percentText, textX, textY - (textPaint.descent() + textPaint.ascent()) / 2f, textPaint);
+                canvas.drawText(percentText, centerX, centerY - (textPaint.descent() + textPaint.ascent()) / 2f, textPaint);
+
             }
             newStartAngle += arcValues[i];
             if (isFullCircle || i < data.size() - 1) {
@@ -341,7 +351,7 @@ public class CustomPieChart extends View {
         demoNames.add("YouTube");
         demoNames.add("Instagram");
         demoNames.add("Snapchat");
-        int[] demoColors = new int[] { Color.parseColor("#0cedda"), Color.parseColor("#ed0cde"), Color.parseColor("#FFEB3B"), Color.parseColor("#184B50") };
+        int[] demoColors = new int[]{Color.parseColor("#0cedda"), Color.parseColor("#ed0cde"), Color.parseColor("#FFEB3B"), Color.parseColor("#184B50")};
         setData(demoData, demoNames, demoColors);
     }
 }

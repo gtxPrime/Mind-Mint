@@ -1,12 +1,19 @@
 package com.gxdevs.mindmint.Activities;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
 import android.Manifest;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Outline;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.TypedValue;
@@ -30,6 +37,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.gxdevs.mindmint.Adapters.TaskAdapter;
 import com.gxdevs.mindmint.Fragments.AddTaskBottomSheet;
@@ -70,12 +78,11 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
     private StreakManager streakManager;
     private MintCrystals mintCrystals;
     private BlurView searchBlur;
+    private BlurView permissionBlur;
     private BlurTarget blurTarget;
     private LinearLayout filterChipContainer;
 
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
-
-    // Sample task images - you can replace these with actual drawable resources
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,10 +98,32 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         setupClickListeners();
         checkNotificationPermission();
         loadTasks();
+        checkPermissionAndMoveOn();
 
         searchBlur.setupWith(blurTarget).setBlurRadius(5f);
+        permissionBlur.setupWith(blurTarget).setBlurRadius(5f);
 
         setupSearchAndFilter();
+    }
+
+    private void checkPermissionAndMoveOn() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        MaterialCardView permissionCard = findViewById(R.id.permissionCard);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                permissionCard.setVisibility(VISIBLE);
+                permissionCard.setOnClickListener(v-> askForExactAlarmPermission());
+            } else {
+                permissionCard.setVisibility(GONE);
+            }
+        }
+    }
+
+    private void askForExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+            startActivity(intent);
+        }
     }
 
     private void initViews() {
@@ -107,6 +136,7 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         emptyStateText = findViewById(R.id.emptyStateText);
         filterScrollView = findViewById(R.id.filterScrollView);
         searchBlur = findViewById(R.id.searchBlurView);
+        permissionBlur = findViewById(R.id.permissionBlur);
         blurTarget = findViewById(R.id.blurTarget);
         filterChipContainer = findViewById(R.id.filterChipContainer);
     }
@@ -211,10 +241,10 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         addTaskButton.setOnClickListener(v -> showAddTaskBottomSheet());
 
         filterButton.setOnClickListener(v -> {
-            if (filterScrollView.getVisibility() == View.VISIBLE) {
-                filterScrollView.setVisibility(View.GONE);
+            if (filterScrollView.getVisibility() == VISIBLE) {
+                filterScrollView.setVisibility(GONE);
             } else {
-                filterScrollView.setVisibility(View.VISIBLE);
+                filterScrollView.setVisibility(VISIBLE);
             }
         });
     }
@@ -226,8 +256,8 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
     private void updateEmptyState() {
         boolean isEmpty = taskAdapter.getItemCount() == 0;
-        emptyStateLayout.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-        tasksRecyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        emptyStateLayout.setVisibility(isEmpty ? VISIBLE : GONE);
+        tasksRecyclerView.setVisibility(isEmpty ? GONE : VISIBLE);
 
         if (isEmpty) {
             if (!currentSearchQuery.isEmpty()) {

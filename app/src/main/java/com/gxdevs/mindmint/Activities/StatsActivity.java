@@ -1,13 +1,28 @@
 package com.gxdevs.mindmint.Activities;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
@@ -19,6 +34,8 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.tabs.TabLayout;
 import com.gxdevs.mindmint.Components.CustomPieChart;
 import com.gxdevs.mindmint.Components.RoundedBarChart;
@@ -45,9 +62,9 @@ public class StatsActivity extends AppCompatActivity {
     private int currentWeekOffset = 0;
     private int currentMonthOffset = 0;
     private boolean isWeekly = true;
-    public int startColor;
-    public int endColor;
     private ImageView brain;
+    private BottomSheetDialog bottomSheetDialog;
+    private ActivityResultLauncher<Intent> accessibilityLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +77,10 @@ public class StatsActivity extends AppCompatActivity {
         BlurView focusBlur = findViewById(R.id.focusBlur);
         BlurView taskBlur = findViewById(R.id.taskBlur);
         BlurView habitBlur = findViewById(R.id.habitBlur);
+        BlurView countBlur = findViewById(R.id.countBlur);
+        TextView instaCount = findViewById(R.id.instaCount);
+        TextView ytCount = findViewById(R.id.ytCount);
+        TextView snapCount = findViewById(R.id.snapCount);
         brain = findViewById(R.id.brainImage);
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -70,6 +91,7 @@ public class StatsActivity extends AppCompatActivity {
         data.add(instaScrolls);
         data.add(ytScrolls);
         data.add(snapScrolls);
+
         List<String> segmentNames = new ArrayList<>();
         segmentNames.add("Instagram");
         segmentNames.add("YouTube");
@@ -79,10 +101,12 @@ public class StatsActivity extends AppCompatActivity {
                 ContextCompat.getColor(this, R.color.sexyYt),
                 ContextCompat.getColor(this, R.color.sexySnap)
         };
+
         pieChart.setData(data, segmentNames, pieChartColors);
 
-        startColor = ContextCompat.getColor(this, R.color.barGradient1);
-        endColor = ContextCompat.getColor(this, R.color.barGradient2);
+        instaCount.setText(String.valueOf(instaScrolls));
+        ytCount.setText(String.valueOf(ytScrolls));
+        snapCount.setText(String.valueOf(snapScrolls));
 
         // Setup TabLayout for weekly/monthly
         TabLayout tabLayout = findViewById(R.id.tabLayout);
@@ -118,10 +142,13 @@ public class StatsActivity extends AppCompatActivity {
 
         updateAllCharts();
         updateBrainImage(ytScrolls + instaScrolls + snapScrolls);
+        checkAndShowPermissionCard();
+        registerForPermission();
 
         focusBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
         taskBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
         habitBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
+        countBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
 
         findViewById(R.id.backButton).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
     }
@@ -172,7 +199,6 @@ public class StatsActivity extends AppCompatActivity {
             label.setText("Week " + week + ", " + year);
         } else {
             cal.add(Calendar.MONTH, currentMonthOffset);
-            int month = cal.get(Calendar.MONTH);
             int year = cal.get(Calendar.YEAR);
             String monthName = new SimpleDateFormat("MMMM", Locale.getDefault()).format(cal.getTime());
             label.setText(monthName + " " + year);
@@ -482,18 +508,119 @@ public class StatsActivity extends AppCompatActivity {
         return result;
     }
 
+    private void checkAndShowPermissionCard() {
+        MaterialCardView permissionCard = findViewById(R.id.permissionCard);
+        if (!isAccessibilityPermissionGranted()) {
+            permissionCard.setVisibility(VISIBLE);
+            permissionCard.setOnClickListener(v -> showBottomSheet(R.string.ass_permission, R.string.why_accessibility, R.string.click_on_proceed, R.string.select_installed_apps));
+        } else {
+            permissionCard.setVisibility(GONE);
+        }
+    }
 
-    private Map<String, Integer> getDemoData() {
-        Map<String, Integer> result = new LinkedHashMap<>();
-        result.put("Mon", 1);
-        result.put("Tue", 2);
-        result.put("Wed", 3);
-        result.put("Thu", 4);
-        result.put("Fri", 5);
-        result.put("Sat", 6);
-        result.put("Sun", 7);
-        Toast.makeText(this, "Data set", Toast.LENGTH_SHORT).show();
-        return result;
+    private void showBottomSheet(int heading, int desc, int step1, int step2) {
+        bottomSheetDialog = new BottomSheetDialog(StatsActivity.this);
+        String mainText = ContextCompat.getString(this, desc);
+        String moreInfo = " More info?";
+        String longText = ContextCompat.getString(this, R.string.accessibility_more_info);
+        String showLess = " Show less";
+
+        View view = LayoutInflater.from(getApplicationContext()).inflate(R.layout.layout_bottomsheet, findViewById(R.id.sheetContainer));
+        TextView permissionHead = view.findViewById(R.id.permissionHead);
+        TextView permissionDesc = view.findViewById(R.id.permissionDesc);
+        TextView permissionStep1 = view.findViewById(R.id.permissionStep1);
+        TextView permissionStep2 = view.findViewById(R.id.permissionStep2);
+        TextView permissionStep3 = view.findViewById(R.id.permissionStep3);
+        TextView proceed = view.findViewById(R.id.proceed);
+        TextView notNow = view.findViewById(R.id.notNow);
+
+        permissionHead.setText(getString(heading));
+        permissionDesc.setText(getString(desc));
+        permissionStep1.setText(getString(step1));
+        permissionStep2.setText(getString(step2));
+
+        SpannableString spannableShort = new SpannableString(mainText + moreInfo);
+        ClickableSpan moreInfoSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                // expanded version
+                SpannableString spannableLong = new SpannableString(longText + showLess);
+                ClickableSpan showLessSpan = new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View widget) {
+                        // back to collapsed
+                        permissionDesc.setText(spannableShort);
+                        permissionDesc.setMovementMethod(LinkMovementMethod.getInstance());
+                        permissionDesc.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+                    }
+
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setColor(ContextCompat.getColor(StatsActivity.this, R.color.cyan));
+                        ds.setUnderlineText(false);
+                    }
+                };
+
+                spannableLong.setSpan(showLessSpan, longText.length(), longText.length() + showLess.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                permissionDesc.setText(spannableLong);
+                permissionDesc.setMovementMethod(LinkMovementMethod.getInstance());
+                permissionDesc.setTextAlignment(View.TEXT_ALIGNMENT_CENTER); // expanded = left
+            }
+
+            @Override
+            public void updateDrawState(@NonNull TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setColor(ContextCompat.getColor(StatsActivity.this, R.color.cyan));
+                ds.setUnderlineText(false);
+            }
+        };
+
+        spannableShort.setSpan(moreInfoSpan, mainText.length(), mainText.length() + moreInfo.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        permissionDesc.setText(spannableShort);
+        permissionDesc.setMovementMethod(LinkMovementMethod.getInstance());
+        permissionDesc.setTextAlignment(View.TEXT_ALIGNMENT_CENTER); // collapsed = center
+        permissionStep3.setVisibility(VISIBLE);
+
+        proceed.setOnClickListener(v -> {
+            if (!isAccessibilityPermissionGranted()) {
+                accessibilityLauncher.launch(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+                if (bottomSheetDialog.isShowing()) {
+                    bottomSheetDialog.dismiss();
+                }
+            } else {
+                if (bottomSheetDialog.isShowing()) {
+                    bottomSheetDialog.dismiss();
+                }
+                Toast.makeText(this, "Already Granted", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        notNow.setOnClickListener(v -> bottomSheetDialog.dismiss());
+
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
+    }
+
+    private boolean isAccessibilityPermissionGranted() {
+        String enabledServices = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        String packageName = getPackageName();
+        return enabledServices != null && enabledServices.contains(packageName);
+    }
+
+    public void registerForPermission() {
+        accessibilityLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (isAccessibilityPermissionGranted()) {
+                Toast.makeText(this, "Thank you for granting Accessibility permission!", Toast.LENGTH_SHORT).show();
+                checkAndShowPermissionCard();
+                if (bottomSheetDialog != null && bottomSheetDialog.isShowing()) {
+                    bottomSheetDialog.dismiss();
+                }
+            } else {
+                Toast.makeText(this, "Accessibility permission not granted.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
 

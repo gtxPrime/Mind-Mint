@@ -24,37 +24,38 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <ImageView
+            <View
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-200dp"
                 android:layout_marginTop="-200dp"
+                android:scaleType="centerCrop"
                 android:importantForAccessibility="no"
-                android:src="@drawable/main_bg_gradient"
+                android:background="@drawable/main_bg_gradient"
+                android:backgroundTint="#59FD7D81"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="#59FD7D81" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
-            <ImageView
+            <View
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginEnd="-200dp"
                 android:layout_marginBottom="-200dp"
                 android:importantForAccessibility="no"
-                android:src="@drawable/main_bg_gradient"
+                android:background="@drawable/main_bg_gradient"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:tint="#2614B8A6" />
+                android:backgroundTint="#2614B8A6" />
 
-            <ImageView
+            <View
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-350dp"
+                android:background="@drawable/main_bg_gradient"
+                android:backgroundTint="#33A78BFA"
                 android:importantForAccessibility="no"
-                android:src="@drawable/main_bg_gradient"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:tint="#33A78BFA" />
+                app:layout_constraintStart_toStartOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

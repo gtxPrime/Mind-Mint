@@ -1,6 +1,8 @@
 package com.gxdevs.mindmint.Activities;
 
 import static android.app.ActivityOptions.makeSceneTransitionAnimation;
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static com.gxdevs.mindmint.Services.FocusService.TOTAL_FOCUSED_TIME_KEY;
 
 import android.app.Dialog;
@@ -9,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -43,6 +46,7 @@ import androidx.preference.PreferenceManager;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.materialswitch.MaterialSwitch;
@@ -84,7 +88,7 @@ public class HomeActivity extends AppCompatActivity {
     private static final String KEY_YT_MOD = "YtMod";
     private static final String KEY_FIRST_NAME = "user_first_name";
     private static final String KEY_AFFIRM_VISIT_COUNT = "affirm_visit_count";
-    private BlurView brainBlur, focusBlur, blockerBlur, taskBlur, habitBlur;
+    private BlurView brainBlur, focusBlur, blockerBlur, taskBlur, habitBlur, permissionBlur;
     private ActivityResultLauncher<Intent> accessibilityLauncher;
     private MaterialSwitch ytSwitch, instaSwitch, snapSwitch;
     private CircularProgressIndicator circularProgress;
@@ -108,6 +112,7 @@ public class HomeActivity extends AppCompatActivity {
     private TextView greetings;
     private ImageView brain;
     private Balloon balloon;
+    private int totalWastedScrolls;
 
     private final ActivityResultLauncher<IntentSenderRequest> updateLauncher = registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), result -> {
         if (result.getResultCode() != RESULT_OK) {
@@ -135,6 +140,10 @@ public class HomeActivity extends AppCompatActivity {
         updateGuidanceBalloon();
         updatePlayPauseButton();
         updateGreetingWithFirstName();
+        checkAndShowPermissionCard();
+
+        totalWastedScrolls = Utils.calculateTotalUsageScrolls(sharedPreferences, "yt") + Utils.calculateTotalUsageScrolls(sharedPreferences, "insta") + Utils.calculateTotalUsageScrolls(sharedPreferences, "snap");
+
 
         mintCrystals.setText(String.valueOf(mintCrystalsObj.getCoins()));
         timeUpdateReceiver = new BroadcastReceiver() {
@@ -181,6 +190,7 @@ public class HomeActivity extends AppCompatActivity {
         habitBlur = findViewById(R.id.habitBlur);
         brainBlur = findViewById(R.id.brainBlur);
         focusBlur = findViewById(R.id.focusBlur);
+        permissionBlur = findViewById(R.id.permissionBlur);
         taskBlur = findViewById(R.id.taskBlur);
         brain = findViewById(R.id.brainHolder);
         count = findViewById(R.id.count);
@@ -199,18 +209,25 @@ public class HomeActivity extends AppCompatActivity {
         findViewById(R.id.habitCard).setOnClickListener(v -> startActivity(new Intent(this, HabitActivity.class)));
         findViewById(R.id.taskCard).setOnClickListener(v -> startActivity(new Intent(this, TaskActivity.class)));
         findViewById(R.id.focusCard).setOnClickListener(v -> startActivity(new Intent(this, FocusMode.class)));
-        findViewById(R.id.blockerCard).setOnClickListener(v -> showBlockerBottomSheet());
+        findViewById(R.id.blockerCard).setOnClickListener(v -> {
+            if (isAccessibilityPermissionGranted()) {
+                showBlockerBottomSheet();
+            } else {
+                Toast.makeText(this, "Accessibility permission required", Toast.LENGTH_SHORT).show();
+            }
+        });
         findViewById(R.id.store).setOnClickListener(v -> Toast.makeText(this, "Store coming soon!", Toast.LENGTH_SHORT).show());
+
 
         brainBlur.setupWith(blurTarget).setBlurRadius(5f);
         focusBlur.setupWith(blurTarget).setBlurRadius(5f);
         blockerBlur.setupWith(blurTarget).setBlurRadius(5f);
         taskBlur.setupWith(blurTarget).setBlurRadius(5f);
         habitBlur.setupWith(blurTarget).setBlurRadius(5f);
+        permissionBlur.setupWith(blurTarget).setBlurRadius(5f);
     }
 
     public void updateAllData() {
-        int totalWastedScrolls = Utils.calculateTotalUsageScrolls(sharedPreferences, "yt") + Utils.calculateTotalUsageScrolls(sharedPreferences, "insta") + Utils.calculateTotalUsageScrolls(sharedPreferences, "snap");
         updateBrainImage(totalWastedScrolls);
         String setter;
         if (totalWastedScrolls < 200) {
@@ -238,6 +255,10 @@ public class HomeActivity extends AppCompatActivity {
 
     private void updateBrainImage(int totalWastedScrolls) {
         int drawableId = getDrawableId(totalWastedScrolls);
+        if (totalWastedScrolls >= 700) {
+            View brainGlow = findViewById(R.id.brainGlowHolder);
+            brainGlow.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#87A44C")));
+        }
         brain.setImageResource(drawableId);
 
         circularProgress.setMaxProgress(1400);
@@ -386,9 +407,7 @@ public class HomeActivity extends AppCompatActivity {
             if (isAccessibilityPermissionGranted()) {
                 Toast.makeText(this, "Thank you for granting Accessibility permission!", Toast.LENGTH_SHORT).show();
                 // Dismiss the balloon if permission is granted
-                if (balloon != null && balloon.isShowing()) {
-                    balloon.dismiss();
-                }
+                checkAndShowPermissionCard();
                 // Dismiss bottom sheet if it's showing
                 if (bottomSheetDialog != null && bottomSheetDialog.isShowing()) {
                     bottomSheetDialog.dismiss();
@@ -525,7 +544,7 @@ public class HomeActivity extends AppCompatActivity {
         permissionDesc.setText(spannableShort);
         permissionDesc.setMovementMethod(LinkMovementMethod.getInstance());
         permissionDesc.setTextAlignment(View.TEXT_ALIGNMENT_CENTER); // collapsed = center
-        permissionStep3.setVisibility(View.VISIBLE);
+        permissionStep3.setVisibility(VISIBLE);
 
         proceed.setOnClickListener(v -> {
             if (!isAccessibilityPermissionGranted()) {
@@ -680,9 +699,9 @@ public class HomeActivity extends AppCompatActivity {
 
     private void changeVisibility(ConstraintLayout view, Boolean isVisible) {
         if (isVisible) {
-            view.setVisibility(View.VISIBLE);
+            view.setVisibility(VISIBLE);
         } else {
-            view.setVisibility(View.GONE);
+            view.setVisibility(GONE);
         }
     }
 
@@ -804,56 +823,24 @@ public class HomeActivity extends AppCompatActivity {
         activeHolder.setTextColor(color);
     }
 
-    private void checkAndShowPermissionBalloon() {
+    private void checkAndShowPermissionCard() {
+        MaterialCardView permissionCard = findViewById(R.id.permissionCard);
         if (!isAccessibilityPermissionGranted()) {
-            if (balloon != null && balloon.isShowing()) {
-                balloon.dismiss();
-            }
-
-            balloon = new Balloon.Builder(this)
-                    .setArrowSize(10)
-                    .setArrowOrientation(ArrowOrientation.BOTTOM)
-                    .setArrowPosition(0.5f)
-                    .setWidthRatio(0.6f)
-                    .setTextTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL))
-                    .setHeight(BalloonSizeSpec.WRAP)
-                    .setTextSize(16f)
-                    .setCornerRadius(12f)
-                    .setAlpha(0.9f)
-                    .setPadding(2)
-                    .setMarginRight(5)
-                    .setText("Please enable the accessibility permission")
-                    .setTextColorResource(R.color.white)
-                    .setBackgroundColorResource(R.color.brainColor)
-                    .setBalloonAnimation(BalloonAnimation.ELASTIC)
-                    .setLifecycleOwner(this)
-                    .setOnBalloonClickListener(v -> showBottomSheet(R.string.ass_permission, R.string.why_accessibility, R.string.click_on_proceed, R.string.select_installed_apps))
-                    .build();
-            brain.post(() -> balloon.showAlignTop(findViewById(R.id.brainHolder)));
+            permissionCard.setVisibility(VISIBLE);
+            permissionCard.setOnClickListener(v -> showBottomSheet(R.string.ass_permission, R.string.why_accessibility, R.string.click_on_proceed, R.string.select_installed_apps));
         } else {
-            if (balloon != null && balloon.isShowing()) {
-                balloon.dismiss();
-            }
+            permissionCard.setVisibility(GONE);
         }
     }
 
     private void updateGuidanceBalloon() {
-        // Priority 1: Accessibility permission
-        if (!isAccessibilityPermissionGranted()) {
-            if (balloon != null && balloon.isShowing()) {
-                balloon.dismiss();
-            }
-            checkAndShowPermissionBalloon();
-            return;
-        }
-
-        // Priority 2: Ask for name via a tappable balloon
+        // Priority 1: Ask for name via a tappable balloon
         if (!isFirstNameSet()) {
             showNameBalloon();
             return;
         }
 
-        // Priority 3: Show contextual affirmations
+        // Priority 2: Show contextual affirmations
         int visits = sharedPreferences.getInt(KEY_AFFIRM_VISIT_COUNT, 0);
         if (visits >= 5) {
             sharedPreferences.edit().putInt(KEY_AFFIRM_VISIT_COUNT, 0).apply();
@@ -872,6 +859,13 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void showNameBalloon() {
+        int bgColor;
+        if (totalWastedScrolls >= 700 ){
+            bgColor = R.color.rotBrainColor;
+        } else {
+            bgColor =  R.color.brainColor;
+        }
+
         if (balloon != null && balloon.isShowing()) {
             balloon.dismiss();
         }
@@ -890,7 +884,7 @@ public class HomeActivity extends AppCompatActivity {
                 .setMarginRight(5)
                 .setText("Tell us your name.\n(tap to add name)")
                 .setTextColorResource(R.color.white)
-                .setBackgroundColorResource(R.color.brainColor)
+                .setBackgroundColorResource(bgColor)
                 .setBalloonAnimation(BalloonAnimation.ELASTIC)
                 .setLifecycleOwner(this)
                 .setOnBalloonClickListener(v -> {
@@ -905,6 +899,12 @@ public class HomeActivity extends AppCompatActivity {
 
     private void showAffirmationBalloon() {
         String text = getAffirmationText();
+        int bgColor;
+        if (totalWastedScrolls >= 700 ){
+            bgColor = R.color.rotBrainColor;
+        } else {
+            bgColor =  R.color.brainColor;
+        }
         if (balloon != null && balloon.isShowing()) {
             balloon.dismiss();
         }
@@ -924,7 +924,7 @@ public class HomeActivity extends AppCompatActivity {
                 .setMarginRight(5)
                 .setText(text)
                 .setTextColorResource(R.color.white)
-                .setBackgroundColorResource(R.color.brainColor)
+                .setBackgroundColorResource(bgColor)
                 .setBalloonAnimation(BalloonAnimation.ELASTIC)
                 .setLifecycleOwner(this)
                 .setOnBalloonClickListener(v -> {

@@ -11,30 +11,51 @@
     <!-- Background Gradient Images -->
     <eightbitlab.com.blurview.BlurTarget
         android:id="@+id/blurTarget"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:layout_width="550dp"
-            android:layout_height="550dp"
-            android:layout_marginStart="-200dp"
-            android:layout_marginTop="-200dp"
-            android:src="@drawable/main_bg_gradient"
-            app:tint="#59FD7D81" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <View
+                android:layout_width="550dp"
+                android:layout_height="550dp"
+                android:layout_marginStart="-200dp"
+                android:layout_marginTop="-200dp"
+                android:background="@drawable/main_bg_gradient"
+                android:backgroundTint="#59FD7D81"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <View
+                android:layout_width="550dp"
+                android:layout_height="550dp"
+                android:layout_marginEnd="-200dp"
+                android:layout_marginBottom="-200dp"
+                android:background="@drawable/main_bg_gradient"
+                android:backgroundTint="#2614B8A6"
+                android:importantForAccessibility="no"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <View
+                android:layout_width="550dp"
+                android:layout_height="550dp"
+                android:layout_marginStart="-350dp"
+                android:background="@drawable/main_bg_gradient"
+                android:backgroundTint="#33A78BFA"
+                android:importantForAccessibility="no"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </eightbitlab.com.blurview.BlurTarget>
-
-    <ImageView
-        android:layout_width="550dp"
-        android:layout_height="550dp"
-        android:layout_marginEnd="-200dp"
-        android:layout_marginBottom="-200dp"
-        android:src="@drawable/main_bg_gradient"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:tint="#2614B8A6" />
 
     <!-- Toolbar -->
     <androidx.constraintlayout.widget.ConstraintLayout

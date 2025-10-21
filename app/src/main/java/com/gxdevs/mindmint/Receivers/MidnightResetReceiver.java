@@ -21,9 +21,9 @@ public class MidnightResetReceiver extends BroadcastReceiver {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Map<String, ?> allEntries = sharedPreferences.getAll();
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-            if (entry.getKey().endsWith("_time")) {
+            if (entry.getKey().endsWith("_scrolls")) {
                 editor.remove(entry.getKey());
-                Log.d(TAG, "Removed app time: " + entry.getKey());
+                Log.d(TAG, "Removed app scrolls: " + entry.getKey());
             }
         }
         editor.apply();

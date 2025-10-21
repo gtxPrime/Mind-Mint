@@ -15,10 +15,10 @@
     <string name="turn_off_battery_optimisation">Turn off battery optimisation</string>
     <string name="heading1">Take Control of Your Time!</string>
     <string name="heading2">Focus on What Matters!</string>
-    <string name="heading3">Grant Powers for Working</string>
+    <string name="heading3">Your privacy is most important</string>
     <string name="desc1">Endless scrolling on reels and shorts can drain your time and focus. Our app helps you break free from the cycle.</string>
     <string name="desc2">Set limits, get reminders, and take back your day. We\'ll help you spend your time more wisely.</string>
-    <string name="desc3">We need access to your app usage data to help you track and manage your time effectively. Your privacy is our priority.</string>
+    <string name="desc3">We don\'t collect any sensitive data and keep all your scrolling data on your device and never share it with anyone. Your privacy is our priority.</string>
     <string name="accessibility_more_info">
     Mind Mint uses the Accessibility permission only to support Focus Mode and app usage tracking features.\n\n
     1. Detecting App Screen – to know which app is currently in use so we can block selected apps when you try to open them.\n
@@ -129,5 +129,11 @@
     <string name="congratulations">Congratulations!</string>
     <string name="no_tasks_match_your_search">No tasks match your search</string>
     <string name="no_tasks_found">No tasks found</string>
+    <string name="access_home">Accessibility permission required for scroll count and other stats.</string>
+    <string name="lets_go">Let\'s go</string>
+    <string name="batter_notice">If app stops working in the background, try turning off battery optimization</string>
+    <string name="set_reminder_time">Set Reminder Time</string>
+    <string name="set_block_time">Set Block Time</string>
+    <string name="accurate">To make sure that you\'re notified at the right time, grant Tasks permission to set alarms and reminders.</string>
 
 </resources>

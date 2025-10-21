@@ -22,7 +22,7 @@ public class TaskNotificationManager {
     private static final String CHANNEL_ID = "task_reminders";
     private static final String CHANNEL_NAME = "Task Reminders";
     private static final String CHANNEL_DESCRIPTION = "Notifications for task reminders";
-    
+
     private final Context context;
     private final NotificationManager notificationManager;
     private final AlarmManager alarmManager;
@@ -35,17 +35,15 @@ public class TaskNotificationManager {
     }
 
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_HIGH
-            );
-            channel.setDescription(CHANNEL_DESCRIPTION);
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
-            notificationManager.createNotificationChannel(channel);
-        }
+        NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        channel.setDescription(CHANNEL_DESCRIPTION);
+        channel.enableVibration(true);
+        channel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+        notificationManager.createNotificationChannel(channel);
     }
 
     public void scheduleTaskReminder(Task task) {
@@ -55,9 +53,9 @@ public class TaskNotificationManager {
 
         Calendar taskTime = Calendar.getInstance();
         taskTime.setTime(task.getScheduledDate());
-        
+
         Calendar now = Calendar.getInstance();
-        
+
         // Don't schedule reminders for past tasks
         if (taskTime.before(now)) {
             return;
@@ -65,12 +63,12 @@ public class TaskNotificationManager {
 
         // Always schedule on-time reminder
         scheduleNotification(task, taskTime, false);
-        
+
         // Only schedule 30-minute reminder if user has enabled reminders
         if (task.hasReminder()) {
             Calendar reminderTime = (Calendar) taskTime.clone();
             reminderTime.add(Calendar.MINUTE, -30);
-            
+
             if (reminderTime.after(now)) {
                 scheduleNotification(task, reminderTime, true);
             }
@@ -86,31 +84,21 @@ public class TaskNotificationManager {
 
         // Use unique request codes for each notification
         int requestCode = (task.getId().hashCode() * 2) + (isPreReminder ? 1 : 0);
-        
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                context,
-                requestCode,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    when.getTimeInMillis(),
-                    pendingIntent
-            );
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
+            }
         } else {
-            alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    when.getTimeInMillis(),
-                    pendingIntent
-            );
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
         }
     }
 
     public void cancelTaskReminder(Task task) {
-        // Cancel both pre-reminder and on-time reminder
         cancelNotification(task, true);
         cancelNotification(task, false);
     }
@@ -118,29 +106,24 @@ public class TaskNotificationManager {
     private void cancelNotification(Task task, boolean isPreReminder) {
         Intent intent = new Intent(context, TaskReminderReceiver.class);
         int requestCode = (task.getId().hashCode() * 2) + (isPreReminder ? 1 : 0);
-        
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context,
                 requestCode,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
-        
+
         alarmManager.cancel(pendingIntent);
     }
 
     public void showTaskNotification(String taskId, String taskName, String taskDescription, boolean isPreReminder) {
         Intent intent = new Intent(context, TaskActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         String title = isPreReminder ? "⏰ Task Reminder" : "🔔 Task Due Now";
-        String content = isPreReminder ? 
-                taskName + " is due in 30 minutes" : 
+        String content = isPreReminder ?
+                taskName + " is due in 30 minutes" :
                 "It's time for: " + taskName;
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -148,7 +131,7 @@ public class TaskNotificationManager {
                 .setContentTitle(title)
                 .setContentText(content)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(content + (taskDescription != null && !taskDescription.isEmpty() ? 
+                        .bigText(content + (taskDescription != null && !taskDescription.isEmpty() ?
                                 "\n" + taskDescription : "")))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
@@ -157,7 +140,7 @@ public class TaskNotificationManager {
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         int notificationId = taskId.hashCode() + (isPreReminder ? 1000 : 2000);
-        
+
         try {
             notificationManager.notify(notificationId, builder.build());
         } catch (SecurityException e) {

@@ -3,12 +3,16 @@ package com.gxdevs.mindmint.Activities;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
-import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -27,6 +31,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
@@ -34,11 +40,11 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.gxdevs.mindmint.R;
 import com.gxdevs.mindmint.Services.AppUsageAccessibilityService;
 import com.gxdevs.mindmint.Utils.Utils;
-import com.gxdevs.mindmint.Views.RevealMaskImageView;
 
 import eightbitlab.com.blurview.BlurTarget;
 import eightbitlab.com.blurview.BlurView;
@@ -47,16 +53,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     MaterialSwitch remindDoomScrollingSwitch, blockAfterWastedTimeSwitch;
     TextView remindDoomSubtitle, blockViewTimeSubtitle;
-    private static final String KEY_INSTA_MOD = "InstaMod";
-    private static final String KEY_YT_MOD = "YtMod";
-    private static final String KEY_SNAP_MOD = "SnapMod";
     public static final String PREF_BLOCK_AFTER_WASTED_TIME_ENABLED = "pref_block_after_wasted_time_enabled";
     public static final String PREF_BLOCK_AFTER_WASTED_TIME_HOURS = "pref_block_after_wasted_time_hours";
     public static final float DEFAULT_BLOCK_AFTER_WASTED_TIME_HOURS = 1.0f;
-    private SharedPreferences.Editor appDataEditor;
     private SharedPreferences defaultSharedPreferences;
     private BottomSheetDialog timerPicker;
-    boolean isRevealed = false;
+    private ActivityResultLauncher<Intent> batteryOptimizationLauncher;
+    private BottomSheetDialog bottomSheetDialog;
+    private boolean batteryOptimizationIgnored = false;
+    private MaterialCardView permissionCard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,13 +69,13 @@ public class SettingsActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_settings);
         Utils.setPad(findViewById(R.id.main), "bottom", this);
-
-        SharedPreferences appDataPrefs = getSharedPreferences("AppData", MODE_PRIVATE);
-        appDataEditor = appDataPrefs.edit();
         defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         remindDoomSubtitle = findViewById(R.id.remindDoomSubtitle);
         blockViewTimeSubtitle = findViewById(R.id.blockViewTimeSubtitle);
+
+        bottomSheetDialog = new BottomSheetDialog(SettingsActivity.this);
+        registerForPermission();
 
         // --- START: Initialize new UI elements and listeners ---
         ConstraintLayout customAppBlockingLayout = findViewById(R.id.customAppBlockingLayout);
@@ -111,7 +116,6 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-
         remindDoomScrollingSwitch = findViewById(R.id.remindDoomScrollingSwitch);
         blockAfterWastedTimeSwitch = findViewById(R.id.blockAfterWastedTimeSwitch);
 
@@ -151,10 +155,16 @@ public class SettingsActivity extends AppCompatActivity {
 
         BlurView timeBlur = findViewById(R.id.timeBlur);
         BlurView blockingBlur = findViewById(R.id.blockingBlur);
+        BlurView permissionBlur = findViewById(R.id.permissionBlurX);
         BlurTarget blurTarget = findViewById(R.id.blurTarget);
+        permissionCard = findViewById(R.id.permissionCard);
 
         timeBlur.setupWith(blurTarget).setBlurRadius(5f);
         blockingBlur.setupWith(blurTarget).setBlurRadius(5f);
+        permissionBlur.setupWith(blurTarget).setBlurRadius(5f);
+
+        permissionCard.setOnClickListener(v -> showBottomSheet(R.string.batter_permission, R.string.why_battery, R.string.click_on_proceed, R.string.step2allow));
+        checkPermissionsAndMove();
         // --- END: NEW FEATURES INITIALIZATION ---
     }
 
@@ -166,7 +176,6 @@ public class SettingsActivity extends AppCompatActivity {
         NumberPicker minutePickerBottomSheet = bottomSheetView.findViewById(R.id.minutes_selector_bottom_sheet);
         Button setLimitBtnBottomSheet = bottomSheetView.findViewById(R.id.setLimitBtnBottomSheet);
         TextView hoursLabel = bottomSheetView.findViewById(R.id.hours_textView_bottom_sheet);
-        TextView minutesLabel = bottomSheetView.findViewById(R.id.minutes_textView_bottom_sheet);
 
         if (isRemindDoomScrolling) {
             // For remind doom scrolling, we only use minutes (0-59)
@@ -179,7 +188,7 @@ public class SettingsActivity extends AppCompatActivity {
             int currentMinutes = defaultSharedPreferences.getInt(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES, AppUsageAccessibilityService.DEFAULT_REMIND_DOOM_SCROLLING_MINUTES);
             minutePickerBottomSheet.setValue(currentMinutes);
 
-            setLimitBtnBottomSheet.setText("Set Reminder Time");
+            setLimitBtnBottomSheet.setText(R.string.set_reminder_time);
         } else {
             // For block after wasted time, we use hours and minutes
             hourPickerBottomSheet.setVisibility(VISIBLE);
@@ -196,7 +205,7 @@ public class SettingsActivity extends AppCompatActivity {
             hourPickerBottomSheet.setValue(hours);
             minutePickerBottomSheet.setValue(minutes);
 
-            setLimitBtnBottomSheet.setText("Set Block Time");
+            setLimitBtnBottomSheet.setText(R.string.set_block_time);
         }
 
         setLimitBtnBottomSheet.setOnClickListener(v -> {
@@ -299,6 +308,93 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    public void registerForPermission() {
+        batteryOptimizationLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(POWER_SERVICE);
+                    if (powerManager.isIgnoringBatteryOptimizations(getPackageName())) {
+                        Toast.makeText(this, "Battery optimization ignored", Toast.LENGTH_SHORT).show();
+                        batteryOptimizationIgnored = true;
+                        checkPermissionsAndMove();
+                        if (bottomSheetDialog.isShowing()) {
+                            bottomSheetDialog.dismiss();
+                        }
+                    } else {
+                        Toast.makeText(this, "Battery optimization not ignored", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+    }
+
+    private void checkPermissionsAndMove() {
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        batteryOptimizationIgnored = pm.isIgnoringBatteryOptimizations(getPackageName());
+
+        if (batteryOptimizationIgnored) {
+            permissionCard.setVisibility(GONE);
+        } else {
+            permissionCard.setVisibility(VISIBLE);
+        }
+    }
+
+    private void showBottomSheet(int heading, int desc, int step1, int step2) {
+        View view = LayoutInflater.from(getApplicationContext()).inflate(R.layout.layout_bottomsheet, findViewById(R.id.sheetContainer));
+        TextView permissionHead = view.findViewById(R.id.permissionHead);
+        TextView permissionDesc = view.findViewById(R.id.permissionDesc);
+        TextView permissionStep1 = view.findViewById(R.id.permissionStep1);
+        TextView permissionStep2 = view.findViewById(R.id.permissionStep2);
+        TextView permissionStep3 = view.findViewById(R.id.permissionStep3);
+        TextView proceed = view.findViewById(R.id.proceed);
+        TextView notNow = view.findViewById(R.id.notNow);
+
+        permissionHead.setText(getString(heading));
+        permissionDesc.setText(getString(desc));
+        permissionStep1.setText(getString(step1));
+        permissionStep2.setText(getString(step2));
+        permissionStep3.setVisibility(GONE);
+
+        proceed.setOnClickListener(v -> {
+            if (!batteryOptimizationIgnored) {
+                requestBattery();
+            } else {
+                if (bottomSheetDialog.isShowing()) {
+                    bottomSheetDialog.dismiss();
+                }
+                Toast.makeText(this, "Already Granted", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        notNow.setOnClickListener(v -> bottomSheetDialog.dismiss());
+
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
+    }
+
+    @SuppressLint("BatteryLife")
+    private void requestBattery() {
+        PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(POWER_SERVICE);
+        Intent i = new Intent();
+
+        if (!powerManager.isIgnoringBatteryOptimizations(getPackageName())) {
+            i.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            i.setData(Uri.parse("package:" + getPackageName()));
+            batteryOptimizationLauncher.launch(i);
+        } else {
+            Toast.makeText(this, "Already Granted", Toast.LENGTH_SHORT).show();
+            if (bottomSheetDialog.isShowing()) {
+                bottomSheetDialog.dismiss();
+            }
+            batteryOptimizationIgnored = true;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        checkPermissionsAndMove();
+        super.onResume();
+    }
 }
 
 

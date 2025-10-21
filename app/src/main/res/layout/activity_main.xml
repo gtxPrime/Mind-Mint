@@ -20,37 +20,38 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <ImageView
+            <View
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-200dp"
                 android:layout_marginTop="-200dp"
+                android:scaleType="centerCrop"
                 android:importantForAccessibility="no"
-                android:src="@drawable/main_bg_gradient"
+                android:background="@drawable/main_bg_gradient"
+                android:backgroundTint="#59FD7D81"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="#59FD7D81" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
-            <ImageView
+            <View
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginEnd="-200dp"
                 android:layout_marginBottom="-200dp"
                 android:importantForAccessibility="no"
-                android:src="@drawable/main_bg_gradient"
+                android:background="@drawable/main_bg_gradient"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:tint="#2614B8A6" />
+                android:backgroundTint="#2614B8A6" />
 
-            <ImageView
+            <View
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-350dp"
+                android:background="@drawable/main_bg_gradient"
+                android:backgroundTint="#33A78BFA"
                 android:importantForAccessibility="no"
-                android:src="@drawable/main_bg_gradient"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:tint="#33A78BFA" />
+                app:layout_constraintStart_toStartOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -146,14 +147,72 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/permissionCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:visibility="gone"
+        android:layout_marginTop="15dp"
+        android:elevation="4dp"
+        app:cardBackgroundColor="@color/cardColor"
+        app:cardCornerRadius="12dp"
+        app:layout_constraintTop_toBottomOf="@+id/greetings"
+        app:strokeColor="#26FD7D81"
+        app:strokeWidth="1dp">
+
+        <eightbitlab.com.blurview.BlurView
+            android:id="@+id/permissionBlur"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:blurOverlayColor="#80FF0000">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:padding="10dp"
+                    android:text="@string/access_home"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/permissionArrow"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/permissionArrow"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginStart="25dp"
+                    android:layout_marginEnd="30dp"
+                    android:contentDescription="@string/decor"
+                    android:rotation="180"
+                    android:src="@drawable/ic_arrow_back"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/white" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </eightbitlab.com.blurview.BlurView>
+
+    </com.google.android.material.card.MaterialCardView>
+
     <ScrollView
         android:id="@+id/rootHolder"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_height="0dp"
         android:padding="20dp"
         android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@+id/greetings"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/permissionCard"
+        app:layout_constraintVertical_bias="0.1"
         tools:ignore="HardcodedText">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -277,13 +336,13 @@
                                 android:elevation="2dp"
                                 android:src="@drawable/brain1" />
 
-                            <ImageView
+                            <View
                                 android:id="@+id/brainGlowHolder"
                                 android:layout_width="150dp"
                                 android:layout_height="150dp"
                                 android:layout_gravity="center"
                                 android:contentDescription="@string/app_name"
-                                android:src="@drawable/brain_glow" />
+                                android:background="@drawable/brain_glow"/>
                         </FrameLayout>
 
                         <com.google.android.material.textview.MaterialTextView

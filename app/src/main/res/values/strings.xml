@@ -129,11 +129,22 @@
     <string name="congratulations">Congratulations!</string>
     <string name="no_tasks_match_your_search">No tasks match your search</string>
     <string name="no_tasks_found">No tasks found</string>
-    <string name="access_home">Accessibility permission required for scroll count and other stats.</string>
+    <string name="access_home">Accessibility permission required for scroll count, blocking and other stats.</string>
     <string name="lets_go">Let\'s go</string>
     <string name="batter_notice">If app stops working in the background, try turning off battery optimization</string>
     <string name="set_reminder_time">Set Reminder Time</string>
     <string name="set_block_time">Set Block Time</string>
     <string name="accurate">To make sure that you\'re notified at the right time, grant Tasks permission to set alarms and reminders.</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="repeats">Repeats</string>
+    <string name="set_time">Set time</string>
+    <string name="repeat">Repeat</string>
+    <string name="done">Done</string>
+    <string name="save">Save</string>
+    <string name="first_name">First name</string>
+    <string name="what_s_your_first_name">What\'s your first name?</string>
+    <string name="dark">Dark</string>
+    <string name="light">Light</string>
 
 </resources>

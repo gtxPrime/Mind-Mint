@@ -63,5 +63,20 @@
     <color name="test">#FFEFCA</color>
 
 
+    <!--Global theme colors-->
+    <color name="globalTintColor">#1f1f1f</color>
+
 
 </resources>
+
+
+
+
+
+
+
+
+
+
+
+

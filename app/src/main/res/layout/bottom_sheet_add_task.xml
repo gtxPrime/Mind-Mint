@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bottom_sheet_shape"
     android:padding="20dp"
-    tools:ignore="HardcodedText">
+    tools:ignore="HardcodedText, Autofill,TextFields">
 
     <!-- Handle bar -->
     <View
@@ -27,7 +27,7 @@
         android:layout_marginTop="20dp"
         android:fontFamily="@font/poppins_semibold"
         android:text="Add Task"
-        android:textColor="@color/white"
+        android:textColor="?attr/tintGlobalColor"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/handleBar" />
@@ -73,8 +73,8 @@
             android:fontFamily="@font/inter18regular"
             android:hint="Task name..."
             android:paddingHorizontal="16dp"
-            android:textColor="@color/white"
-            android:textColorHint="@color/textColor"
+            android:textColor="?attr/tintGlobalColor"
+            android:textColorHint="?attr/tintGlobalColor"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@+id/emojiCard"
             app:layout_constraintEnd_toEndOf="parent"
@@ -97,7 +97,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter18regular"
             android:text="Priority"
-            android:textColor="@color/textColor"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="14sp" />
 
         <Spinner
@@ -126,7 +126,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter18regular"
             android:text="Set Date/Time"
-            android:textColor="@color/textColor"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -144,6 +144,7 @@
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
+                android:importantForAccessibility="no"
                 android:src="@drawable/ic_time"
                 app:tint="@color/brainColor" />
 
@@ -155,7 +156,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/inter18regular"
                 android:text="Today 3PM"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="14sp" />
 
         </LinearLayout>
@@ -179,15 +180,15 @@
             android:layout_weight="1"
             android:fontFamily="@font/inter18regular"
             android:text="Reminder"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="16sp" />
 
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/reminderSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:thumbTint="@color/white"
-            app:trackTint="@color/brainColor" />
+            app:thumbTint="?attr/switchThumb"
+            app:trackTint="?attr/switchTrack" />
 
     </LinearLayout>
 
@@ -213,7 +214,7 @@
             android:background="@drawable/background_outline"
             android:fontFamily="@font/inter18regular"
             android:text="Cancel"
-            android:textColor="@color/textColor"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="16sp" />
 
         <Button
@@ -226,7 +227,7 @@
             android:background="@drawable/button_pill_bg"
             android:fontFamily="@font/inter18regular"
             android:text="Save"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="16sp" />
 
     </LinearLayout>

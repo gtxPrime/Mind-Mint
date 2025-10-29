@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/poppins_semibold"
         android:text="Select time"
-        android:textColor="@color/white"
+        android:textColor="?attr/tintGlobalColor"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -40,7 +40,7 @@
             android:fontFamily="@font/poppins_semibold"
             android:gravity="center"
             android:text="09"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="32sp" />
 
         <!-- Separator -->
@@ -50,7 +50,7 @@
             android:layout_marginHorizontal="8dp"
             android:fontFamily="@font/poppins_semibold"
             android:text=":"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="32sp" />
 
         <!-- Minute Display -->
@@ -62,7 +62,7 @@
             android:fontFamily="@font/poppins_semibold"
             android:gravity="center"
             android:text="00"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="32sp" />
 
         <!-- AM/PM Toggle -->
@@ -83,7 +83,7 @@
                 android:fontFamily="@font/inter18regular"
                 android:gravity="center"
                 android:text="a.m."
-                android:textColor="@color/textColor"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
             <TextView
@@ -97,7 +97,7 @@
                 android:fontFamily="@font/inter18regular"
                 android:gravity="center"
                 android:text="p.m."
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -135,12 +135,13 @@
         android:layout_height="40dp"
         android:layout_marginTop="20dp"
         android:background="@drawable/background_outline"
+        android:importantForAccessibility="no"
         android:padding="8dp"
         android:src="@drawable/ic_keyboard"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/analogClockContainer"
-        app:tint="@color/white" />
+        app:tint="?attr/tintGlobalColor" />
 
     <!-- Action Buttons -->
     <LinearLayout
@@ -160,8 +161,8 @@
             android:layout_weight="1"
             android:background="@drawable/background_outline"
             android:fontFamily="@font/inter18regular"
-            android:text="Cancel"
-            android:textColor="@color/textColor"
+            android:text="@string/cancel"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="16sp" />
 
         <Button
@@ -173,8 +174,8 @@
             android:layout_weight="1"
             android:background="@drawable/button_pill_bg"
             android:fontFamily="@font/inter18regular"
-            android:text="OK"
-            android:textColor="@color/white"
+            android:text="@string/ok"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="16sp" />
 
     </LinearLayout>

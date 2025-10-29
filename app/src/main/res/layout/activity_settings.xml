@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/mainBgColor"
+    android:background="?attr/globalBg"
     tools:context=".Activities.SettingsActivity"
     tools:ignore="LabelFor, ContentDescription, HardcodedText">
 
@@ -21,34 +21,37 @@
             android:layout_height="match_parent">
 
             <View
+                android:id="@+id/arcTopLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-200dp"
                 android:layout_marginTop="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#59FD7D81"
+                android:backgroundTint="#B4FD7D81"
                 android:importantForAccessibility="no"
                 android:scaleType="centerCrop"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <View
+                android:id="@+id/arcBottomRight"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginEnd="-200dp"
                 android:layout_marginBottom="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#2614B8A6"
+                android:backgroundTint="#8014B8A6"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
             <View
+                android:id="@+id/arcBottomLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-350dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#33A78BFA"
+                android:backgroundTint="#D9A78BFA"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
@@ -57,23 +60,54 @@
 
     </eightbitlab.com.blurview.BlurTarget>
 
-    <TextView
-        android:id="@+id/blockHead"
-        android:layout_width="match_parent"
+    <!-- Toolbar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="35dp"
-        android:layout_marginTop="40dp"
-        android:fontFamily="sans-serif-medium"
-        android:text="@string/settings"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginTop="46dp"
+        android:background="@color/transparent"
+        android:elevation="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Back Button -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/backButton"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="20dp"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="?attr/tintGlobalColor"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/circleImageView" />
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/toolbarTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="@string/settings"
+            android:textColor="?attr/tintGlobalColor"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/backButton"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:elevation="4dp"
+        android:scrollbars="none"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/blockHead">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -87,10 +121,13 @@
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="15dp"
                 android:layout_marginEnd="20dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
                 app:layout_constraintTop_toTopOf="parent"
-                app:strokeWidth="0dp">
+                app:strokeColor="#1AFD7D81"
+                app:strokeWidth="1dp">
 
                 <eightbitlab.com.blurview.BlurView
                     android:id="@+id/timeBlur"
@@ -110,7 +147,7 @@
                             android:layout_marginTop="10dp"
                             android:fontFamily="sans-serif-medium"
                             android:text="Time Limits"
-                            android:textColor="@color/textColor"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="26sp"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -141,7 +178,7 @@
                                 android:layout_marginStart="15dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="Remind me"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="15sp"
                                 app:layout_constraintBottom_toTopOf="@+id/remindDoomSubtitle"
                                 app:layout_constraintEnd_toStartOf="@+id/remindDoomScrollingSwitch"
@@ -155,7 +192,7 @@
                                 android:alpha="0.7"
                                 android:fontFamily="@font/inter18regular"
                                 android:text="For specific content like Reels, Shorts, etc."
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="13sp"
                                 android:visibility="gone"
                                 app:layout_constraintBottom_toBottomOf="@+id/remindDoomIcon"
@@ -167,12 +204,12 @@
                                 android:id="@+id/remindDoomScrollingSwitch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginEnd="15dp"
+                                android:layout_marginEnd="12dp"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent"
-                                app:thumbTint="@color/textColor"
-                                app:trackTint="#283039" />
+                                app:thumbTint="?attr/switchThumb"
+                                app:trackTint="?attr/switchTrack" />
 
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -202,7 +239,7 @@
                                 android:layout_marginStart="15dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="Block content"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="15sp"
                                 app:layout_constraintBottom_toTopOf="@+id/blockViewTimeSubtitle"
                                 app:layout_constraintEnd_toStartOf="@+id/blockAfterWastedTimeSwitch"
@@ -216,7 +253,7 @@
                                 android:alpha="0.7"
                                 android:fontFamily="@font/inter18regular"
                                 android:text="Max daily hours for Reels, Shorts, etc."
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="13sp"
                                 android:visibility="gone"
                                 app:layout_constraintBottom_toBottomOf="@+id/blockViewTimeIcon"
@@ -232,15 +269,14 @@
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintTop_toTopOf="parent"
-                                app:thumbTint="@color/textColor"
-                                app:trackTint="#283039" />
+                                app:thumbTint="?attr/switchThumb"
+                                app:trackTint="?attr/switchTrack" />
 
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </eightbitlab.com.blurview.BlurView>
-
 
             </com.google.android.material.card.MaterialCardView>
 
@@ -249,12 +285,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
-                android:layout_marginTop="15dp"
                 android:layout_marginEnd="20dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
                 app:layout_constraintTop_toBottomOf="@+id/timeLimits"
-                app:strokeWidth="0dp">
+                app:strokeColor="#1AFD7D81"
+                app:strokeWidth="1dp">
 
                 <eightbitlab.com.blurview.BlurView
                     android:id="@+id/blockingBlur"
@@ -273,7 +311,7 @@
                             android:layout_marginTop="10dp"
                             android:fontFamily="sans-serif-medium"
                             android:text="Blocking"
-                            android:textColor="@color/textColor"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="26sp"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -309,7 +347,7 @@
                                 android:layout_marginStart="15dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="@string/custom_app_blocking"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="15sp"
                                 app:layout_constraintBottom_toTopOf="@+id/customAppBlockingSubtitle"
                                 app:layout_constraintEnd_toStartOf="@+id/customAppBlockingArrow"
@@ -324,7 +362,7 @@
                                 android:alpha="0.7"
                                 android:fontFamily="@font/inter18regular"
                                 android:text="@string/select_apps_to_block_during_focus_mode"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="12sp"
                                 app:layout_constraintBottom_toBottomOf="@+id/customAppBlockingIcon"
                                 app:layout_constraintEnd_toStartOf="@+id/customAppBlockingArrow"
@@ -346,6 +384,72 @@
                         </androidx.constraintlayout.widget.ConstraintLayout>
 
                         <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/blockBrowsersLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/customAppBlockingLayout">
+
+                            <ImageView
+                                android:id="@+id/blockBrowsersIcon"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="20dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="5dp"
+                                android:src="@drawable/ic_app_block"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/blockBrowsersTitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="15dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Block browsers doomscrolling"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="15sp"
+                                app:layout_constraintBottom_toTopOf="@+id/blockBrowsersSubtitle"
+                                app:layout_constraintEnd_toStartOf="@+id/blockBrowsersDoomSwitch"
+                                app:layout_constraintStart_toEndOf="@+id/blockBrowsersIcon"
+                                app:layout_constraintTop_toTopOf="@+id/blockBrowsersIcon" />
+
+                            <TextView
+                                android:id="@+id/blockBrowsersSubtitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:alpha="0.7"
+                                android:fontFamily="@font/inter18regular"
+                                android:text="Helps avoid doomscrolling on web browsers"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="12sp"
+                                android:visibility="gone"
+                                app:layout_constraintBottom_toBottomOf="@+id/blockBrowsersIcon"
+                                app:layout_constraintEnd_toStartOf="@+id/blockBrowsersDoomSwitch"
+                                app:layout_constraintStart_toStartOf="@+id/blockBrowsersTitle"
+                                app:layout_constraintTop_toBottomOf="@+id/blockBrowsersTitle" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/blockBrowsersDoomSwitch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="15dp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:thumbTint="?attr/switchThumb"
+                                app:trackTint="?attr/switchTrack" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
                             android:id="@+id/blockingPopupDurationLayout"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -354,7 +458,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/customAppBlockingLayout">
+                            app:layout_constraintTop_toBottomOf="@+id/blockBrowsersLayout">
 
                             <ImageView
                                 android:id="@+id/blockingPopupDurationIcon"
@@ -375,7 +479,7 @@
                                 android:layout_marginStart="16dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="@string/blocking_popup_duration"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="15sp"
                                 app:layout_constraintBottom_toTopOf="@+id/blockingPopupDurationSubtitle"
                                 app:layout_constraintStart_toEndOf="@+id/blockingPopupDurationIcon"
@@ -388,7 +492,7 @@
                                 android:alpha="0.7"
                                 android:fontFamily="@font/inter18regular"
                                 android:text="@string/min_5_seconds_in_seconds"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="12sp"
                                 app:layout_constraintBottom_toBottomOf="@+id/blockingPopupDurationIcon"
                                 app:layout_constraintStart_toStartOf="@+id/blockingPopupDurationTitle"
@@ -405,7 +509,7 @@
                                 android:gravity="center"
                                 android:inputType="number"
                                 android:maxLength="3"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="15sp"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toStartOf="@+id/tv_seconds_label"
@@ -418,7 +522,7 @@
                                 android:layout_marginEnd="15dp"
                                 android:fontFamily="@font/inter18regular"
                                 android:text="@string/sec"
-                                android:textColor="@color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="15sp"
                                 app:layout_constraintBaseline_toBaselineOf="@+id/et_blocking_popup_duration"
                                 app:layout_constraintEnd_toEndOf="parent" />
@@ -432,17 +536,311 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/themingCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                app:cardBackgroundColor="?attr/secondaryColor"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
+                app:layout_constraintTop_toBottomOf="@+id/blockingHolder"
+                app:strokeColor="#1AFD7D81"
+                app:strokeWidth="1dp">
+
+                <eightbitlab.com.blurview.BlurView
+                    android:id="@+id/themingBlur"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="15dp">
+
+                        <TextView
+                            android:id="@+id/themingHeading"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="10dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Theming"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="26sp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <LinearLayout
+                            android:id="@+id/themeSection"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginEnd="20dp"
+                            android:orientation="vertical"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/themingHeading">
+
+                            <TextView
+                                android:id="@+id/themeLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Theme"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="14sp" />
+
+                            <Spinner
+                                android:id="@+id/themeSpinner"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:layout_marginTop="8dp"
+                                android:background="@drawable/background_outline"
+                                android:paddingHorizontal="12dp"
+                                android:popupBackground="@drawable/spinner_dropdown_bg"
+                                android:theme="@style/SpinnerTheme" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/advancedOptionsToggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="12dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:fontFamily="sans-serif-medium"
+                            android:padding="6dp"
+                            android:text="Advanced options"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="14sp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/themeSection" />
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/secondaryRow"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginEnd="20dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:visibility="gone"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/advancedOptionsToggle">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/secondaryPreview"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginBottom="10dp"
+                                android:padding="2dp"
+                                app:circularflow_radiusInDP="15dp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:shapeAppearance="@style/circleImageView"
+                                app:strokeColor="?attr/tintGlobalColor"
+                                app:strokeWidth="2dp" />
+
+                            <TextView
+                                android:id="@+id/secondaryTitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Secondary color"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="15sp"
+                                app:layout_constraintBottom_toBottomOf="@id/secondaryPreview"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toEndOf="@id/secondaryPreview"
+                                app:layout_constraintTop_toTopOf="@id/secondaryPreview" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/colorRow1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="20dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:visibility="gone"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/secondaryRow">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/colorPreview1"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="0dp"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginBottom="10dp"
+                                android:padding="2dp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:shapeAppearance="@style/circleImageView"
+                                app:strokeColor="?attr/tintGlobalColor"
+                                app:strokeWidth="2dp" />
+
+                            <TextView
+                                android:id="@+id/colorTitle1"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Aura Arc 1"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="15sp"
+                                app:layout_constraintBottom_toBottomOf="@id/colorPreview1"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toEndOf="@id/colorPreview1"
+                                app:layout_constraintTop_toTopOf="@id/colorPreview1" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/colorRow2"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="20dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:visibility="gone"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/colorRow1">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/colorPreview2"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="0dp"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginBottom="10dp"
+                                android:padding="2dp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:shapeAppearance="@style/circleImageView"
+                                app:strokeColor="?attr/tintGlobalColor"
+                                app:strokeWidth="2dp" />
+
+                            <TextView
+                                android:id="@+id/colorTitle2"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Aura Arc 2"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="15sp"
+                                app:layout_constraintBottom_toBottomOf="@id/colorPreview2"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toEndOf="@id/colorPreview2"
+                                app:layout_constraintTop_toTopOf="@id/colorPreview2" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/colorRow3"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="20dp"
+                            android:layout_marginBottom="15dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:visibility="gone"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/colorRow2">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/colorPreview3"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="0dp"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginBottom="10dp"
+                                android:padding="2dp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:shapeAppearance="@style/circleImageView"
+                                app:strokeColor="?attr/tintGlobalColor"
+                                app:strokeWidth="2dp" />
+
+                            <TextView
+                                android:id="@+id/colorTitle3"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Aura Arc 3"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="15sp"
+                                app:layout_constraintBottom_toBottomOf="@id/colorPreview3"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintStart_toEndOf="@id/colorPreview3"
+                                app:layout_constraintTop_toTopOf="@id/colorPreview3" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <TextView
+                            android:id="@+id/reset"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginEnd="16dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Reset theme"
+                            android:textAlignment="center"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="15sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/colorRow3" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </eightbitlab.com.blurview.BlurView>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/permissionCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="20dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:visibility="visible"
-                android:layout_marginTop="15dp"
-                android:elevation="4dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="12dp"
-                app:layout_constraintTop_toBottomOf="@+id/blockingHolder"
-                app:strokeColor="#26FD7D81"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
+                app:layout_constraintTop_toBottomOf="@+id/themingCard"
+                app:strokeColor="#1AFD7D81"
                 app:strokeWidth="1dp">
 
                 <eightbitlab.com.blurview.BlurView
@@ -459,10 +857,10 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
-                            android:padding="10dp"
+                            android:padding="8dp"
                             android:text="@string/batter_notice"
-                            android:textColor="@color/white"
-                            android:textSize="16sp"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="13sp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@+id/permissionArrow"
                             app:layout_constraintStart_toStartOf="parent"
@@ -470,8 +868,8 @@
 
                         <ImageView
                             android:id="@+id/permissionArrow"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
                             android:layout_marginStart="25dp"
                             android:layout_marginEnd="30dp"
                             android:contentDescription="@string/decor"
@@ -480,7 +878,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:tint="@color/white" />
+                            app:tint="?attr/tintGlobalColor" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 

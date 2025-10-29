@@ -7,13 +7,11 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="30dp"
     android:elevation="20dp"
-    android:theme="@style/Theme.Material3.DayNight.NoActionBar"
-    app:cardBackgroundColor="@color/cardColor"
+    app:cardBackgroundColor="?attr/secondaryColor"
     app:cardCornerRadius="20dp"
     app:layout_constraintBottom_toBottomOf="parent"
     app:strokeWidth="0dp"
     tools:ignore="HardcodedText, ContentDescription">
-
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/appsHolder"
@@ -23,24 +21,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/focusTimeHolder">
 
-        <!--        <TextView-->
-        <!--            android:id="@+id/blockHead"-->
-        <!--            android:layout_width="match_parent"-->
-        <!--            android:layout_height="wrap_content"-->
-        <!--            android:layout_marginTop="5dp"-->
-        <!--            android:fontFamily="sans-serif-medium"-->
-        <!--            android:text="@string/block"-->
-        <!--            android:textColor="@color/white"-->
-        <!--            android:textSize="23sp"-->
-        <!--            app:layout_constraintTop_toTopOf="parent" />-->
-
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/ytCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
             android:elevation="4dp"
-            app:cardBackgroundColor="@color/cardColor"
+            app:cardBackgroundColor="?attr/secondaryColor"
             app:cardCornerRadius="10dp"
             app:layout_constraintTop_toTopOf="parent"
             app:strokeColor="#26FD7D81"
@@ -53,7 +40,7 @@
                 android:padding="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/blockHead">
+                app:layout_constraintTop_toTopOf="parent">
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ytLogo"
@@ -71,7 +58,7 @@
                     android:fontFamily="sans-serif-medium"
                     android:gravity="center"
                     android:text="@string/youtube_shorts"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/tintGlobalColor"
                     android:textSize="15sp"
                     app:layout_constraintBottom_toBottomOf="@+id/ytLogo"
                     app:layout_constraintStart_toEndOf="@+id/ytLogo"
@@ -84,8 +71,8 @@
                     app:layout_constraintBottom_toBottomOf="@+id/ytLogo"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/ytLogo"
-                    app:thumbTint="@color/textColor"
-                    app:trackTint="#283039" />
+                    app:thumbTint="?attr/switchThumb"
+                    app:trackTint="?attr/switchTrack"/>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/ytModHolder"
@@ -104,7 +91,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         android:text="Use mod"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/tintGlobalColor"
                         android:textSize="13sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -130,7 +117,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
             android:elevation="4dp"
-            app:cardBackgroundColor="@color/cardColor"
+            app:cardBackgroundColor="?attr/secondaryColor"
             app:cardCornerRadius="10dp"
             app:layout_constraintTop_toBottomOf="@+id/ytCard"
             app:strokeColor="#26FD7D81"
@@ -161,7 +148,7 @@
                     android:fontFamily="@font/poppins_semibold"
                     android:gravity="center"
                     android:text="@string/instagram_reels"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/tintGlobalColor"
                     android:textSize="15sp"
                     app:layout_constraintBottom_toBottomOf="@+id/instaLogo"
                     app:layout_constraintStart_toEndOf="@+id/instaLogo"
@@ -174,8 +161,8 @@
                     app:layout_constraintBottom_toBottomOf="@+id/instaLogo"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/instaLogo"
-                    app:thumbTint="@color/textColor"
-                    app:trackTint="#283039" />
+                    app:thumbTint="?attr/switchThumb"
+                    app:trackTint="?attr/switchTrack"/>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/instaModHolder"
@@ -194,7 +181,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         android:text="Use mod"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/tintGlobalColor"
                         android:textSize="13sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -220,7 +207,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
             android:elevation="4dp"
-            app:cardBackgroundColor="@color/cardColor"
+            app:cardBackgroundColor="?attr/secondaryColor"
             app:cardCornerRadius="10dp"
             app:layout_constraintTop_toBottomOf="@+id/instaCard"
             app:strokeColor="#26FD7D81"
@@ -252,7 +239,7 @@
                     android:fontFamily="@font/poppins_semibold"
                     android:gravity="center"
                     android:text="@string/snapchat_highlights"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/tintGlobalColor"
                     android:textSize="15sp"
                     app:layout_constraintBottom_toBottomOf="@+id/snapLogo"
                     app:layout_constraintStart_toEndOf="@+id/snapLogo"
@@ -265,8 +252,8 @@
                     app:layout_constraintBottom_toBottomOf="@+id/snapLogo"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/snapLogo"
-                    app:thumbTint="@color/textColor"
-                    app:trackTint="#283039" />
+                    app:thumbTint="?attr/switchThumb"
+                    app:trackTint="?attr/switchTrack"/>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/snapModHolder"
@@ -285,7 +272,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         android:text="Use mod"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/tintGlobalColor"
                         android:textSize="13sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -314,7 +301,7 @@
             android:fontFamily="sans-serif-medium"
             android:text="@string/more_apps_coming_soon"
             android:textAlignment="center"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="14sp"
             app:layout_constraintTop_toBottomOf="@+id/snapCard" />
 

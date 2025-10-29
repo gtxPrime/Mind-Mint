@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/mainBgColor"
+    android:background="?attr/globalBg"
     android:scrollbars="none"
     tools:ignore="HardcodedText">
 
@@ -20,34 +20,37 @@
             android:layout_height="match_parent">
 
             <View
+                android:id="@+id/arcTopLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-200dp"
                 android:layout_marginTop="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#59FD7D81"
+                android:backgroundTint="#B4FD7D81"
                 android:importantForAccessibility="no"
                 android:scaleType="centerCrop"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <View
+                android:id="@+id/arcBottomRight"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginEnd="-200dp"
                 android:layout_marginBottom="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#2614B8A6"
+                android:backgroundTint="#8014B8A6"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
             <View
+                android:id="@+id/arcBottomLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-350dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#33A78BFA"
+                android:backgroundTint="#D9A78BFA"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
@@ -85,7 +88,7 @@
                     android:layout_height="30dp"
                     android:layout_marginStart="20dp"
                     android:src="@drawable/ic_arrow_back"
-                    android:tint="@color/white"
+                    android:tint="?attr/tintGlobalColor"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
@@ -99,7 +102,7 @@
                     android:layout_marginStart="15dp"
                     android:fontFamily="@font/poppins_semibold"
                     android:text="Stats"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/tintGlobalColor"
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/backButton"
@@ -112,6 +115,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:background="@color/transparent"
+                android:contentDescription="change time"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -147,10 +151,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="20dp"
-                android:layout_marginTop="15dp"
-                android:elevation="4dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/pieChart"
@@ -171,10 +175,10 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
-                            android:padding="10dp"
+                            android:padding="8dp"
                             android:text="@string/access_home"
-                            android:textColor="@color/white"
-                            android:textSize="16sp"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="13sp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@+id/permissionArrow"
                             app:layout_constraintStart_toStartOf="parent"
@@ -182,8 +186,8 @@
 
                         <ImageView
                             android:id="@+id/permissionArrow"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
                             android:layout_marginStart="25dp"
                             android:layout_marginEnd="30dp"
                             android:contentDescription="@string/decor"
@@ -192,7 +196,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:tint="@color/white" />
+                            app:tint="?attr/tintGlobalColor" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -205,12 +209,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="25dp"
-                app:cardBackgroundColor="#111111"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/permissionCard"
-                app:strokeColor="#333333"
+                app:strokeColor="#1AFD7D81"
                 app:strokeWidth="1dp">
 
                 <eightbitlab.com.blurview.BlurView
@@ -236,7 +242,7 @@
                                 android:layout_height="wrap_content"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="Instagram"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
 
@@ -247,7 +253,7 @@
                                 android:layout_marginTop="4dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="0"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="18sp" />
                         </LinearLayout>
 
@@ -274,7 +280,7 @@
                                 android:layout_height="wrap_content"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="YouTube"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
 
@@ -285,7 +291,7 @@
                                 android:layout_marginTop="4dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="0"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="18sp" />
                         </LinearLayout>
 
@@ -312,7 +318,7 @@
                                 android:layout_height="wrap_content"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="Snapchat"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
 
@@ -323,7 +329,7 @@
                                 android:layout_marginTop="4dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="0"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="18sp" />
                         </LinearLayout>
 
@@ -344,10 +350,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
-                            android:alpha="0.4"
+                            android:alpha="0.9"
                             android:fontFamily="sans-serif-medium"
                             android:text="Scroll counts"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -380,7 +386,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:tint="@color/white" />
+                    app:tint="?attr/tintGlobalColor" />
 
                 <TextView
                     android:id="@+id/periodLabel"
@@ -388,7 +394,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins_semibold"
                     android:text="Week 32"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/tintGlobalColor"
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -406,7 +412,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:tint="@color/white" />
+                    app:tint="?attr/tintGlobalColor" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -417,8 +423,10 @@
                 android:layout_marginStart="25dp"
                 android:layout_marginTop="25dp"
                 android:layout_marginEnd="25dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/navContainer"
@@ -435,16 +443,19 @@
 
                         <TextView
                             android:id="@+id/focusHeading"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="25dp"
+                            android:layout_marginStart="15dp"
+                            android:layout_marginEnd="15dp"
                             android:layout_marginTop="25dp"
-                            android:alpha="0.3"
+                            android:alpha="0.7"
                             android:fontFamily="sans-serif-medium"
                             android:text="Focused in last 7 days"
-                            android:textColor="@color/white"
-                            android:textSize="15sp"
+                            android:textAlignment="textStart"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="14sp"
                             android:textStyle="bold"
+                            app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
@@ -470,7 +481,7 @@
                             android:alpha="0.3"
                             android:fontFamily="sans-serif-medium"
                             android:text="44h of Focus"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="15sp"
                             android:textStyle="bold"
                             app:layout_constraintBottom_toBottomOf="parent"
@@ -491,8 +502,10 @@
                 android:layout_marginStart="25dp"
                 android:layout_marginTop="25dp"
                 android:layout_marginEnd="25dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/focusStatHolder"
@@ -509,15 +522,18 @@
 
                         <TextView
                             android:id="@+id/taskHeading"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            android:textAlignment="textStart"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="25dp"
+                            android:layout_marginStart="15dp"
+                            android:layout_marginEnd="15dp"
                             android:layout_marginTop="25dp"
-                            android:alpha="0.3"
+                            android:alpha="0.7"
                             android:fontFamily="sans-serif-medium"
                             android:text="Task completed in last 7 days"
-                            android:textColor="@color/white"
-                            android:textSize="15sp"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="14sp"
                             android:textStyle="bold"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -544,7 +560,7 @@
                             android:alpha="0.3"
                             android:fontFamily="sans-serif-medium"
                             android:text="102 Task"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="15sp"
                             android:textStyle="bold"
                             app:layout_constraintBottom_toBottomOf="parent"
@@ -565,8 +581,10 @@
                 android:layout_marginTop="25dp"
                 android:layout_marginEnd="25dp"
                 android:layout_marginBottom="25dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardUseCompatPadding="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -584,15 +602,18 @@
 
                         <TextView
                             android:id="@+id/habitHeading"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            android:textAlignment="textStart"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="25dp"
+                            android:layout_marginStart="15dp"
+                            android:layout_marginEnd="15dp"
                             android:layout_marginTop="25dp"
-                            android:alpha="0.3"
+                            android:alpha="0.7"
                             android:fontFamily="sans-serif-medium"
                             android:text="Habits completed in last 7 days"
-                            android:textColor="@color/white"
-                            android:textSize="15sp"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="14sp"
                             android:textStyle="bold"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -619,7 +640,7 @@
                             android:alpha="0.3"
                             android:fontFamily="sans-serif-medium"
                             android:text="102 Task"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="15sp"
                             android:textStyle="bold"
                             app:layout_constraintBottom_toBottomOf="parent"

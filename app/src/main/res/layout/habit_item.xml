@@ -1,121 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/habitItemCard"
     android:layout_width="190dp"
     android:layout_height="220dp"
-    android:layout_margin="6dp"
+    app:cardBackgroundColor="?attr/secondaryColor"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true"
     tools:ignore="HardcodedText">
 
-    <com.google.android.material.card.MaterialCardView
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainCard"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginEnd="15dp"
-        android:elevation="3dp"
-        app:strokeWidth="0dp"
-        app:cardBackgroundColor="@color/transparent"
-        app:cardCornerRadius="16dp">
+        android:background="?attr/secondaryColor"
+        android:padding="20dp"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/mainCard"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/cardColor"
-            android:padding="20dp"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/habitIcon"
+            android:layout_width="48dp"
+            android:layout_height="45dp"
+            android:src="@drawable/habit"
+            app:cardBackgroundColor="@color/transparent"
+            app:cardCornerRadius="24dp"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/habitIcon"
-                android:layout_width="48dp"
-                android:layout_height="45dp"
-                android:src="@drawable/habit"
-                app:cardBackgroundColor="@color/transparent"
-                app:cardCornerRadius="24dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <TextView
-                    android:id="@+id/emojiText"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/icon_bg"
-                    android:gravity="center"
-                    android:text="💡"
-                    android:textSize="25sp" />
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.checkbox.MaterialCheckBox
-                android:id="@+id/habitDoneCheck"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="-2dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <TextView
-                android:id="@+id/habitTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:fontFamily="@font/poppins_semibold"
-                android:text="Morning run"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/habitIcon" />
-
-            <TextView
-                android:id="@+id/habitReason"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:alpha="0.7"
-                android:fontFamily="@font/inter18regular"
-                android:text="Stay healthy"
-                android:textColor="@color/textColor"
-                android:textSize="12sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="@id/habitTitle"
-                app:layout_constraintTop_toBottomOf="@id/habitTitle" />
-
-            <!-- Gradient progress bar -->
-            <com.skydoves.progressview.ProgressView
-                android:id="@+id/habitProgress"
-                android:layout_width="80dp"
-                android:layout_height="6dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginBottom="10dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/dayGoal"
-                app:layout_constraintStart_toStartOf="parent"
-                app:progressView_animation="decelerate"
-                app:progressView_autoAnimate="true"
-                app:progressView_colorBackground="@color/sexyGrey"
-                app:progressView_colorGradientEnd="#A600FF"
-                app:progressView_colorGradientStart="#FF0096"
-                app:progressView_progress="40" />
-
-            <TextView
-                android:id="@+id/dayGoal"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/inter18regular"
+                android:id="@+id/emojiText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/icon_bg"
                 android:gravity="center"
-                android:text="200/500"
-                android:textColor="@color/white"
-                android:textSize="11sp"
-                app:layout_constraintBottom_toBottomOf="@+id/habitProgress"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/habitProgress"
-                app:layout_constraintTop_toTopOf="@id/habitProgress" />
+                android:text="💡"
+                android:textSize="25sp" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-    </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/habitDoneCheck"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="-2dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/habitTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="Morning run"
+            android:textColor="?attr/tintGlobalColor"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/habitIcon" />
+
+        <TextView
+            android:id="@+id/habitReason"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:alpha="0.7"
+            android:fontFamily="@font/inter18regular"
+            android:text="Stay healthy"
+            android:textColor="?attr/tintGlobalColor"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/habitTitle"
+            app:layout_constraintTop_toBottomOf="@id/habitTitle" />
+
+        <!-- Gradient progress bar -->
+        <com.skydoves.progressview.ProgressView
+            android:id="@+id/habitProgress"
+            android:layout_width="80dp"
+            android:layout_height="6dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/dayGoal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:progressView_animation="decelerate"
+            app:progressView_autoAnimate="true"
+            app:progressView_colorBackground="@color/sexyGrey"
+            app:progressView_colorGradientEnd="#A600FF"
+            app:progressView_colorGradientStart="#FF0096"
+            app:progressView_progress="40" />
+
+        <TextView
+            android:id="@+id/dayGoal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter18regular"
+            android:gravity="center"
+            android:text="200/500"
+            android:textColor="?attr/tintGlobalColor"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="@+id/habitProgress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/habitProgress"
+            app:layout_constraintTop_toTopOf="@id/habitProgress" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
 
 

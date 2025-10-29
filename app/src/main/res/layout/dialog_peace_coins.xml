@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:elevation="8dp"
     android:padding="10dp"
-    app:cardBackgroundColor="@color/cardColor"
+    app:cardBackgroundColor="?attr/secondaryColor"
     app:cardCornerRadius="24dp"
     app:cardPreventCornerOverlap="true"
     app:cardUseCompatPadding="true"
@@ -28,7 +28,7 @@
             android:focusable="true"
             android:gravity="end"
             android:text="✕"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="20sp" />
 
         <ImageView
@@ -47,7 +47,7 @@
             android:fontFamily="sans-serif-medium"
             android:gravity="center"
             android:text="Mint Crystals are earned by focusing and completing tasks."
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="14sp" />
 
         <com.google.android.material.textview.MaterialTextView
@@ -58,14 +58,14 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:text="Crystal Economy"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="20sp"
             android:textStyle="bold" />
 
         <ScrollView
-            android:scrollbars="none"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -79,7 +79,7 @@
                     android:layout_marginTop="16dp"
                     app:cardBackgroundColor="@android:color/transparent"
                     app:cardCornerRadius="12dp"
-                    app:strokeColor="@color/white"
+                    app:strokeColor="?attr/embeddedCards"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -93,7 +93,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
                             android:text="🪙  Tasks &amp; Habits"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="16sp" />
 
                         <com.google.android.material.textview.MaterialTextView
@@ -103,7 +103,7 @@
                             android:fontFamily="sans-serif"
                             android:lineSpacingMultiplier="1.3"
                             android:text="✅ Tasks: +2 each (habit-related tasks excluded)\n✅ Habits: +5 each"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="14sp" />
 
                     </LinearLayout>
@@ -117,7 +117,7 @@
                     android:layout_marginTop="12dp"
                     app:cardBackgroundColor="@android:color/transparent"
                     app:cardCornerRadius="12dp"
-                    app:strokeColor="@color/white"
+                    app:strokeColor="?attr/embeddedCards"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -131,7 +131,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
                             android:text="⏱️  Focus Timer Rewards"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="16sp" />
 
                         <androidx.constraintlayout.widget.ConstraintLayout
@@ -145,7 +145,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="2dp"
                                 android:alpha="0.6"
-                                android:background="@color/white"
+                                android:background="?attr/tintGlobalColor"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
@@ -180,43 +180,43 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="+2"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toTopOf="parent" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt30ArrowUp"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▲"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt30Bonus"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt30Bonus" />
 
                                 <View
                                     android:id="@+id/line30"
                                     android:layout_width="2dp"
                                     android:layout_height="28dp"
                                     android:alpha="0.7"
-                                    android:background="@color/white"
-                                    app:layout_constraintTop_toBottomOf="@id/txt30ArrowUp"
+                                    android:background="?attr/tintGlobalColor"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt30ArrowUp" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt30ArrowDown"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▼"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/line30"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/line30" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt30Distance"
@@ -225,11 +225,11 @@
                                     android:layout_marginTop="2dp"
                                     android:fontFamily="sans-serif"
                                     android:text="30m"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt30ArrowDown"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt30ArrowDown" />
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -247,43 +247,43 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="+5"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toTopOf="parent" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt60ArrowUp"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▲"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt60Bonus"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt60Bonus" />
 
                                 <View
                                     android:id="@+id/line60"
                                     android:layout_width="2dp"
                                     android:layout_height="28dp"
                                     android:alpha="0.7"
-                                    android:background="@color/white"
-                                    app:layout_constraintTop_toBottomOf="@id/txt60ArrowUp"
+                                    android:background="?attr/tintGlobalColor"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt60ArrowUp" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt60ArrowDown"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▼"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/line60"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/line60" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt60Distance"
@@ -292,11 +292,11 @@
                                     android:layout_marginTop="2dp"
                                     android:fontFamily="sans-serif"
                                     android:text="60m"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt60ArrowDown"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt60ArrowDown" />
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -314,43 +314,43 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="+7"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toTopOf="parent" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt90ArrowUp"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▲"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt90Bonus"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt90Bonus" />
 
                                 <View
                                     android:id="@+id/line90"
                                     android:layout_width="2dp"
                                     android:layout_height="28dp"
                                     android:alpha="0.7"
-                                    android:background="@color/white"
-                                    app:layout_constraintTop_toBottomOf="@id/txt90ArrowUp"
+                                    android:background="?attr/tintGlobalColor"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt90ArrowUp" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt90ArrowDown"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▼"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/line90"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/line90" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt90Distance"
@@ -359,11 +359,11 @@
                                     android:layout_marginTop="2dp"
                                     android:fontFamily="sans-serif"
                                     android:text="90m"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt90ArrowDown"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt90ArrowDown" />
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -381,43 +381,43 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="+10"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toTopOf="parent" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt120ArrowUp"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▲"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt120Bonus"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt120Bonus" />
 
                                 <View
                                     android:id="@+id/line120"
                                     android:layout_width="2dp"
                                     android:layout_height="28dp"
                                     android:alpha="0.7"
-                                    android:background="@color/white"
-                                    app:layout_constraintTop_toBottomOf="@id/txt120ArrowUp"
+                                    android:background="?attr/tintGlobalColor"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt120ArrowUp" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt120ArrowDown"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▼"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/line120"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/line120" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt120Distance"
@@ -426,11 +426,11 @@
                                     android:layout_marginTop="2dp"
                                     android:fontFamily="sans-serif"
                                     android:text="120m"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt120ArrowDown"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt120ArrowDown" />
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -448,43 +448,43 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="+15"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toTopOf="parent" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt150ArrowUp"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▲"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt150Bonus"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt150Bonus" />
 
                                 <View
                                     android:id="@+id/line150"
                                     android:layout_width="2dp"
                                     android:layout_height="28dp"
                                     android:alpha="0.7"
-                                    android:background="@color/white"
-                                    app:layout_constraintTop_toBottomOf="@id/txt150ArrowUp"
+                                    android:background="?attr/tintGlobalColor"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt150ArrowUp" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt150ArrowDown"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▼"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/line150"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/line150" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt150Distance"
@@ -493,11 +493,11 @@
                                     android:layout_marginTop="2dp"
                                     android:fontFamily="sans-serif"
                                     android:text="150m"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt150ArrowDown"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt150ArrowDown" />
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -515,43 +515,43 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="+20"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toTopOf="parent" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt180ArrowUp"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▲"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt180Bonus"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt180Bonus" />
 
                                 <View
                                     android:id="@+id/line180"
                                     android:layout_width="2dp"
                                     android:layout_height="28dp"
                                     android:alpha="0.7"
-                                    android:background="@color/white"
-                                    app:layout_constraintTop_toBottomOf="@id/txt180ArrowUp"
+                                    android:background="?attr/tintGlobalColor"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt180ArrowUp" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt180ArrowDown"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="▼"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="11sp"
-                                    app:layout_constraintTop_toBottomOf="@id/line180"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/line180" />
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/txt180Distance"
@@ -560,11 +560,11 @@
                                     android:layout_marginTop="2dp"
                                     android:fontFamily="sans-serif"
                                     android:text="180m"
-                                    android:textColor="@color/white"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="12sp"
-                                    app:layout_constraintTop_toBottomOf="@id/txt180ArrowDown"
+                                    app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent" />
+                                    app:layout_constraintTop_toBottomOf="@id/txt180ArrowDown" />
 
                             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -581,7 +581,7 @@
                     android:layout_marginTop="12dp"
                     app:cardBackgroundColor="@android:color/transparent"
                     app:cardCornerRadius="12dp"
-                    app:strokeColor="@color/white"
+                    app:strokeColor="?attr/embeddedCards"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -595,7 +595,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
                             android:text="⚠️  Penalties"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="16sp" />
 
                         <com.google.android.material.textview.MaterialTextView
@@ -605,14 +605,14 @@
                             android:fontFamily="sans-serif"
                             android:lineSpacingMultiplier="1.3"
                             android:text="⚠️ Stopped timer before limit: −3\n⚠️ Ignored 5 scroll reminders in a day: −2"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="11sp" />
 
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Section: Comg Soon (card) -->
+                <!-- Section: Coming Soon (card) -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -620,7 +620,7 @@
                     android:layout_marginBottom="4dp"
                     app:cardBackgroundColor="@android:color/transparent"
                     app:cardCornerRadius="12dp"
-                    app:strokeColor="@color/white"
+                    app:strokeColor="?attr/embeddedCards"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -634,7 +634,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
                             android:text="🛍️  Coming soon"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="16sp" />
 
                         <com.google.android.material.textview.MaterialTextView
@@ -644,7 +644,7 @@
                             android:fontFamily="sans-serif"
                             android:lineSpacingMultiplier="1.3"
                             android:text="Spend crystals in the shop and discover more ways to earn."
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="14sp" />
 
                     </LinearLayout>

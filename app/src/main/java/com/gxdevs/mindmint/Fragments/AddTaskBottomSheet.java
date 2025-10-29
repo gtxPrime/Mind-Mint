@@ -129,7 +129,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         // Setup priority spinner
         ArrayAdapter<Task.Priority> priorityAdapter = new ArrayAdapter<>(
                 requireContext(),
-                R.layout.spinner_item,
+                R.layout.spinner_dropdown_item,
                 Task.Priority.values()
         );
         priorityAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);

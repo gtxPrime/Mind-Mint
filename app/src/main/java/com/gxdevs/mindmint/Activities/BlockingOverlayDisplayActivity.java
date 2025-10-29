@@ -38,8 +38,6 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
         Log.i(TAG, "onCreate: Activity CREATING. Intent: " + getIntent());
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_blocking_overlay_display);

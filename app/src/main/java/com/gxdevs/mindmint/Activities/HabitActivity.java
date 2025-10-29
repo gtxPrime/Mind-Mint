@@ -3,7 +3,6 @@ package com.gxdevs.mindmint.Activities;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Outline;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
@@ -32,6 +31,7 @@ import com.gxdevs.mindmint.Utils.HabitManager;
 import com.gxdevs.mindmint.Utils.MintCrystals;
 import com.gxdevs.mindmint.Utils.StreakManager;
 import com.gxdevs.mindmint.Utils.TaskManager;
+import com.gxdevs.mindmint.Utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +51,6 @@ public class HabitActivity extends AppCompatActivity implements HabitAdapter.OnH
     private EditText searchEditText;
     private String currentFilter = "All"; // default
     private BlurTarget blurTarget;
-    private Drawable windowBackground;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +64,7 @@ public class HabitActivity extends AppCompatActivity implements HabitAdapter.OnH
         blurTarget = findViewById(R.id.blurTarget);
 
         BlurView searchBlurView = findViewById(R.id.searchBlurView);
-        windowBackground = getWindow().getDecorView().getBackground();
-        searchBlurView.setupWith(blurTarget)
-                .setBlurRadius(18f);
+        BlurTarget blurTarget = findViewById(R.id.blurTarget);
 
         ImageView back = findViewById(R.id.backButton);
         back.setOnClickListener(v -> finish());
@@ -81,12 +78,20 @@ public class HabitActivity extends AppCompatActivity implements HabitAdapter.OnH
         findViewById(R.id.addHabitButton).setOnClickListener(v -> startActivity(new Intent(this, HabitDetailActivity.class)));
 
         // Search & filter
+        searchBlurView.setupWith(blurTarget).setBlurRadius(5f);
         searchEditText = findViewById(R.id.searchEditText);
+        applyColors();
         setupSearch();
         load();
         setupCustomBlurChips();
     }
 
+    private void applyColors() {
+        View arc1 = findViewById(R.id.arcTopLeft);
+        View arc2 = findViewById(R.id.arcBottomRight);
+        View arc3 = findViewById(R.id.arcBottomLeft);
+        Utils.applyAccentColors(arc1, arc2, arc3, this);
+    }
 
     private void setupSearch() {
         if (searchEditText == null) return;
@@ -229,10 +234,10 @@ public class HabitActivity extends AppCompatActivity implements HabitAdapter.OnH
     public void onHabitCompletedToday(Habit habit, int position) {
         habit.markDoneToday();
         habitManager.saveHabits(habits);
-        
+
         // Award 5 coins for completing a habit
         mintCrystals.addCoins(5);
-        
+
         // Mark all related tasks as completed
         TaskManager tm = taskManager != null ? taskManager : new TaskManager(this);
         List<Task> all = tm.loadTasks();
@@ -258,10 +263,10 @@ public class HabitActivity extends AppCompatActivity implements HabitAdapter.OnH
     public void onHabitUncompletedToday(Habit habit, int position) {
         habit.unmarkToday();
         habitManager.saveHabits(habits);
-        
-        // Subtract 5 coins for uncompleting a habit
+
+        // Subtract 5 coins for un-completing a habit
         mintCrystals.subtractCoins(5);
-        
+
         // Unmark all related tasks as not completed
         TaskManager tm = taskManager != null ? taskManager : new TaskManager(this);
         List<Task> all = tm.loadTasks();

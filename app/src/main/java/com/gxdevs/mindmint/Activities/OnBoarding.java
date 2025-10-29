@@ -25,6 +25,7 @@ public class OnBoarding extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Utils.applyAppThemeFromPrefs(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
             splashScreen.setKeepOnScreenCondition(() -> false);
@@ -36,9 +37,7 @@ public class OnBoarding extends AppCompatActivity {
         boolean isFirstRun = getSharedPreferences("PREFERENCE", MODE_PRIVATE).getBoolean("isFirstRun", true);
         if (isFirstRun) {
             setContentView(R.layout.activity_on_boarding);
-
             Utils.setPad(findViewById(R.id.main), "bottom", this);
-
             viewPager = findViewById(R.id.slider);
             permissionBtn = findViewById(R.id.accessibilityBtn);
 

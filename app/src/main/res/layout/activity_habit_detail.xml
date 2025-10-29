@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/mainBgColor"
+    android:background="?attr/globalBg"
     tools:context=".Activities.HabitDetailActivity"
     tools:ignore="HardcodedText, ContentDescription, Autofill,TextFields">
 
@@ -20,34 +20,37 @@
             android:layout_height="match_parent">
 
             <View
+                android:id="@+id/arcTopLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-200dp"
                 android:layout_marginTop="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#59FD7D81"
+                android:backgroundTint="#B4FD7D81"
                 android:importantForAccessibility="no"
                 android:scaleType="centerCrop"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <View
+                android:id="@+id/arcBottomRight"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginEnd="-200dp"
                 android:layout_marginBottom="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#2614B8A6"
+                android:backgroundTint="#8014B8A6"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
             <View
+                android:id="@+id/arcBottomLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-350dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#33A78BFA"
+                android:backgroundTint="#D9A78BFA"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
@@ -72,7 +75,7 @@
             android:layout_height="30dp"
             android:layout_marginStart="20dp"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white"
+            android:tint="?attr/tintGlobalColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -87,7 +90,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white" />
+            app:tint="?attr/tintGlobalColor" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -114,7 +117,7 @@
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="2"
                 android:text="New habit"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textFontWeight="1000"
                 android:textSize="34sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -127,7 +130,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="30dp"
                 android:layout_marginEnd="5dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="25dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -171,9 +174,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
+                            android:alpha="0.6"
                             android:fontFamily="sans-serif-medium"
                             android:text="Habit name"
-                            android:textColor="#FFFFFF"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="13sp"
                             app:layout_constraintBottom_toTopOf="@+id/habitTitleEdit"
                             app:layout_constraintStart_toEndOf="@id/emojiCard"
@@ -188,8 +192,8 @@
                             android:fontFamily="sans-serif-medium"
                             android:hint="Habit name"
                             android:maxLines="1"
-                            android:textColor="@color/white"
-                            android:textColorHint="#80FFFFFF"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textColorHint="?attr/tintGlobalColor"
                             android:textSize="16sp"
                             app:layout_constraintBottom_toBottomOf="@+id/emojiCard"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -223,9 +227,10 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
+                                    android:alpha="0.7"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="Difficulty"
-                                    android:textColor="@color/textColor"
+                                    android:textColor="?attr/tintGlobalColor"
                                     android:textSize="14sp" />
 
                                 <Spinner
@@ -254,6 +259,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
+                                    android:alpha="0.7"
                                     android:fontFamily="sans-serif-medium"
                                     android:text="Good / Bad"
                                     android:textColor="@color/textColor"
@@ -315,7 +321,7 @@
                                 android:layout_marginStart="12dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="Goal date"
-                                android:textColor="#FFFFFF"
+                                android:textColor="?attr/tintGlobalColor"
                                 android:textSize="13sp"
                                 app:layout_constraintBottom_toTopOf="@+id/dateTitleEdit"
                                 app:layout_constraintStart_toEndOf="@id/calendarCard"
@@ -330,8 +336,8 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:hint="Goal date"
                                 android:maxLines="1"
-                                android:textColor="@color/white"
-                                android:textColorHint="#80FFFFFF"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textColorHint="?attr/tintGlobalColor"
                                 android:textSize="16sp"
                                 app:layout_constraintBottom_toBottomOf="@+id/calendarCard"
                                 app:layout_constraintEnd_toEndOf="parent"
@@ -352,7 +358,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:layout_marginEnd="5dp"
-                app:cardBackgroundColor="@color/cardColor"
+                app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="25dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -376,7 +382,7 @@
                             android:layout_marginTop="15dp"
                             android:fontFamily="@font/poppins_semibold"
                             android:text="Description"
-                            android:textColor="@color/white"
+                            android:textColor="?attr/tintGlobalColor"
                             android:textSize="14sp"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -389,7 +395,7 @@
                             android:layout_marginTop="8dp"
                             android:layout_marginEnd="20dp"
                             android:layout_marginBottom="15dp"
-                            android:hint="A short reason (shown when demotivated)"
+                            android:hint="A short reason."
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -400,8 +406,8 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:background="@drawable/background_outline"
-                                android:textColor="@color/white"
-                                android:textColorHint="#80FFFFFF" />
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textColorHint="?attr/tintGlobalColor" />
 
                         </com.google.android.material.textfield.TextInputLayout>
 
@@ -436,10 +442,12 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDelete"
                     android:layout_width="0dp"
+                    android:layout_marginEnd="10dp"
                     android:layout_height="wrap_content"
+                    android:backgroundTint="?attr/embeddedCards"
                     android:text="Delete"
-                    android:textColor="@color/white"
                     android:visibility="gone"
+                    android:textColor="?attr/tintGlobalColor"
                     app:layout_constraintEnd_toStartOf="@+id/btnDone"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -447,10 +455,11 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDone"
                     android:layout_width="0dp"
+                    android:layout_marginStart="10dp"
                     android:layout_height="wrap_content"
-                    android:background="@color/transparent"
+                    android:backgroundTint="?attr/embeddedCards"
                     android:text="Save"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/tintGlobalColor"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/btnDelete"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -463,11 +472,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="10dp"
                 android:layout_marginBottom="15dp"
-                android:backgroundTint="@color/cardColor"
+                android:backgroundTint="?attr/embeddedCards"
                 android:text="Add related task"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 app:icon="@drawable/ic_task"
-                app:iconTint="@color/white"
+                app:iconTint="?attr/tintGlobalColor"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 

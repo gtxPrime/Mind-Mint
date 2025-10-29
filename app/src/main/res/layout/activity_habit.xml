@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/mainBgColor"
+    android:background="?attr/globalBg"
     tools:context=".Activities.HabitActivity"
     tools:ignore="ContentDescription,HardcodedText,Autofill,TextFields">
 
@@ -21,34 +21,37 @@
             android:layout_height="match_parent">
 
             <View
+                android:id="@+id/arcTopLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-200dp"
                 android:layout_marginTop="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#59FD7D81"
+                android:backgroundTint="#B4FD7D81"
                 android:importantForAccessibility="no"
                 android:scaleType="centerCrop"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <View
+                android:id="@+id/arcBottomRight"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginEnd="-200dp"
                 android:layout_marginBottom="-200dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#2614B8A6"
+                android:backgroundTint="#8014B8A6"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
             <View
+                android:id="@+id/arcBottomLeft"
                 android:layout_width="550dp"
                 android:layout_height="550dp"
                 android:layout_marginStart="-350dp"
                 android:background="@drawable/main_bg_gradient"
-                android:backgroundTint="#33A78BFA"
+                android:backgroundTint="#D9A78BFA"
                 android:importantForAccessibility="no"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
@@ -76,7 +79,7 @@
             android:layout_height="30dp"
             android:layout_marginStart="20dp"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white"
+            android:tint="?attr/tintGlobalColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -90,7 +93,7 @@
             android:layout_marginStart="15dp"
             android:fontFamily="@font/poppins_semibold"
             android:text="Habits"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="18sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/backButton"
@@ -103,7 +106,7 @@
             android:layout_height="30dp"
             android:layout_marginEnd="20dp"
             android:src="@drawable/ic_add"
-            android:tint="@color/white"
+            android:tint="?attr/tintGlobalColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -120,7 +123,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="20dp"
-        app:cardBackgroundColor="@color/cardColor"
+        app:cardBackgroundColor="?attr/secondaryColor"
         app:cardCornerRadius="12dp"
         app:cardElevation="8dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -149,7 +152,7 @@
                     app:layout_constraintBottom_toBottomOf="@+id/searchEditText"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/searchEditText"
-                    app:tint="@color/textColor" />
+                    app:tint="?attr/tintGlobalColor" />
 
                 <!-- Search EditText -->
                 <EditText
@@ -161,8 +164,8 @@
                     android:background="@android:color/transparent"
                     android:fontFamily="@font/inter18regular"
                     android:hint="Search tasks..."
-                    android:textColor="@color/white"
-                    android:textColorHint="@color/textColor"
+                    android:textColor="?attr/tintGlobalColor"
+                    android:textColorHint="?attr/tintGlobalColor"
                     android:textSize="14sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/filterButton"

@@ -62,8 +62,7 @@ public class HabitAdapter extends RecyclerView.Adapter<HabitAdapter.HabitViewHol
         int progress = Math.min(100, target > 0 ? (int) (current * 100f / target) : 0);
         holder.progress.setProgress(progress);
         String targetLabel = habit.getCurrentTargetLabel();
-        String labelSuffix = targetLabel != null && !targetLabel.isEmpty() ? " (" + targetLabel + ")" : "";
-        holder.dayGoal.setText(current + "/" + target + labelSuffix);
+        holder.dayGoal.setText(current + "/" + target);
 
         // Checkbox reflects state
         holder.checkBox.setOnCheckedChangeListener(null);

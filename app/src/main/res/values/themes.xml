@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.NoScroll" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.NoScroll" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="tintGlobalColor">#4a4a4a</item>
+        <item name="globalBg">#FFFDF7</item>
+        <item name="secondaryColor">#FFF6F6</item>
+        <item name="switchTrack">#FFB8BC</item>
+        <item name="switchThumb">#FFF6F6</item>
+        <item name="embeddedCards">#FFB8BC</item>
+    </style>
 
-    <style name="Theme.MyApp.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.MyApp.Splash" parent="Theme.NoScroll">
         <item name="materialSwitchStyle">@style/Widget.App.Switch</item>
         <item name="android:windowBackground">@color/black</item>
     </style>
 
     <style name="circleImageView" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">20%</item>
+        <item name="cornerSize">14dp</item>
     </style>
 
     <style name="NumberPickerTheme" parent="Theme.AppCompat.Light">
-        <item name="colorAccent">@android:color/white</item>
+        <item name="colorAccent">?attr/tintGlobalColor</item>
+        <item name="dividerColor">?attr/tintGlobalColor</item>
         <item name="android:fontFamily">@font/baloo</item>
-        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:textColorPrimary">?attr/tintGlobalColor</item>
         <item name="android:background">@android:color/transparent</item>
         <item name="android:textSize">25sp</item>
     </style>
@@ -49,32 +57,32 @@
     <style name="CustomBottomSheetTheme" parent="Theme.Material3.DayNight.BottomSheetDialog"/>
 
     <style name="AlertDialogTheme" parent="Theme.Material3.DayNight.Dialog.Alert">
-        <item name="android:background">@color/cardColor</item>
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:textColorSecondary">@color/textColor</item>
+        <item name="android:background">?attr/secondaryColor</item>
+        <item name="android:textColorPrimary">?attr/tintGlobalColor</item>
+        <item name="android:textColorSecondary">?attr/tintGlobalColor</item>
         <item name="colorPrimary">@color/brainColor</item>
         <item name="colorOnSurface">@color/white</item>
     </style>
 
     <style name="CalendarViewCustom" parent="android:Theme.Material">
         <item name="android:colorAccent">@color/brainColor</item>
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:textColorSecondary">@color/textColor</item>
-        <item name="android:colorBackground">@color/cardColor</item>
+        <item name="android:textColorPrimary">?attr/tintGlobalColor</item>
+        <item name="android:textColorSecondary">?attr/tintGlobalColor</item>
+        <item name="android:colorBackground">?attr/secondaryColor</item>
     </style>
 
     <style name="SpinnerTheme" parent="android:Theme.Material">
         <item name="android:colorAccent">@color/brainColor</item>
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:textColorSecondary">@color/textColor</item>
-        <item name="android:colorBackground">@color/cardColor</item>
+        <item name="android:textColorPrimary">?attr/tintGlobalColor</item>
+        <item name="android:textColorSecondary">?attr/tintGlobalColor</item>
+        <item name="android:colorBackground">?attr/secondaryColor</item>
     </style>
 
     <style name="DatePickerTheme" parent="android:Theme.Material.Dialog">
         <item name="android:colorAccent">@color/brainColor</item>
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:textColorSecondary">@color/textColor</item>
-        <item name="android:colorBackground">@color/cardColor</item>
+        <item name="android:textColorPrimary">?attr/tintGlobalColor</item>
+        <item name="android:textColorSecondary">?attr/tintGlobalColor</item>
+        <item name="android:colorBackground">?attr/secondaryColor</item>
     </style>
 
 </resources>

@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_black"
+    android:background="?attr/globalBg"
     tools:context=".Activities.OnBoarding">
 
     <eightbitlab.com.blurview.BlurTarget
@@ -90,7 +90,7 @@
             android:paddingEnd="20dp"
             android:text="@string/next"
             android:textAllCaps="false"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

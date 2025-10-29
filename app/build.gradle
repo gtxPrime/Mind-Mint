@@ -13,8 +13,8 @@ android {
         applicationId "com.gxdevs.mindmint"
         minSdk 28
         targetSdk 35
-        versionCode 9
-        versionName 'Pumpkin 5'
+        versionCode 10
+        versionName 'Pumpkin 6'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -60,11 +60,6 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion '1.5.1'
     }
-    packaging {
-        resources {
-            excludes += '/META-INF/{AL2.0,LGPL2.1}'
-        }
-    }
     buildToolsVersion '35.0.0'
 }
 
@@ -97,7 +92,6 @@ dependencies {
     implementation libs.androidx.core.splashscreen
     implementation libs.mpandroidchart
     implementation libs.lottie
-    implementation libs.blurry
 
     //play update pop up
     implementation libs.app.update
@@ -115,7 +109,7 @@ dependencies {
     //Gradient progressbar
     implementation libs.progressview
     implementation libs.lib.circularseekbar
-    
+
     //MPAndroidChart
     implementation libs.mpandroidchart
 
@@ -127,6 +121,14 @@ dependencies {
 
     //reveal
     implementation libs.easyreveal
+
+    implementation libs.firebase.crashlytics
+    implementation libs.review
+    implementation libs.app.update
+
+    //color picker
+    implementation libs.colorpickerview
+
 }
 
 

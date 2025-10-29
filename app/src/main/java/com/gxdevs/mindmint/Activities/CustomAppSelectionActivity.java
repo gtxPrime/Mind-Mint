@@ -44,7 +44,7 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
         setContentView(R.layout.activity_custom_app_selection);
 
         Utils.setPad(findViewById(R.id.main), "bottom", this);
-        findViewById(R.id.backBtn).setOnClickListener(v -> onBackPressed());
+        findViewById(R.id.backBtn).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         recyclerViewApps = findViewById(R.id.rv_apps_list);
         progressBar = findViewById(R.id.pb_loading_apps);
@@ -57,6 +57,14 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
         recyclerViewApps.setAdapter(adapter);
 
         loadInstalledApps();
+        applyColors();
+    }
+
+    private void applyColors() {
+        View arc1 = findViewById(R.id.arcTopLeft);
+        View arc2 = findViewById(R.id.arcBottomRight);
+        View arc3 = findViewById(R.id.arcBottomLeft);
+        Utils.applyAccentColors(arc1, arc2, arc3, this);
     }
 
     private void loadInstalledApps() {

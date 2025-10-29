@@ -2,6 +2,8 @@
 package com.gxdevs.mindmint.Components;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -9,6 +11,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +26,6 @@ import java.util.Random;
 public class NebulaStarfieldView extends View {
 
     private static final int DEFAULT_STAR_COUNT = 120;
-    private static final int DEFAULT_NEBULA_COUNT = 4;
 
     private static final float DEFAULT_MIN_STAR_SIZE = 1.2f;
     private static final float DEFAULT_MAX_STAR_SIZE = 3.5f;
@@ -39,7 +41,11 @@ public class NebulaStarfieldView extends View {
     private float minStarSize = DEFAULT_MIN_STAR_SIZE;
     private float maxStarSize = DEFAULT_MAX_STAR_SIZE;
     private float driftRange = DEFAULT_DRIFT_RANGE;
-    private int bgColor = Color.rgb(5, 5, 15);
+    private int bgColor = Color.rgb(255, 255, 255);
+    private Context context;
+
+    // If non-null, overrides theme detection: true = dark, false = light
+    private Boolean themeOverrideDark = null;
 
     public NebulaStarfieldView(Context context) {
         super(context);
@@ -91,6 +97,21 @@ public class NebulaStarfieldView extends View {
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawColor(bgColor);
+        boolean isDark;
+        if (themeOverrideDark != null) {
+            isDark = themeOverrideDark;
+        } else {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            String mode = prefs.getString("pref_theme_mode", "Dark Theme");
+            if ("Dark Theme".equalsIgnoreCase(mode) || "dark".equalsIgnoreCase(mode)) {
+                isDark = true;
+            } else if ("Light Theme".equalsIgnoreCase(mode) || "light".equalsIgnoreCase(mode)) {
+                isDark = false;
+            } else {
+                int nightModeFlags = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+                isDark = (nightModeFlags == Configuration.UI_MODE_NIGHT_YES);
+            }
+        }
 
         for (Star s : stars) {
             float driftX = (float) Math.sin(s.movePhase) * driftRange * 20f;
@@ -98,10 +119,13 @@ public class NebulaStarfieldView extends View {
             float twinkle = (float) Math.sin(s.twinklePhase) * 0.5f + 0.5f;
 
             int alpha = (int) (s.alpha * (0.7f + 0.3f * twinkle));
-            int r = 255, g = 255, b = 255;
+            int base = isDark ? 255 : 0;
+            int r = base, g = base, b = base;
+
             if (s.colorShift) {
-                r = 200 + random.nextInt(56);
-                g = 200 + random.nextInt(56);
+                r = base == 255 ? 200 + random.nextInt(56) : random.nextInt(56);
+                g = base == 255 ? 200 + random.nextInt(56) : random.nextInt(56);
+                b = base == 255 ? 200 + random.nextInt(56) : random.nextInt(56);
             }
 
             starPaint.setColor(Color.argb(alpha, r, g, b));
@@ -120,6 +144,10 @@ public class NebulaStarfieldView extends View {
         createStars();
     }
 
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
     public void setDriftRange(float range) {
         this.driftRange = range;
     }
@@ -132,6 +160,15 @@ public class NebulaStarfieldView extends View {
         this.minStarSize = min;
         this.maxStarSize = max;
         createStars();
+    }
+
+    // === Theme override API ===
+    public void setThemeOverrideDark(Boolean isDark) {
+        this.themeOverrideDark = isDark;
+        if (isDark != null) {
+            this.bgColor = isDark ? Color.rgb(0, 0, 0) : Color.rgb(255, 255, 255);
+        }
+        invalidate();
     }
 
     // === Inner classes ===

@@ -101,6 +101,11 @@ public class HomeActivity extends AppCompatActivity {
     private BottomSheetDialog pauseTimer;
     private MaterialTextView mintCrystals;
     private MintCrystals mintCrystalsObj;
+    private MaterialCardView blockerCard;
+    private MaterialCardView focusCard;
+    private MaterialCardView habitCard;
+    private MaterialCardView mindCard;
+    private MaterialCardView taskCard;
     private boolean isServicePaused;
     private TaskManager taskManager;
     private MaterialTextView count;
@@ -130,6 +135,7 @@ public class HomeActivity extends AppCompatActivity {
 
         registerForPermission();
         intiViews();
+        applyColors();
         checkForUpdate();
         maybeAskForReview();
         setupCards();
@@ -143,7 +149,6 @@ public class HomeActivity extends AppCompatActivity {
         checkAndShowPermissionCard();
 
         totalWastedScrolls = Utils.calculateTotalUsageScrolls(sharedPreferences, "yt") + Utils.calculateTotalUsageScrolls(sharedPreferences, "insta") + Utils.calculateTotalUsageScrolls(sharedPreferences, "snap");
-
 
         mintCrystals.setText(String.valueOf(mintCrystalsObj.getCoins()));
         timeUpdateReceiver = new BroadcastReceiver() {
@@ -173,6 +178,18 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    private void applyColors() {
+        View arc1 = findViewById(R.id.arcTopLeft);
+        View arc2 = findViewById(R.id.arcBottomRight);
+        View arc3 = findViewById(R.id.arcBottomLeft);
+        Utils.applySecondaryColor(mindCard, this);
+        Utils.applySecondaryColor(focusCard, this);
+        Utils.applySecondaryColor(blockerCard, this);
+        Utils.applySecondaryColor(taskCard, this);
+        Utils.applySecondaryColor(habitCard, this);
+        Utils.applyAccentColors(arc1, arc2, arc3, this);
+    }
+
     private void intiViews() {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         isServicePaused = sharedPreferences.getBoolean("isServicePaused", false);
@@ -199,17 +216,21 @@ public class HomeActivity extends AppCompatActivity {
         taskManager = new TaskManager(this);
         mintCrystalsObj = new MintCrystals(this);
         appUpdateManager = AppUpdateManagerFactory.create(this);
+        mindCard = findViewById(R.id.mindCard);
+        focusCard = findViewById(R.id.focusCard);
+        blockerCard = findViewById(R.id.blockerCard);
+        taskCard = findViewById(R.id.taskCard);
+        habitCard = findViewById(R.id.habitCard);
     }
 
     private void setupCards() {
         long totalFocusedSeconds = prefs.getLong(TOTAL_FOCUSED_TIME_KEY, 0);
         minuteHolder.setText(formatTime((int) totalFocusedSeconds));
-
-        findViewById(R.id.mindCard).setOnClickListener(v -> startActivity(new Intent(this, StatsActivity.class), makeSceneTransitionAnimation(this, brain, "brainTransition").toBundle()));
-        findViewById(R.id.habitCard).setOnClickListener(v -> startActivity(new Intent(this, HabitActivity.class)));
-        findViewById(R.id.taskCard).setOnClickListener(v -> startActivity(new Intent(this, TaskActivity.class)));
-        findViewById(R.id.focusCard).setOnClickListener(v -> startActivity(new Intent(this, FocusMode.class)));
-        findViewById(R.id.blockerCard).setOnClickListener(v -> {
+        mindCard.setOnClickListener(v -> startActivity(new Intent(this, StatsActivity.class), makeSceneTransitionAnimation(this, brain, "brainTransition").toBundle()));
+        habitCard.setOnClickListener(v -> startActivity(new Intent(this, HabitActivity.class)));
+        taskCard.setOnClickListener(v -> startActivity(new Intent(this, TaskActivity.class)));
+        focusCard.setOnClickListener(v -> startActivity(new Intent(this, FocusMode.class)));
+        blockerCard.setOnClickListener(v -> {
             if (isAccessibilityPermissionGranted()) {
                 showBlockerBottomSheet();
             } else {
@@ -357,6 +378,8 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Ensure theme and accents are consistent after returning from Settings
+        Utils.applyAppThemeFromPrefs(this);
         updateTodayTasksCount();
         updateStreakDisplay();
 
@@ -448,8 +471,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void showTimePickerBottomSheet() {
         pauseTimer = new BottomSheetDialog(HomeActivity.this);
-        View bottomSheetView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.bottom_sheet_time_picker, findViewById(R.id.bottomSheetTimePickerLayout));
-
+        View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_time_picker, findViewById(R.id.bottomSheetTimePickerLayout));
         NumberPicker hourPickerBottomSheet = bottomSheetView.findViewById(R.id.hours_selector_bottom_sheet);
         NumberPicker minutePickerBottomSheet = bottomSheetView.findViewById(R.id.minutes_selector_bottom_sheet);
         Button setLimitBtnBottomSheet = bottomSheetView.findViewById(R.id.setLimitBtnBottomSheet);
@@ -489,7 +511,7 @@ public class HomeActivity extends AppCompatActivity {
         String longText = ContextCompat.getString(this, R.string.accessibility_more_info);
         String showLess = " Show less";
 
-        View view = LayoutInflater.from(getApplicationContext()).inflate(R.layout.layout_bottomsheet, findViewById(R.id.sheetContainer));
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_bottomsheet, findViewById(R.id.sheetContainer));
         TextView permissionHead = view.findViewById(R.id.permissionHead);
         TextView permissionDesc = view.findViewById(R.id.permissionDesc);
         TextView permissionStep1 = view.findViewById(R.id.permissionStep1);
@@ -569,7 +591,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void showBlockerBottomSheet() {
         BottomSheetDialog blockerSheet = new BottomSheetDialog(this, R.style.CustomBottomSheetTheme);
-        View bottomSheetView = LayoutInflater.from(this.getApplicationContext()).inflate(R.layout.bottom_sheet_blocker, findViewById(R.id.bottomSheetBlockerLayout));
+        View bottomSheetView = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_blocker, findViewById(R.id.bottomSheetBlockerLayout));
 
         // Initialize switches
         ytSwitch = bottomSheetView.findViewById(R.id.ytSwitch);
@@ -860,10 +882,10 @@ public class HomeActivity extends AppCompatActivity {
 
     private void showNameBalloon() {
         int bgColor;
-        if (totalWastedScrolls >= 700 ){
+        if (totalWastedScrolls >= 700) {
             bgColor = R.color.rotBrainColor;
         } else {
-            bgColor =  R.color.brainColor;
+            bgColor = R.color.brainColor;
         }
 
         if (balloon != null && balloon.isShowing()) {
@@ -900,10 +922,10 @@ public class HomeActivity extends AppCompatActivity {
     private void showAffirmationBalloon() {
         String text = getAffirmationText();
         int bgColor;
-        if (totalWastedScrolls >= 700 ){
+        if (totalWastedScrolls >= 700) {
             bgColor = R.color.rotBrainColor;
         } else {
-            bgColor =  R.color.brainColor;
+            bgColor = R.color.brainColor;
         }
         if (balloon != null && balloon.isShowing()) {
             balloon.dismiss();

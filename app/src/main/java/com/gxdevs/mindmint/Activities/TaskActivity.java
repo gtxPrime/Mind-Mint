@@ -49,6 +49,7 @@ import com.gxdevs.mindmint.Utils.MintCrystals;
 import com.gxdevs.mindmint.Utils.StreakManager;
 import com.gxdevs.mindmint.Utils.TaskManager;
 import com.gxdevs.mindmint.Utils.TaskNotificationManager;
+import com.gxdevs.mindmint.Utils.Utils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -94,6 +95,7 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         streakManager = new StreakManager(this);
         mintCrystals = new MintCrystals(this);
         initViews();
+        applyColors();
         setupRecyclerView();
         setupClickListeners();
         checkNotificationPermission();
@@ -112,7 +114,7 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
                 permissionCard.setVisibility(VISIBLE);
-                permissionCard.setOnClickListener(v-> askForExactAlarmPermission());
+                permissionCard.setOnClickListener(v -> askForExactAlarmPermission());
             } else {
                 permissionCard.setVisibility(GONE);
             }
@@ -235,11 +237,18 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         }
     }
 
+    private void applyColors() {
+        View arc1 = findViewById(R.id.arcTopLeft);
+        View arc2 = findViewById(R.id.arcBottomRight);
+        View arc3 = findViewById(R.id.arcBottomLeft);
+        MaterialCardView permissionCard = findViewById(R.id.permissionCard);
+        Utils.applySecondaryColor(permissionCard, this);
+        Utils.applyAccentColors(arc1, arc2, arc3, this);
+    }
+
     private void setupClickListeners() {
         backButton.setOnClickListener(v -> finish());
-
         addTaskButton.setOnClickListener(v -> showAddTaskBottomSheet());
-
         filterButton.setOnClickListener(v -> {
             if (filterScrollView.getVisibility() == VISIBLE) {
                 filterScrollView.setVisibility(GONE);

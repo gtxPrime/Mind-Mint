@@ -103,7 +103,6 @@ public class RepeatOptionsBottomSheet extends BottomSheetDialogFragment {
     private EditText frequencyNumber;
     private Spinner frequencyTypeSpinner;
     private LinearLayout weeklyOptionsContainer;
-    private LinearLayout monthlyOptionsContainer;
     private RadioGroup monthlyRadioGroup;
     private RadioButton radioMonthlyByDate, radioMonthlyByWeek;
     private TextView startDateText;
@@ -185,7 +184,6 @@ public class RepeatOptionsBottomSheet extends BottomSheetDialogFragment {
         frequencyNumber = view.findViewById(R.id.frequencyNumber);
         frequencyTypeSpinner = view.findViewById(R.id.frequencyTypeSpinner);
         weeklyOptionsContainer = view.findViewById(R.id.weeklyOptionsContainer);
-        monthlyOptionsContainer = view.findViewById(R.id.monthlyOptionsContainer);
         monthlyRadioGroup = view.findViewById(R.id.monthlyRadioGroup);
         radioMonthlyByDate = view.findViewById(R.id.radioMonthlyByDate);
         radioMonthlyByWeek = view.findViewById(R.id.radioMonthlyByWeek);
@@ -349,7 +347,7 @@ public class RepeatOptionsBottomSheet extends BottomSheetDialogFragment {
     private void updateVisibilityBasedOnFrequency(int position) {
         // Hide all optional containers first
         weeklyOptionsContainer.setVisibility(View.GONE);
-        monthlyOptionsContainer.setVisibility(View.GONE);
+        monthlyRadioGroup.setVisibility(View.GONE);
 
         switch (position) {
             case 1: // weekly
@@ -364,8 +362,8 @@ public class RepeatOptionsBottomSheet extends BottomSheetDialogFragment {
                 weeklyOptionsContainer.requestLayout();
                 break;
             case 2: // monthly
-                monthlyOptionsContainer.setVisibility(View.VISIBLE);
-                monthlyOptionsContainer.requestLayout();
+                monthlyRadioGroup.setVisibility(View.VISIBLE);
+                monthlyRadioGroup.requestLayout();
                 break;
         }
     }
@@ -382,7 +380,7 @@ public class RepeatOptionsBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void updateMonthlyOptions() {
-        if (monthlyOptionsContainer.getVisibility() == View.VISIBLE) {
+        if (monthlyRadioGroup.getVisibility() == View.VISIBLE) {
             SimpleDateFormat dayFormat = new SimpleDateFormat("dd", Locale.getDefault());
             String dayOfMonth = dayFormat.format(selectedStartDate.getTime());
             radioMonthlyByDate.setText("Day " + dayOfMonth);

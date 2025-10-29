@@ -10,21 +10,19 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/cardColor">
+        android:background="?attr/secondaryColor">
 
         <ImageView
             android:id="@+id/permissionImg"
             android:layout_width="90dp"
             android:layout_height="90dp"
             android:layout_marginTop="10dp"
-            android:backgroundTint="@color/white"
-            android:foregroundTint="@color/white"
             android:padding="15dp"
             android:src="@drawable/secure"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white" />
+            app:tint="?attr/tintGlobalColor" />
 
         <TextView
             android:id="@+id/permissionHead"
@@ -36,7 +34,7 @@
             android:fontFamily="@font/baloo"
             android:gravity="center"
             android:text="@string/ass_permission"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="23sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -53,7 +51,7 @@
             android:fontFamily="@font/inter18regular"
             android:gravity="center"
             android:text="@string/why_accessibility"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -72,7 +70,7 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:text="@string/click_on_proceed"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
@@ -92,7 +90,7 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:text="@string/select_installed_apps"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -111,7 +109,7 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:text="@string/enableApp"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -124,8 +122,8 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="15dp"
             android:layout_marginEnd="10dp"
-            android:fontFamily="sans-serif"
             android:alpha="0.9"
+            android:fontFamily="sans-serif"
             android:gravity="center"
             android:text="@string/data_note"
             android:textColor="@color/brainColor"
@@ -147,7 +145,7 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:text="@string/proceed"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/note" />
@@ -163,7 +161,7 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:text="@string/not_now"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/note" />

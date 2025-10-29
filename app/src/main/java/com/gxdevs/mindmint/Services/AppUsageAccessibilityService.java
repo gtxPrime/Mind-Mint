@@ -58,6 +58,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     public static final String PREF_BLOCK_AFTER_WASTED_TIME_ENABLED = "pref_block_after_wasted_time_enabled";
     public static final String PREF_BLOCK_AFTER_WASTED_TIME_HOURS = "pref_block_after_wasted_time_hours";
     public static final float DEFAULT_BLOCK_AFTER_WASTED_TIME_HOURS = 1.0f;
+    public static final String PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED = "pref_block_browsers_doom_enabled";
 
     // --- Constants for Persistent View Tracking (used by Reminder & View Block) ---
     public static final String PREF_APP_VIEW_ACCUMULATED_TIME_MS_PREFIX = "app_view_accumulated_time_ms_"; // Referenced in resetDailyViewTracking
@@ -69,6 +70,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     public static final String ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY = "com.gxdevs.mindmint.action.PERFORM_GLOBAL_HOME_FROM_OVERLAY";
     // Broadcast Action for internal state refresh at midnight
     public static final String ACTION_REFRESH_DAILY_STATE_INTERNAL = "com.gxdevs.mindmint.action.REFRESH_DAILY_STATE_INTERNAL";
+    // Preference keys for service notification (not used in original)
 
     private SharedPreferences sharedPreferences;
     private SharedPreferences prefs;
@@ -79,6 +81,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private BroadcastReceiver midnightStateRefreshReceiver;
     private BroadcastReceiver pauseServiceReceiver;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
+
+    // --- Foreground blocker notification (removed) ---
 
     // --- Variables for Back Pressing ---
     private boolean isYtHomeSwitchOn = false;
@@ -109,6 +113,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private boolean blockAfterWastedTimeEnabled;
     private float blockAfterWastedTimeHours;
     private final Map<String, Long> appTotalWastedTimeToday = new HashMap<>(); // For global wasted time blocking & UI
+    private boolean blockBrowsersDoomEnabled = false;
 
     // --- Variables for old View Focus system (potentially needs review/cleanup) ---
     private final Map<String, Long> currentViewFocusSessionStartTimeMap = new HashMap<>(); // Used in loadConfiguration to clear
@@ -126,6 +131,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         Log.d(TAG, "Service onCreate: Initializing service");
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
+        // No foreground notification
 
         isYtHomeSwitchOn = false;
         isInstaHomeSwitchOn = false;
@@ -171,11 +178,13 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     case PREF_REMIND_DOOM_SCROLLING_MINUTES:
                     case PREF_BLOCK_AFTER_WASTED_TIME_ENABLED:
                     case PREF_BLOCK_AFTER_WASTED_TIME_HOURS:
+                    case PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED:
                         Log.d(TAG, "Configuration changed for key: " + key + ". Reloading.");
                         loadConfiguration();
                         appViewFocusAccumulatedTimeTodayMap.clear(); // Part of old view focus
                         loadLastReminderTimestampsForAppTags();
                         break;
+                    // No foreground service preference handling in original
                 }
             }
         };
@@ -235,6 +244,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         Log.d(TAG, "Service onServiceConnected: System connected. Determining initial foreground app.");
+        // No foreground notification
         loadLastReminderTimestampsForAppTags();
 
         if (appTagToTimeLeftForNextSessionMs.isEmpty()) {
@@ -301,6 +311,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         clearCurrentPackageTracking();
         processViewFocusEndIfActive(currentViewIdPackage); // Old view focus system
         Log.d(TAG, "Service destroyed.");
+
+        // No foreground notification to stop
     }
 
     // --- Core Logic Entry Point ---
@@ -390,6 +402,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
 
         handleBackPress(eventPackageName, event); // Handles back press modification
+
+        // --- Browser Doom-scrolling Block ---
+        if (blockBrowsersDoomEnabled) {
+            tryBlockBrowserIfDoomUrlVisible(eventPackageName);
+        }
 
         // --- General App Usage Time Tracking & Window State Changes ---
         if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) { // NEW CONDITION (Scroll is handled above)
@@ -561,6 +578,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         intent.setPackage(getPackageName());
         sendBroadcast(intent);
     }
+
+    // Foreground helpers removed
 
     // --- Back Pressing Feature ---
     private void handleBackPress(String currentEventPackageName, AccessibilityEvent event) {
@@ -895,6 +914,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         remindDoomScrollingMinutes = sharedPreferences.getInt(PREF_REMIND_DOOM_SCROLLING_MINUTES, DEFAULT_REMIND_DOOM_SCROLLING_MINUTES);
         blockAfterWastedTimeEnabled = sharedPreferences.getBoolean(PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
         blockAfterWastedTimeHours = sharedPreferences.getFloat(PREF_BLOCK_AFTER_WASTED_TIME_HOURS, DEFAULT_BLOCK_AFTER_WASTED_TIME_HOURS);
+        blockBrowsersDoomEnabled = sharedPreferences.getBoolean(PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false);
 
         long currentUserReminderIntervalMs = (long) remindDoomScrollingMinutes * 60 * 1000;
         boolean settingsChanged = oldRemindDoomScrollingEnabled != remindDoomScrollingEnabled || oldRemindDoomScrollingMinutes != remindDoomScrollingMinutes;
@@ -935,6 +955,83 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             currentViewFocusSessionStartTimeMap.clear();
             appViewFocusAccumulatedTimeTodayMap.clear();
             currentViewIdPackage = null;
+        }
+    }
+
+    private void tryBlockBrowserIfDoomUrlVisible(String packageName) {
+        if (packageName == null) return;
+        if (!Utils.BROWSERS_PACKAGES.containsKey(packageName)) return;
+
+        String urlBarViewIdName = Utils.BROWSERS_PACKAGES.get(packageName);
+        if (urlBarViewIdName == null) return;
+
+        AccessibilityNodeInfo rootNode = getRootInActiveWindow();
+        if (rootNode == null) return;
+        try {
+            logNodeTree(rootNode, 0);
+            List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + urlBarViewIdName);
+            if (nodes == null || nodes.isEmpty()) return;
+            if (packageName.contains("mozilla") && !packageName.contains("focus")) {
+                if (scanNodeForDoomText(rootNode)) {
+                    launchOverlay(packageName);
+                    resetUsageAndTimersForPackage(packageName);
+                }
+            } else if (packageName.contains("microsoft") || packageName.contains("sbrowser") || packageName.contains("heytap")) {
+                for (AccessibilityNodeInfo node : nodes) {
+                    if (node == null) continue;
+                    CharSequence textCs = node.getText();
+                    if (textCs != null) {
+                        String urlText = textCs.toString().toLowerCase();
+                        for (String blocked : Utils.FULL_BLOCKED_URLS) {
+                            if (urlText.contains(blocked.toLowerCase())) {
+                                launchOverlay(packageName);
+                                resetUsageAndTimersForPackage(packageName);
+                                return;
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (AccessibilityNodeInfo node : nodes) {
+                    if (node == null) continue;
+                    CharSequence textCs = node.getText();
+                    if (textCs != null) {
+                        String urlText = textCs.toString().toLowerCase();
+                        for (String blocked : Utils.BLOCKED_URLS) {
+                            if (urlText.contains(blocked.toLowerCase())) {
+                                launchOverlay(packageName);
+                                resetUsageAndTimersForPackage(packageName);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+        } finally {
+            rootNode.recycle();
+        }
+    }
+
+    private boolean scanNodeForDoomText(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+        CharSequence text = node.getText();
+        if (text != null) {
+            String lower = text.toString().toLowerCase();
+            if (lower.contains("reel") || lower.contains("shorts")) return true;
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            if (scanNodeForDoomText(node.getChild(i))) return true;
+        }
+        return false;
+    }
+
+    private void logNodeTree(AccessibilityNodeInfo node, int depth) {
+        if (node == null) return;
+        String indent = new String(new char[depth]).replace("\0", "-");
+        Log.d("NodeDump", indent + node.getViewIdResourceName() + " | " + node.getText());
+        for (int i = 0; i < node.getChildCount(); i++) {
+            logNodeTree(node.getChild(i), depth + 1);
         }
     }
 

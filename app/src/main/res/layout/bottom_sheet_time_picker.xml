@@ -4,15 +4,16 @@
     android:id="@+id/bottomSheetTimePickerLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="30dp"
+    app:cardBackgroundColor="?attr/secondaryColor"
     android:elevation="20dp"
     app:cardCornerRadius="20dp"
-    app:layout_constraintBottom_toBottomOf="parent"
-    android:layout_marginBottom="30dp">
+    app:layout_constraintBottom_toBottomOf="parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/cardColor">
+        android:background="?attr/secondaryColor">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -32,7 +33,7 @@
                 android:layout_height="130dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/tintGlobalColor"
                 android:theme="@style/NumberPickerTheme" />
 
             <TextView
@@ -43,7 +44,7 @@
                 android:layout_marginEnd="8dp"
                 android:gravity="center"
                 android:text="@string/hour"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -53,7 +54,7 @@
                 android:layout_height="130dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/tintGlobalColor"
                 android:theme="@style/NumberPickerTheme" />
 
             <TextView
@@ -64,7 +65,7 @@
                 android:layout_marginEnd="8dp"
                 android:gravity="center"
                 android:text="@string/mins"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -78,9 +79,9 @@
             android:layout_marginEnd="15dp"
             android:layout_marginBottom="35dp"
             android:autoSizeMaxTextSize="10dp"
-            android:backgroundTint="@color/black"
+            android:backgroundTint="?attr/tintGlobalColor"
             android:text="@string/set_limit"
-            android:textColor="#DADADA"
+            android:textColor="?attr/secondaryColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

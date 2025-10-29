@@ -11,7 +11,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
@@ -40,10 +42,13 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textview.MaterialTextView;
 import com.gxdevs.mindmint.Components.NebulaStarfieldView;
 import com.gxdevs.mindmint.R;
@@ -81,20 +86,28 @@ public class FocusMode extends AppCompatActivity {
     private MintCrystals mintCrystals;
     private BlurView blurView;
     private BlurTarget blurTarget;
+    private MaterialSwitch themeSwitch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Apply local night mode for this Activity only if user saved a nebula override
+        SharedPreferences prefsInit = PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefsInit.contains("nebula_theme_override")) {
+            boolean dark = prefsInit.getBoolean("nebula_theme_override", false);
+            getDelegate().setLocalNightMode(dark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_focus_mode);
         Utils.setPad(findViewById(R.id.main), "bottom", this);
 
         setupPermissionLauncher();
         initViews();
+        applyColors();
         setupOnUI();
         setupReveal();
         setupCircularSeekBar();
-
     }
 
     private void setupOnUI() {
@@ -134,12 +147,52 @@ public class FocusMode extends AppCompatActivity {
                 }
             }
         });
+
         NebulaStarfieldView galaxy = findViewById(R.id.starFieldView);
-        galaxy.setBackgroundColorCustom(Color.rgb(5, 5, 20));
+        galaxy.setContext(this);
         galaxy.setStarCount(200);
         galaxy.setDriftRange(2f);
+
+        // Initialize switch state from stored override (fallback to app theme), and persist changes
+        if (themeSwitch != null) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            Boolean savedOverride = prefs.contains("nebula_theme_override")
+                    ? prefs.getBoolean("nebula_theme_override", false)
+                    : null;
+
+            boolean isDark;
+            if (savedOverride != null) {
+                isDark = savedOverride;
+            } else {
+                String mode = prefs.getString("pref_theme_mode", "Dark Theme");
+                if ("Dark Theme".equalsIgnoreCase(mode) || "dark".equalsIgnoreCase(mode)) {
+                    isDark = true;
+                } else if ("Light Theme".equalsIgnoreCase(mode) || "light".equalsIgnoreCase(mode)) {
+                    isDark = false;
+                } else {
+                    int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+                    isDark = (nightModeFlags == Configuration.UI_MODE_NIGHT_YES);
+                }
+            }
+
+            themeSwitch.setChecked(isDark);
+            galaxy.setThemeOverrideDark(isDark);
+
+            themeSwitch.setOnCheckedChangeListener((buttonView, checked) -> {
+                prefs.edit().putBoolean("nebula_theme_override", checked).apply();
+                galaxy.setThemeOverrideDark(checked);
+                getDelegate().setLocalNightMode(checked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+            });
+        }
         mintCrystalsTxt.setText(String.valueOf(mintCrystals.getCoins()));
         blurView.setupWith(blurTarget).setBlurRadius(15f);
+    }
+
+    private void applyColors() {
+        View arc1 = findViewById(R.id.arcTopLeft);
+        View arc2 = findViewById(R.id.arcBottomRight);
+        View arc3 = findViewById(R.id.arcBottomLeft);
+        Utils.applyAccentColors(arc1, arc2, arc3, this);
     }
 
     private void initViews() {
@@ -154,6 +207,7 @@ public class FocusMode extends AppCompatActivity {
         mintCrystals = new MintCrystals(this);
         blurView = findViewById(R.id.btnBlur);
         blurTarget = findViewById(R.id.blurTarget);
+        themeSwitch = findViewById(R.id.themeSwitch);
     }
 
     private void setupReveal() {
@@ -365,7 +419,7 @@ public class FocusMode extends AppCompatActivity {
 
     private void showBottomSheet(int heading, int desc, int step1, int step2) {
         bottomSheetDialog = new BottomSheetDialog(FocusMode.this);
-        View view = LayoutInflater.from(getApplicationContext()).inflate(R.layout.layout_bottomsheet, findViewById(R.id.sheetContainer));
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_bottomsheet, findViewById(R.id.sheetContainer));
         TextView permissionHead = view.findViewById(R.id.permissionHead);
         TextView permissionDesc = view.findViewById(R.id.permissionDesc);
         TextView permissionStep1 = view.findViewById(R.id.permissionStep1);

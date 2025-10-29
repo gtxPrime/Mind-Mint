@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -28,6 +27,7 @@ import com.gxdevs.mindmint.Models.Task;
 import com.gxdevs.mindmint.R;
 import com.gxdevs.mindmint.Utils.HabitManager;
 import com.gxdevs.mindmint.Utils.TaskManager;
+import com.gxdevs.mindmint.Utils.Utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -119,12 +119,12 @@ public class HabitDetailActivity extends AppCompatActivity {
         }
 
         // Spinners
-        ArrayAdapter<String> diffAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, new String[]{"Easy", "Medium", "Hard"});
+        ArrayAdapter<String> diffAdapter = new ArrayAdapter<>(this, R.layout.spinner_dropdown_item, new String[]{"Easy", "Medium", "Hard"});
         diffAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         difficultySpinner.setAdapter(diffAdapter);
         difficultySpinner.setSelection(habit.getDifficulty() == Habit.Difficulty.EASY ? 0 : habit.getDifficulty() == Habit.Difficulty.MEDIUM ? 1 : 2);
 
-        ArrayAdapter<String> gbAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, new String[]{"Good", "Bad"});
+        ArrayAdapter<String> gbAdapter = new ArrayAdapter<>(this, R.layout.spinner_dropdown_item, new String[]{"Good", "Bad"});
         gbAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         goodBadSpinner.setAdapter(gbAdapter);
         goodBadSpinner.setSelection(habit.getGoodBad() == Habit.GoodBad.GOOD ? 0 : 1);
@@ -270,6 +270,7 @@ public class HabitDetailActivity extends AppCompatActivity {
             setResult(RESULT_OK, new Intent().putExtra(EXTRA_HABIT_ID, habit.getId()));
             finish();
         });
+        applyColors();
     }
 
     private void initViews() {
@@ -290,6 +291,16 @@ public class HabitDetailActivity extends AppCompatActivity {
         blurTarget = findViewById(R.id.blurTarget);
     }
 
+    private void applyColors() {
+        View arc1 = findViewById(R.id.arcTopLeft);
+        View arc2 = findViewById(R.id.arcBottomRight);
+        View arc3 = findViewById(R.id.arcBottomLeft);
+        MaterialCardView nameCard = findViewById(R.id.nameCard);
+        MaterialCardView sectionCard = findViewById(R.id.sectionCard);
+        Utils.applySecondaryColor(nameCard, this);
+        Utils.applySecondaryColor(sectionCard, this);
+        Utils.applyAccentColors(arc1, arc2, arc3, this);
+    }
 
     private void setupUI() {
         BlurView nameBlur = findViewById(R.id.nameBlur);

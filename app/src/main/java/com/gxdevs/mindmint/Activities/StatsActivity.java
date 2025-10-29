@@ -75,6 +75,7 @@ public class StatsActivity extends AppCompatActivity {
         CustomPieChart pieChart = findViewById(R.id.pieChart);
         BlurTarget blurTarget = findViewById(R.id.blurTarget);
         BlurView focusBlur = findViewById(R.id.focusBlur);
+        BlurView permissionBlur = findViewById(R.id.permissionBlur);
         BlurView taskBlur = findViewById(R.id.taskBlur);
         BlurView habitBlur = findViewById(R.id.habitBlur);
         BlurView countBlur = findViewById(R.id.countBlur);
@@ -145,12 +146,14 @@ public class StatsActivity extends AppCompatActivity {
         checkAndShowPermissionCard();
         registerForPermission();
 
-        focusBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
-        taskBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
-        habitBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
-        countBlur.setupWith(blurTarget).setBlurRadius(10f).setOverlayColor(Color.parseColor("#331E1E2A"));
+        focusBlur.setupWith(blurTarget).setBlurRadius(10f);
+        taskBlur.setupWith(blurTarget).setBlurRadius(10f);
+        habitBlur.setupWith(blurTarget).setBlurRadius(10f);
+        countBlur.setupWith(blurTarget).setBlurRadius(10f);
+        permissionBlur.setupWith(blurTarget).setBlurRadius(10f);
 
         findViewById(R.id.backButton).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        applyColors();
     }
 
     private void updateAllCharts() {
@@ -158,6 +161,13 @@ public class StatsActivity extends AppCompatActivity {
         updateFocusBarChart();
         updateTasksBarChart();
         updateHabitsBarChart();
+    }
+
+    private void applyColors() {
+        View arc1 = findViewById(R.id.arcTopLeft);
+        View arc2 = findViewById(R.id.arcBottomRight);
+        View arc3 = findViewById(R.id.arcBottomLeft);
+        Utils.applyAccentColors(arc1, arc2, arc3, this);
     }
 
     private void updateBrainImage(int totalWastedScrolls) {

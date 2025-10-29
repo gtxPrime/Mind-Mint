@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bottom_sheet_shape"
     android:padding="20dp"
-    tools:ignore="HardcodedText,Autofill,LabelFor">
+    tools:ignore="HardcodedText,Autofill,LabelFor, TextFields">
 
     <!-- Header -->
     <TextView
@@ -14,8 +14,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/inter18regular"
-        android:text="Repeats"
-        android:textColor="@color/white"
+        android:text="@string/repeats"
+        android:textColor="?attr/tintGlobalColor"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +29,7 @@
         android:layout_marginTop="24dp"
         android:fontFamily="@font/inter18regular"
         android:text="Every"
-        android:textColor="@color/white"
+        android:textColor="?attr/tintGlobalColor"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sheetTitle" />
@@ -54,7 +54,7 @@
             android:gravity="center"
             android:inputType="number"
             android:text="1"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textColorHint="@color/textColor"
             android:textSize="16sp" />
 
@@ -85,7 +85,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter18regular"
             android:text="On these days"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -110,7 +110,7 @@
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="S"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp"
                 app:strokeColor="@color/sexyGrey"
                 app:strokeWidth="2dp" />
@@ -128,7 +128,7 @@
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="M"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
@@ -144,7 +144,7 @@
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="T"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
@@ -160,7 +160,7 @@
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="W"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
@@ -176,7 +176,7 @@
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="T"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
@@ -192,7 +192,7 @@
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="F"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
@@ -208,7 +208,7 @@
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:text="S"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -216,46 +216,37 @@
     </LinearLayout>
 
     <!-- Monthly Options (visible only when monthly is selected) -->
-    <LinearLayout
-        android:id="@+id/monthlyOptionsContainer"
+
+    <RadioGroup
+        android:id="@+id/monthlyRadioGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:orientation="vertical"
-        android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@+id/weeklyOptionsContainer">
 
-        <RadioGroup
-            android:id="@+id/monthlyRadioGroup"
+        <RadioButton
+            android:id="@+id/radioMonthlyByDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:buttonTint="@color/brainColor"
+            android:checked="true"
+            android:fontFamily="@font/inter18regular"
+            android:text="Day 28"
+            android:textColor="?attr/tintGlobalColor"
+            android:textSize="14sp" />
 
-            <RadioButton
-                android:id="@+id/radioMonthlyByDate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:buttonTint="@color/brainColor"
-                android:checked="true"
-                android:fontFamily="@font/inter18regular"
-                android:text="Day 28"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
+        <RadioButton
+            android:id="@+id/radioMonthlyByWeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:buttonTint="@color/brainColor"
+            android:fontFamily="@font/inter18regular"
+            android:text="Fourth Sunday"
+            android:textColor="?attr/tintGlobalColor"
+            android:textSize="14sp" />
 
-            <RadioButton
-                android:id="@+id/radioMonthlyByWeek"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:buttonTint="@color/brainColor"
-                android:fontFamily="@font/inter18regular"
-                android:text="Fourth Sunday"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
-
-        </RadioGroup>
-
-    </LinearLayout>
+    </RadioGroup>
 
     <!-- Start Date Section -->
     <TextView
@@ -265,10 +256,10 @@
         android:layout_marginTop="24dp"
         android:fontFamily="@font/inter18regular"
         android:text="Starts"
-        android:textColor="@color/white"
+        android:textColor="?attr/tintGlobalColor"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/monthlyOptionsContainer" />
+        app:layout_constraintTop_toBottomOf="@+id/monthlyRadioGroup" />
 
     <!-- Start Date Display -->
     <LinearLayout
@@ -291,7 +282,7 @@
             android:layout_weight="1"
             android:fontFamily="@font/inter18regular"
             android:text="28 September"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="16sp" />
 
         <TextView
@@ -314,7 +305,7 @@
         android:layout_marginTop="24dp"
         android:fontFamily="@font/inter18regular"
         android:text="Ends"
-        android:textColor="@color/white"
+        android:textColor="?attr/tintGlobalColor"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startDateContainer" />
@@ -336,7 +327,7 @@
             android:checked="true"
             android:fontFamily="@font/inter18regular"
             android:text="Never"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -353,7 +344,7 @@
                 android:buttonTint="@color/brainColor"
                 android:fontFamily="@font/inter18regular"
                 android:text="On"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="14sp" />
 
             <EditText
@@ -369,7 +360,7 @@
                 android:gravity="center_vertical"
                 android:hint="28 Oct 2026"
                 android:paddingHorizontal="12dp"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textColorHint="@color/textColor"
                 android:textSize="14sp" />
 
@@ -389,7 +380,7 @@
                 android:buttonTint="@color/brainColor"
                 android:fontFamily="@font/inter18regular"
                 android:text="After"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="14sp" />
 
             <EditText
@@ -402,7 +393,7 @@
                 android:gravity="center"
                 android:hint="30"
                 android:inputType="number"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textColorHint="@color/textColor"
                 android:textSize="14sp" />
 
@@ -412,7 +403,7 @@
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/inter18regular"
                 android:text="occurrences"
-                android:textColor="@color/white"
+                android:textColor="?attr/tintGlobalColor"
                 android:textSize="14sp" />
 
         </LinearLayout>
@@ -452,7 +443,7 @@
             android:background="@drawable/button_pill_bg"
             android:fontFamily="@font/inter18regular"
             android:text="Done"
-            android:textColor="@color/white"
+            android:textColor="?attr/tintGlobalColor"
             android:textSize="16sp" />
 
     </LinearLayout>

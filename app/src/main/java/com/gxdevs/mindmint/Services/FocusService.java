@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.pm.ServiceInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -61,6 +62,14 @@ public class FocusService extends Service {
     private int lastCompletedDurationMinutes = 0;
     private AlarmManager alarmManager;
 
+    private void startForegroundWithType(Notification notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(FocusService.NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else {
+            startForeground(FocusService.NOTIFICATION_ID, notification);
+        }
+    }
+
     public class TimerBinder extends Binder {
         public FocusService getService() {
             return FocusService.this;
@@ -89,11 +98,11 @@ public class FocusService extends Service {
                 if (endElapsed <= now) {
                     // Treat as a naturally completed session and finalize immediately
                     startTimeMillis = now - duration;
-                    startForeground(NOTIFICATION_ID, createNotification(currentDurationInMillis));
+                    startForegroundWithType(createNotification(currentDurationInMillis));
                     stopTimer();
                 } else {
                     startTimeMillis = endElapsed - duration;
-                    startForeground(NOTIFICATION_ID, createNotification(getElapsedMillis()));
+                    startForegroundWithType(createNotification(getElapsedMillis()));
                     notificationHandler.removeCallbacks(updateNotificationTask);
                     notificationHandler.post(updateNotificationTask);
                     scheduleStopAlarm(endElapsed);
@@ -113,7 +122,7 @@ public class FocusService extends Service {
                     if (!isRunning) {
                         startTimer(currentDurationInMillis);
                     } else {
-                        startForeground(NOTIFICATION_ID, createNotification(getElapsedMillis()));
+                        startForegroundWithType(createNotification(getElapsedMillis()));
                         notificationHandler.post(updateNotificationTask);
                     }
                     break;
@@ -142,7 +151,7 @@ public class FocusService extends Service {
             completedNaturally = false;
             Log.d(TAG, "Timer logic started. Duration: " + (currentDurationInMillis == Long.MAX_VALUE ? "Infinite" : currentDurationInMillis + "ms"));
 
-            startForeground(NOTIFICATION_ID, createNotification(0));
+            startForegroundWithType(createNotification(0));
             notificationHandler.removeCallbacks(updateNotificationTask);
             notificationHandler.post(updateNotificationTask);
 
@@ -177,7 +186,7 @@ public class FocusService extends Service {
     private void saveDailyFocusStat(long elapsedSeconds) {
         SharedPreferences statsPrefs = getSharedPreferences("FOCUS_STATS_PREFS", MODE_PRIVATE);
         SharedPreferences.Editor editor = statsPrefs.edit();
-        String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         String dailyKey = "focus_time_" + today;
         long todaySeconds = statsPrefs.getLong(dailyKey, 0);
         editor.putLong(dailyKey, todaySeconds + elapsedSeconds);
@@ -239,6 +248,8 @@ public class FocusService extends Service {
             }
 
             stopForeground(true);
+            // Ensure the service fully stops after exiting foreground
+            stopSelf();
         }
     }
 
@@ -428,6 +439,10 @@ public class FocusService extends Service {
         Log.d(TAG, "Service destroyed");
         isPublicFocusRun = false;
         isRunning = false;
+        // Ensure foreground notification is removed if still present
+        try {
+            stopForeground(true);
+        } catch (Throwable ignored) {}
         notificationHandler.removeCallbacksAndMessages(null);
         durationHandler.removeCallbacksAndMessages(null);
     }

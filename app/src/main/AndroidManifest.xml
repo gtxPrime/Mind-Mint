@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Permission to draw over other apps (for overlay) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -95,7 +95,11 @@
         <service
             android:name=".Services.FocusService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-initiated productivity timer service that provides continuous time tracking and notifications during focus sessions. The service must remain active to accurately track session duration, display remaining time in notifications, and maintain timer state across app lifecycle changes. Sessions are user-controlled and range from 10 to 180 minutes." />
+        </service>
 
         <receiver
             android:name=".Receivers.MidnightResetReceiver"

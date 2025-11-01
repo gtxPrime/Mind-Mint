@@ -10,10 +10,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.Pair;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
@@ -27,6 +30,8 @@ import com.gxdevs.mindmint.Activities.BlockingOverlayDisplayActivity;
 import com.gxdevs.mindmint.Common.IntentActions;
 import com.gxdevs.mindmint.Receivers.MidnightResetReceiver;
 import com.gxdevs.mindmint.Receivers.ServiceResumeReceiver;
+import com.gxdevs.mindmint.Utils.AdultDomainListManager;
+import com.gxdevs.mindmint.Utils.BlockedSitesManager;
 import com.gxdevs.mindmint.Utils.MintCrystals;
 import com.gxdevs.mindmint.Utils.Utils;
 
@@ -59,6 +64,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     public static final String PREF_BLOCK_AFTER_WASTED_TIME_HOURS = "pref_block_after_wasted_time_hours";
     public static final float DEFAULT_BLOCK_AFTER_WASTED_TIME_HOURS = 1.0f;
     public static final String PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED = "pref_block_browsers_doom_enabled";
+    public static final String PREF_BLOCK_ADULT_SITES_ENABLED = "pref_block_adult_sites_enabled";
 
     // --- Constants for Persistent View Tracking (used by Reminder & View Block) ---
     public static final String PREF_APP_VIEW_ACCUMULATED_TIME_MS_PREFIX = "app_view_accumulated_time_ms_"; // Referenced in resetDailyViewTracking
@@ -68,6 +74,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
     // Action for the overlay to tell this service to close the current app
     public static final String ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY = "com.gxdevs.mindmint.action.PERFORM_GLOBAL_HOME_FROM_OVERLAY";
+    public static final String ACTION_PERFORM_GLOBAL_BACK_FROM_OVERLAY = "com.gxdevs.mindmint.action.PERFORM_GLOBAL_BACK_FROM_OVERLAY";
     // Broadcast Action for internal state refresh at midnight
     public static final String ACTION_REFRESH_DAILY_STATE_INTERNAL = "com.gxdevs.mindmint.action.REFRESH_DAILY_STATE_INTERNAL";
     // Preference keys for service notification (not used in original)
@@ -81,8 +88,6 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private BroadcastReceiver midnightStateRefreshReceiver;
     private BroadcastReceiver pauseServiceReceiver;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
-
-    // --- Foreground blocker notification (removed) ---
 
     // --- Variables for Back Pressing ---
     private boolean isYtHomeSwitchOn = false;
@@ -104,6 +109,9 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private Handler reminderHandler;
     private final Map<String, Long> lastScrollEventTimestamp = new HashMap<>();
 
+    // Cache for browser package checks
+    private final Map<String, Boolean> browserCheckCache = new HashMap<>();
+
     // Obsolete, but kept for context during transition for saveReminderViewAccumulatedTime method.
     private final Map<String, Long> reminderViewSessionStartTimeMs = new HashMap<>();
     private final Map<String, Long> reminderViewAccumulatedTimeCurrentCycleMs = new HashMap<>();
@@ -114,6 +122,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private float blockAfterWastedTimeHours;
     private final Map<String, Long> appTotalWastedTimeToday = new HashMap<>(); // For global wasted time blocking & UI
     private boolean blockBrowsersDoomEnabled = false;
+    private boolean blockAdultSitesEnabled = false;
+
+    // Cache the most recently checked adult domain and its result
+    private String lastAdultCheckedDomain = null;
+    private boolean lastAdultCheckedBlocked = false;
 
     // --- Variables for old View Focus system (potentially needs review/cleanup) ---
     private final Map<String, Long> currentViewFocusSessionStartTimeMap = new HashMap<>(); // Used in loadConfiguration to clear
@@ -132,7 +145,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // No foreground notification
+        // Ensure storage sets exist (do not seed defaults here)
+        BlockedSitesManager.ensureSetsExist(getApplicationContext());
 
         isYtHomeSwitchOn = false;
         isInstaHomeSwitchOn = false;
@@ -179,6 +193,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     case PREF_BLOCK_AFTER_WASTED_TIME_ENABLED:
                     case PREF_BLOCK_AFTER_WASTED_TIME_HOURS:
                     case PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED:
+                    case PREF_BLOCK_ADULT_SITES_ENABLED:
                         Log.d(TAG, "Configuration changed for key: " + key + ". Reloading.");
                         loadConfiguration();
                         appViewFocusAccumulatedTimeTodayMap.clear(); // Part of old view focus
@@ -215,8 +230,9 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             public void onReceive(Context context, Intent intent) {
                 if (intent != null && ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY.equals(intent.getAction())) {
                     Log.i(TAG, "Received command from overlay: ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY. Performing GLOBAL_ACTION_HOME.");
-                    boolean homeActionPerformed = performGlobalAction(GLOBAL_ACTION_HOME);
-                    Log.d(TAG, "GLOBAL_ACTION_HOME (triggered by overlay) success: " + homeActionPerformed);
+                    performGlobalAction(GLOBAL_ACTION_HOME);
+                } else if (intent != null && ACTION_PERFORM_GLOBAL_BACK_FROM_OVERLAY.equals(intent.getAction())) {
+                    performGlobalAction(GLOBAL_ACTION_BACK);
                 }
             }
         };
@@ -321,7 +337,6 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         if (sharedPreferences.getBoolean("isServicePaused", false)) {
             return;
         }
-        Log.i(TAG, "onAccessibilityEvent: RECEIVED_EVENT - Type: " + AccessibilityEvent.eventTypeToString(event.getEventType()) + ", Pkg: " + event.getPackageName() + ", Time: " + event.getEventTime());
         String eventPackageName = event.getPackageName() != null ? event.getPackageName().toString() : null;
         int eventType = event.getEventType();
 
@@ -364,7 +379,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     if (!activeAppTagNow.equals(previouslyTrackedAppTag)) {
                         if (previouslyTrackedAppTag != null) {
                             Log.i(TAG, "onAccessibilityEvent: Reminder Flow - Switching. Attempting to PAUSE: " + previouslyTrackedAppTag);
-                            endReminderViewSession(previouslyTrackedAppTag, "Switched to new app/view: " + activeAppTagNow);
+                            endReminderViewSession(previouslyTrackedAppTag);
                         }
                         Log.i(TAG, "onAccessibilityEvent: Reminder Flow - STARTING/RESUMING: " + activeAppTagNow + " on view " + activeReminderViewIdNow);
                         startReminderViewSession(activeAppTagNow, activeReminderViewIdNow);
@@ -379,7 +394,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                 } else {
                     if (previouslyTrackedAppTag != null) {
                         Log.i(TAG, "onAccessibilityEvent: Reminder Flow - View for " + previouslyTrackedAppTag + " no longer visible. Attempting to PAUSE. Event Pkg: " + eventPackageName);
-                        endReminderViewSession(previouslyTrackedAppTag, "Tracked view no longer visible or app/package changed. Event Pkg: " + eventPackageName);
+                        endReminderViewSession(previouslyTrackedAppTag);
                     }
                 }
             }
@@ -392,7 +407,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                 }
                 if (currentAppTagForReminderViewTracking != null) {
                     Log.i(TAG, "onAccessibilityEvent: eventPackageName is null, pausing active reminder for " + currentAppTagForReminderViewTracking);
-                    endReminderViewSession(currentAppTagForReminderViewTracking, "Event package became null");
+                    endReminderViewSession(currentAppTagForReminderViewTracking);
                 }
                 clearCurrentPackageTracking();
                 processViewFocusEndIfActive(currentViewIdPackage); // Old view focus system
@@ -403,9 +418,13 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
         handleBackPress(eventPackageName, event); // Handles back press modification
 
-        // --- Browser Doom-scrolling Block ---
-        if (blockBrowsersDoomEnabled) {
-            tryBlockBrowserIfDoomUrlVisible(eventPackageName);
+        // --- Browser blocking (user list) and adult sites block ---
+        if (blockBrowsersDoomEnabled || blockAdultSitesEnabled) {
+            Log.d(TAG, "Browser dispatch: pkg=" + eventPackageName +
+                    ", browsersOn=" + blockBrowsersDoomEnabled +
+                    ", adultOn=" + blockAdultSitesEnabled +
+                    ", evt=" + AccessibilityEvent.eventTypeToString(event.getEventType()));
+            tryBlockBrowser(eventPackageName);
         }
 
         // --- General App Usage Time Tracking & Window State Changes ---
@@ -453,18 +472,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             if (globalTimeLimitExceededToday) {
                 String appTagForGlobalBlock = getAppTagFromAllPackages(eventPackageName);
                 if (appTagForGlobalBlock != null) {
-                    String viewIdToLookFor = null;
-                    switch (appTagForGlobalBlock) {
-                        case "yt":
-                            viewIdToLookFor = Utils.YtViewId;
-                            break;
-                        case "insta":
-                            viewIdToLookFor = Utils.instaViewId;
-                            break;
-                        case "snap":
-                            viewIdToLookFor = Utils.snapViewId;
-                            break;
-                    }
+                    String viewIdToLookFor = getReminderViewIdForAppTag(appTagForGlobalBlock);
 
                     if (viewIdToLookFor != null) {
                         AccessibilityNodeInfo rootNodeForGlobalBlockCheck = getRootInActiveWindow();
@@ -503,6 +511,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
     }
 
+    // ===== SCROLL COUNTING =====
     private void handleScrollCounting(AccessibilityEvent event) {
         String packageName = event.getPackageName() != null ? event.getPackageName().toString() : null;
         if (packageName == null) {
@@ -546,7 +555,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
         if (isReminderViewVisible(rootNode, packageName, viewId)) {
-            if (rootNode != null) rootNode.recycle();
+            rootNode.recycle();
 
             long currentTime = System.currentTimeMillis();
             long lastTime = lastScrollEventTimestamp.getOrDefault(appTag, 0L);
@@ -579,13 +588,13 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         sendBroadcast(intent);
     }
 
-    // Foreground helpers removed
-
-    // --- Back Pressing Feature ---
+    // ===== BACK PRESS HANDLING =====
     private void handleBackPress(String currentEventPackageName, AccessibilityEvent event) {
         AccessibilityNodeInfo eventSource = event.getSource();
         boolean isEventSourceNull = eventSource == null;
-
+        if (!isEventSourceNull) {
+            eventSource.recycle();
+        }
         if (isEventSourceNull) {
             return;
         }
@@ -629,13 +638,13 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         if (appTag.equals(packagesToTarget.get(currentEventPackageName))) {
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if (rootNode != null) {
-                findAndBlockView(rootNode, viewIdForBackPress, currentEventPackageName); // This performs GLOBAL_ACTION_BACK
+                findAndBlockView(rootNode, viewIdForBackPress, currentEventPackageName);
                 rootNode.recycle(); // Essential: recycle the rootNode after use
             }
         }
     }
 
-    // --- Reminder Feature ---
+    // ===== REMINDER FLOW (Doom Scrolling) =====
     private class ShowReminderRunnable implements Runnable {
         private final String appTag;
 
@@ -648,7 +657,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             activeRunnables.remove(appTag);
 
             if (!remindDoomScrollingEnabled) {
-                resetTimerStateForApp(appTag, "Reminders disabled");
+                resetTimerStateForApp(appTag);
                 return;
             }
 
@@ -736,7 +745,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         currentAppTagForReminderViewTracking = appTag;
     }
 
-    private void endReminderViewSession(String appTagToEnd, String reason) {
+    private void endReminderViewSession(String appTagToEnd) {
         if (appTagToEnd == null) return;
         ShowReminderRunnable activeRunnable = activeRunnables.remove(appTagToEnd);
         if (activeRunnable == null) {
@@ -762,7 +771,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
     }
 
-    private void resetTimerStateForApp(String appTag, String reason) {
+    private void resetTimerStateForApp(String appTag) {
         if (appTag == null) return;
 
         ShowReminderRunnable activeRunnable = activeRunnables.remove(appTag);
@@ -842,44 +851,43 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             return false;
         }
         List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + viewId);
+        boolean visible = false;
         if (nodes != null && !nodes.isEmpty()) {
             for (AccessibilityNodeInfo node : nodes) {
-                if (node != null && node.isVisibleToUser()) {
-                    node.recycle();
-                    return true;
+                if (!visible && node != null && node.isVisibleToUser()) {
+                    visible = true;
                 }
+            }
+            for (AccessibilityNodeInfo node : nodes) {
                 if (node != null) node.recycle();
             }
         }
-        return false;
+        return visible;
     }
 
+    // ===== VIEW BLOCKERS (View ID-based) =====
     private void handleBlockers(String currentEventPackageName, AccessibilityEvent event) { // This handles "blockAllFeatures" view ID blocking
         boolean blockersGloballyEnabled = sharedPreferences.getBoolean("blockAllFeatures", false);
-        if (!blockersGloballyEnabled || event.getSource() == null) {
+        AccessibilityNodeInfo src = event.getSource();
+        boolean hasSource = src != null;
+        if (src != null) src.recycle();
+        if (!blockersGloballyEnabled || !hasSource) {
             return;
         }
 
         String appTag = getAppTagFromAllPackages(currentEventPackageName);
-        String viewIdToBlock = null;
-
-        if (appTag != null) {
-            switch (appTag) {
-                case "yt":
-                    viewIdToBlock = Utils.YtViewId;
-                    break;
-                case "insta":
-                    viewIdToBlock = Utils.instaViewId;
-                    break;
-                case "snap":
-                    viewIdToBlock = Utils.snapViewId;
-                    break;
-            }
-        }
+        String viewIdToBlock = appTag != null ? getReminderViewIdForAppTag(appTag) : null;
 
         if (viewIdToBlock != null) {
             Log.d(TAG, "Blocker: Checking for view ID " + viewIdToBlock + " in " + currentEventPackageName);
-            findAndBlockView(getRootInActiveWindow(), viewIdToBlock, currentEventPackageName); // Uses helper
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root != null) {
+                try {
+                    findAndBlockView(root, viewIdToBlock, currentEventPackageName); // Uses helper
+                } finally {
+                    root.recycle();
+                }
+            }
         }
     }
 
@@ -915,6 +923,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         blockAfterWastedTimeEnabled = sharedPreferences.getBoolean(PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
         blockAfterWastedTimeHours = sharedPreferences.getFloat(PREF_BLOCK_AFTER_WASTED_TIME_HOURS, DEFAULT_BLOCK_AFTER_WASTED_TIME_HOURS);
         blockBrowsersDoomEnabled = sharedPreferences.getBoolean(PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false);
+        blockAdultSitesEnabled = sharedPreferences.getBoolean(PREF_BLOCK_ADULT_SITES_ENABLED, false);
 
         long currentUserReminderIntervalMs = (long) remindDoomScrollingMinutes * 60 * 1000;
         boolean settingsChanged = oldRemindDoomScrollingEnabled != remindDoomScrollingEnabled || oldRemindDoomScrollingMinutes != remindDoomScrollingMinutes;
@@ -939,7 +948,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
         if (!remindDoomScrollingEnabled) {
             if (currentAppTagForReminderViewTracking != null) {
-                resetTimerStateForApp(currentAppTagForReminderViewTracking, "Reminders globally disabled in config");
+                resetTimerStateForApp(currentAppTagForReminderViewTracking);
             }
             appTagToTimeLeftForNextSessionMs.clear();
             appTagToOriginalDelayMs.clear();
@@ -958,52 +967,65 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
     }
 
-    private void tryBlockBrowserIfDoomUrlVisible(String packageName) {
+    // ===== BROWSER / URL BLOCKING =====
+    private void tryBlockBrowser(String packageName) {
         if (packageName == null) return;
-        if (!Utils.BROWSERS_PACKAGES.containsKey(packageName)) return;
-
-        String urlBarViewIdName = Utils.BROWSERS_PACKAGES.get(packageName);
-        if (urlBarViewIdName == null) return;
+        boolean isKnownBrowser = Utils.BROWSERS_PACKAGES.containsKey(packageName);
+        if (!isKnownBrowser && !isBrowserPackage(packageName, this)) return;
 
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
+        logNodeTree(rootNode, 0);
         if (rootNode == null) return;
         try {
-            logNodeTree(rootNode, 0);
-            List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + urlBarViewIdName);
-            if (nodes == null || nodes.isEmpty()) return;
-            if (packageName.contains("mozilla") && !packageName.contains("focus")) {
-                if (scanNodeForDoomText(rootNode)) {
-                    launchOverlay(packageName);
-                    resetUsageAndTimersForPackage(packageName);
-                }
-            } else if (packageName.contains("microsoft") || packageName.contains("sbrowser") || packageName.contains("heytap")) {
-                for (AccessibilityNodeInfo node : nodes) {
-                    if (node == null) continue;
-                    CharSequence textCs = node.getText();
-                    if (textCs != null) {
-                        String urlText = textCs.toString().toLowerCase();
-                        for (String blocked : Utils.FULL_BLOCKED_URLS) {
-                            if (urlText.contains(blocked.toLowerCase())) {
-                                launchOverlay(packageName);
-                                resetUsageAndTimersForPackage(packageName);
-                                return;
-                            }
-                        }
+            Pair<String, Boolean> result = tryGetUrlBarTextWithRetry(packageName, rootNode);
+            String urlText = result.first;
+
+            if (urlText == null || urlText.isEmpty())
+                return;
+
+            String lowerText = urlText.toLowerCase();
+            String host = AdultDomainListManager.extractHostFromUrlText(lowerText);
+            Log.d(TAG, "Browser check: pkg=" + packageName + ", urlText=" + urlText + ", host=" + host +
+                    ", browsersOn=" + blockBrowsersDoomEnabled + ", adultOn=" + blockAdultSitesEnabled);
+            Set<String> candidateTexts = new HashSet<>();
+            candidateTexts.add(lowerText);
+            Set<String> candidateHosts = new HashSet<>();
+            if (host != null && host.contains(".")) candidateHosts.add(host);
+
+            // 1) User-defined blocking (no doom fallback)
+            if (blockBrowsersDoomEnabled) {
+                if (isEdgeOrSamsung(packageName)) {
+                    if (isBlockedByUserListsEdgeSamsung(candidateTexts, candidateHosts)) {
+                        Log.i(TAG, "Blocker: Decision=USER_LIST_EDGE_SAMSUNG host-only for exacts");
+                        launchOverlay(packageName);
+                        resetUsageAndTimersForPackage(packageName);
+                        return;
+                    }
+                } else {
+                    if (isBlockedByUserLists(candidateTexts, candidateHosts)) {
+                        Log.i(TAG, "Blocker: Decision=USER_LIST (domains/exacts)");
+                        launchOverlay(packageName);
+                        resetUsageAndTimersForPackage(packageName);
+                        return;
                     }
                 }
-            } else {
-                for (AccessibilityNodeInfo node : nodes) {
-                    if (node == null) continue;
-                    CharSequence textCs = node.getText();
-                    if (textCs != null) {
-                        String urlText = textCs.toString().toLowerCase();
-                        for (String blocked : Utils.BLOCKED_URLS) {
-                            if (urlText.contains(blocked.toLowerCase())) {
-                                launchOverlay(packageName);
-                                resetUsageAndTimersForPackage(packageName);
-                                return;
-                            }
-                        }
+            }
+
+            // 2) Adult sites blocking using URL text only
+            if (blockAdultSitesEnabled && !candidateHosts.isEmpty()) {
+                for (String h : candidateHosts) {
+                    boolean shouldCheck = (lastAdultCheckedDomain == null) || !lastAdultCheckedDomain.equals(h);
+                    boolean isBlocked = lastAdultCheckedBlocked;
+                    if (shouldCheck) {
+                        isBlocked = AdultDomainListManager.isAdultHost(this, h);
+                        lastAdultCheckedDomain = h;
+                        lastAdultCheckedBlocked = isBlocked;
+                    }
+                    if (isBlocked) {
+                        Log.i(TAG, "Blocker: Decision=ADULT_LIST host=" + h);
+                        launchOverlay(packageName);
+                        resetUsageAndTimersForPackage(packageName);
+                        return;
                     }
                 }
             }
@@ -1013,28 +1035,253 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
     }
 
-    private boolean scanNodeForDoomText(AccessibilityNodeInfo node) {
-        if (node == null) return false;
-        CharSequence text = node.getText();
-        if (text != null) {
-            String lower = text.toString().toLowerCase();
-            if (lower.contains("reel") || lower.contains("shorts")) return true;
+    private boolean isBrowserPackage(String packageName, Context context) {
+        Boolean cached = browserCheckCache.get(packageName);
+        if (cached != null) return cached;
+
+        Log.e("isBrowser: ", packageName);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.example.com"));
+        PackageManager pm = context.getPackageManager();
+        List<ResolveInfo> resolveInfos = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        boolean isBrowser = false;
+        for (ResolveInfo info : resolveInfos) {
+            if (info.activityInfo.packageName.equals(packageName)) {
+                Log.e("isBrowser: ", packageName + " true");
+                isBrowser = true;
+                break;
+            }
         }
-        for (int i = 0; i < node.getChildCount(); i++) {
-            if (scanNodeForDoomText(node.getChild(i))) return true;
+        if (!isBrowser) {
+            Log.e("isBrowser: ", packageName + " false");
+        }
+        browserCheckCache.put(packageName, isBrowser);
+        return isBrowser;
+    }
+
+    private Pair<String, Boolean> tryGetUrlBarText(String packageName, AccessibilityNodeInfo rootNode) {
+        boolean nodeFound = false;
+        String id = Utils.BROWSERS_PACKAGES.get(packageName);
+        if (id != null) {
+            List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + id);
+            if (nodes != null && !nodes.isEmpty()) {
+                nodeFound = true;
+                String foundText = null;
+                for (AccessibilityNodeInfo n : nodes) {
+                    if (n == null) continue;
+                    CharSequence t = n.getText();
+                    if (t != null && t.length() > 0) {
+                        foundText = t.toString();
+                        break;
+                    }
+                }
+                for (AccessibilityNodeInfo n : nodes) {
+                    if (n != null) n.recycle();
+                }
+                if (foundText != null) return new Pair<>(foundText, true);
+            }
+        }
+        for (String candidateId : Utils.browserIds) {
+            List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + candidateId);
+            if (nodes == null || nodes.isEmpty()) continue;
+            nodeFound = true;
+            String foundText = null;
+            for (AccessibilityNodeInfo n : nodes) {
+                if (n == null) continue;
+                CharSequence t = n.getText();
+                if (t != null && t.length() > 0) {
+                    foundText = t.toString();
+                    break;
+                }
+            }
+            for (AccessibilityNodeInfo n : nodes) {
+                if (n != null) n.recycle();
+            }
+            if (foundText != null) return new Pair<>(foundText, true);
+        }
+        if (nodeFound) return new Pair<>("", true);
+        return new Pair<>(null, false);
+    }
+
+    private Pair<String, Boolean> tryGetUrlBarTextWithRetry(String packageName, AccessibilityNodeInfo rootNode) {
+        final int maxRetries = 3;
+        final int delayMs = 300;
+
+        // Avoid blocking the main thread; fall back to single attempt if on main looper
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            return tryGetUrlBarText(packageName, rootNode);
+        }
+
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            Pair<String, Boolean> result = tryGetUrlBarText(packageName, rootNode);
+            if (result.second) {
+                return result;
+            }
+            try {
+                Thread.sleep(delayMs);
+            } catch (InterruptedException e) {
+                Log.d("Sleep", String.valueOf(e));
+            }
+        }
+
+        // No node found after all retries
+        return new Pair<>(null, false);
+    }
+
+    private boolean isEdgeOrSamsung(String packageName) {
+        if (packageName == null) return false;
+        if (packageName.startsWith("com.microsoft.emmx")) return true;
+        return "com.sec.android.app.sbrowser".equals(packageName);
+    }
+
+    private boolean isBlockedByUserListsEdgeSamsung(Set<String> candidateTextsLower, Set<String> candidateHosts) {
+        Set<String> domains = BlockedSitesManager.getBlockedDomains(this);
+        Set<String> exacts = BlockedSitesManager.getBlockedExactUrls(this);
+
+        for (String d : domains) {
+            if (d == null) continue;
+            String dl = d.toLowerCase();
+            boolean domainLike = dl.contains(".");
+            if (domainLike) {
+                if (candidateHosts != null) {
+                    for (String host : candidateHosts) {
+                        if (host.equals(dl) || host.endsWith("." + dl)) {
+                            Log.d(TAG, "Blocker: ES DOMAIN match entry=" + dl + ", host=" + host);
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                if (candidateTextsLower != null) {
+                    for (String ct : candidateTextsLower) {
+                        if (ct.contains(dl)) {
+                            Log.d(TAG, "Blocker: ES KEYWORD match entry=" + dl + ", textSource=" + ct);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (String e : exacts) {
+            if (e == null) continue;
+            HostPath exactHp = parseHostPath(e);
+            if (exactHp == null || exactHp.host == null) continue;
+            if (candidateHosts != null) {
+                for (String host : candidateHosts) {
+                    if (host.equals(exactHp.host) || host.endsWith("." + exactHp.host)) {
+                        Log.d(TAG, "Blocker: ES EXACT-HOST match host=" + exactHp.host + ", candidateHost=" + host);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isBlockedByUserLists(Set<String> candidateTextsLower, Set<String> candidateHosts) {
+        Set<String> domains = BlockedSitesManager.getBlockedDomains(this);
+        Set<String> exacts = BlockedSitesManager.getBlockedExactUrls(this);
+
+        // Domain entries
+        for (String d : domains) {
+            if (d == null) continue;
+            String dl = d.toLowerCase();
+            boolean domainLike = dl.contains(".");
+            if (domainLike) {
+                // Require host and check suffix match
+                if (candidateHosts != null) {
+                    for (String host : candidateHosts) {
+                        if (host.equals(dl) || host.endsWith("." + dl)) {
+                            Log.d(TAG, "Blocker: User list DOMAIN match entry=" + dl + ", host=" + host);
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                // Brand keyword match limited to URL bar/title strings only
+                if (candidateTextsLower != null) {
+                    for (String ct : candidateTextsLower) {
+                        if (ct.contains(dl)) {
+                            Log.d(TAG, "Blocker: User list KEYWORD match entry=" + dl + ", textSource=" + ct);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Exact URL entries (host + path prefix match)
+        for (String e : exacts) {
+            if (e == null) continue;
+            HostPath exactHp = parseHostPath(e);
+            if (exactHp == null || exactHp.host == null) continue;
+            if (candidateTextsLower != null) {
+                for (String ct : candidateTextsLower) {
+                    HostPath candHp = parseHostPath(ct);
+                    if (candHp == null || candHp.host == null) continue;
+                    if (candHp.host.equals(exactHp.host) || candHp.host.endsWith("." + exactHp.host)) {
+                        if (candHp.path.startsWith(exactHp.path)) {
+                            Log.d(TAG, "Blocker: User list EXACT match host=" + exactHp.host + ", pathPrefix=" + exactHp.path + ", matchedPath=" + candHp.path);
+                            return true;
+                        }
+                    }
+                }
+            }
         }
         return false;
     }
 
+    private static class HostPath {
+        String host;
+        String path;
+    }
+
+    @Nullable
+    private HostPath parseHostPath(String text) {
+        if (text == null || text.isEmpty()) return null;
+        String host = AdultDomainListManager.extractHostFromUrlText(text);
+        if (host == null || !host.contains(".")) return null;
+        String s = text.trim();
+        if (!s.startsWith("http://") && !s.startsWith("https://")) {
+            s = "https://" + s;
+        }
+        try {
+            java.net.URL u = new java.net.URL(s);
+            String h = u.getHost().toLowerCase();
+            if (h.startsWith("www.")) h = h.substring(4);
+            String p = u.getPath();
+            if (p == null || p.isEmpty()) p = "/";
+            if (p.length() > 1 && p.endsWith("/")) p = p.substring(0, p.length() - 1);
+            HostPath hp = new HostPath();
+            hp.host = h;
+            hp.path = p;
+            return hp;
+        } catch (Exception ignore) {
+            String p = "/";
+            int slash = s.indexOf('/');
+            if (slash >= 0) p = s.substring(slash);
+            if (p.length() > 1 && p.endsWith("/")) p = p.substring(0, p.length() - 1);
+            HostPath hp = new HostPath();
+            hp.host = host;
+            hp.path = p;
+            return hp;
+        }
+    }
+
+    // ===== DEBUG / NODE TREE LOGGING =====
     private void logNodeTree(AccessibilityNodeInfo node, int depth) {
         if (node == null) return;
         String indent = new String(new char[depth]).replace("\0", "-");
         Log.d("NodeDump", indent + node.getViewIdResourceName() + " | " + node.getText());
         for (int i = 0; i < node.getChildCount(); i++) {
-            logNodeTree(node.getChild(i), depth + 1);
+            AccessibilityNodeInfo child = node.getChild(i);
+            logNodeTree(child, depth + 1);
+            if (child != null) child.recycle();
         }
     }
 
+    // ===== FOREGROUND APP HELPERS =====
     @Nullable
     private String getForegroundPackageName() {
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
@@ -1049,6 +1296,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         return foregroundPackageName;
     }
 
+    // ===== SCHEDULING / ALARMS =====
     private void scheduleMidnightReset() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, MidnightResetReceiver.class);
@@ -1083,7 +1331,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
         String appTag = getAppTagFromAllPackages(packageName);
         if (appTag != null) {
-            resetTimerStateForApp(appTag, "App blocked (focus/global limit)");
+            resetTimerStateForApp(appTag);
         }
 
         processViewFocusEndIfActive(packageName); // Old view focus system
@@ -1106,10 +1354,6 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
     private void processViewFocusEndIfActive(String packageName) { // Part of the old view focus system
         if (packageName != null && packageName.equals(currentViewIdPackage)) {
-            Log.d(TAG, "processViewFocusEndIfActive called for " + packageName + ". View-specific key determination needs review.");
-            // Original logic cleared currentViewFocusSessionStartTimeMap and updated appViewFocusAccumulatedTimeTodayMap here.
-            // These maps are now cleared directly in loadConfiguration or not actively used by the new reminder system.
-            // For now, just clearing currentViewIdPackage.
             currentViewIdPackage = null;
         }
     }
@@ -1179,9 +1423,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
     private void refreshDailyServiceState() {
         loadTodaysWastedTime();
-        loadLastReminderTimestampsForAppTags(); // For reminder cooldowns
-
-        // Reset ignore counts for all apps at the start of a new day
+        loadLastReminderTimestampsForAppTags();
         resetAllReminderIgnoredCounts();
 
         long currentUserReminderIntervalMs = (long) remindDoomScrollingMinutes * 60 * 1000;
@@ -1250,11 +1492,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
         List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + targetViewIdName);
         if (nodes != null && !nodes.isEmpty()) {
+            boolean actionPerformed = false;
             for (AccessibilityNodeInfo node : nodes) {
-                if (node != null && node.isVisibleToUser()) {
+                if (node != null && node.isVisibleToUser() && !actionPerformed) {
                     performGlobalAction(GLOBAL_ACTION_BACK);
-                    node.recycle();
-                    break;
+                    actionPerformed = true;
                 }
                 if (node != null) node.recycle();
             }
@@ -1273,12 +1515,6 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         int count = getReminderIgnoredCount(appTag) + 1;
         sharedPreferences.edit().putInt(PREF_REMINDER_IGNORED_COUNT_PREFIX + appTag, count).apply();
-    }
-
-    private void resetReminderIgnoredCount(String appTag) {
-        if (sharedPreferences == null)
-            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sharedPreferences.edit().putInt(PREF_REMINDER_IGNORED_COUNT_PREFIX + appTag, 0).apply();
     }
 
     private void resetAllReminderIgnoredCounts() {

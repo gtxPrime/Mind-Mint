@@ -7,6 +7,7 @@ import static android.view.View.VISIBLE;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.app.AlarmManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +23,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
@@ -49,6 +54,7 @@ import androidx.preference.PreferenceManager;
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textview.MaterialTextView;
 import com.gxdevs.mindmint.Components.NebulaStarfieldView;
 import com.gxdevs.mindmint.R;
@@ -86,6 +92,7 @@ public class FocusMode extends AppCompatActivity {
     private MintCrystals mintCrystals;
     private BlurView blurView;
     private BlurTarget blurTarget;
+    private BlurView permissionBlur;
     private MaterialSwitch themeSwitch;
 
     @Override
@@ -108,12 +115,25 @@ public class FocusMode extends AppCompatActivity {
         setupOnUI();
         setupReveal();
         setupCircularSeekBar();
+
+        // Setup blur on permission card and update its visibility
+        if (permissionBlur != null && blurTarget != null) {
+            permissionBlur.setupWith(blurTarget).setBlurRadius(5f);
+        }
+        checkPermissionAndMoveOn();
     }
 
     private void setupOnUI() {
         findViewById(R.id.coinImg).setOnClickListener(v -> showPeaceCoinsDialog());
         findViewById(R.id.mintCrystals).setOnClickListener(v -> showPeaceCoinsDialog());
         startButton.setOnClickListener(v -> {
+            // Require exact alarm permission on Android 12+ before any timer action
+            if (!hasExactAlarmPermission()) {
+                checkPermissionAndMoveOn();
+                askForExactAlarmPermission();
+                Toast.makeText(this, "Allow exact alarm permission to use Focus Mode timer.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             if (checkNotification()) {
                 if (isBound && focusService != null) {
                     if (focusService.isTimerRunning()) {
@@ -192,6 +212,10 @@ public class FocusMode extends AppCompatActivity {
         View arc1 = findViewById(R.id.arcTopLeft);
         View arc2 = findViewById(R.id.arcBottomRight);
         View arc3 = findViewById(R.id.arcBottomLeft);
+        MaterialCardView permissionCard = findViewById(R.id.permissionCard);
+        if (permissionCard != null) {
+            Utils.applySecondaryColor(permissionCard, this);
+        }
         Utils.applyAccentColors(arc1, arc2, arc3, this);
     }
 
@@ -207,6 +231,7 @@ public class FocusMode extends AppCompatActivity {
         mintCrystals = new MintCrystals(this);
         blurView = findViewById(R.id.btnBlur);
         blurTarget = findViewById(R.id.blurTarget);
+        permissionBlur = findViewById(R.id.permissionBlur);
         themeSwitch = findViewById(R.id.themeSwitch);
     }
 
@@ -466,6 +491,42 @@ public class FocusMode extends AppCompatActivity {
                 });
     }
 
+    private void checkPermissionAndMoveOn() {
+        MaterialCardView permissionCard = findViewById(R.id.permissionCard);
+        if (permissionCard == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            boolean allowed = alarmManager != null && alarmManager.canScheduleExactAlarms();
+            permissionCard.setVisibility(allowed ? GONE : VISIBLE);
+            if (!allowed) {
+                permissionCard.setOnClickListener(v -> askForExactAlarmPermission());
+            } else {
+                permissionCard.setOnClickListener(null);
+            }
+        } else {
+            permissionCard.setVisibility(GONE);
+            permissionCard.setOnClickListener(null);
+        }
+    }
+
+    private boolean hasExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            return alarmManager != null && alarmManager.canScheduleExactAlarms();
+        }
+        return true;
+    }
+
+    private void askForExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                startActivity(intent);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -478,6 +539,8 @@ public class FocusMode extends AppCompatActivity {
         mintCrystalsTxt.setText(String.valueOf(mintCrystals.getCoins()));
         handler.removeCallbacks(updateUITask);
         applyCrystalEffectBase();
+        // Re-check exact alarm permission when returning to screen
+        checkPermissionAndMoveOn();
 
         if (isBound && focusService != null) {
             boolean isRunning = focusService.isTimerRunning();
@@ -840,6 +903,30 @@ public class FocusMode extends AppCompatActivity {
 
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
+        vibrateCompletion();
+    }
+
+    private void vibrateCompletion() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                VibratorManager vm = (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                if (vm != null) {
+                    long[] pattern = new long[]{0, 220, 120, 220};
+                    VibrationEffect effect = VibrationEffect.createWaveform(pattern, -1);
+                    vm.getDefaultVibrator().vibrate(effect);
+                }
+            } else {
+                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                if (v != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        v.vibrate(VibrationEffect.createOneShot(260, VibrationEffect.DEFAULT_AMPLITUDE));
+                    } else {
+                        v.vibrate(260);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
     }
 }
 

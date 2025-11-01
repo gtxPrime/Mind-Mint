@@ -118,9 +118,9 @@
                 android:id="@+id/timeLimits"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
+                android:layout_marginStart="15dp"
                 android:layout_marginTop="15dp"
-                android:layout_marginEnd="20dp"
+                android:layout_marginEnd="15dp"
                 app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp"
@@ -284,8 +284,8 @@
                 android:id="@+id/blockingHolder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
                 app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp"
@@ -402,7 +402,7 @@
                                 android:layout_marginStart="20dp"
                                 android:layout_marginTop="5dp"
                                 android:layout_marginBottom="5dp"
-                                android:src="@drawable/ic_app_block"
+                                android:src="@drawable/browser"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
@@ -413,7 +413,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="15dp"
                                 android:fontFamily="sans-serif-medium"
-                                android:text="Block browsers doomscrolling"
+                                android:text="Blocker on browsers"
                                 android:textColor="?attr/tintGlobalColor"
                                 android:textSize="15sp"
                                 app:layout_constraintBottom_toTopOf="@+id/blockBrowsersSubtitle"
@@ -427,10 +427,9 @@
                                 android:layout_height="wrap_content"
                                 android:alpha="0.7"
                                 android:fontFamily="@font/inter18regular"
-                                android:text="Helps avoid doomscrolling on web browsers"
+                                android:text="Tap to add more sites"
                                 android:textColor="?attr/tintGlobalColor"
                                 android:textSize="12sp"
-                                android:visibility="gone"
                                 app:layout_constraintBottom_toBottomOf="@+id/blockBrowsersIcon"
                                 app:layout_constraintEnd_toStartOf="@+id/blockBrowsersDoomSwitch"
                                 app:layout_constraintStart_toStartOf="@+id/blockBrowsersTitle"
@@ -438,6 +437,85 @@
 
                             <com.google.android.material.materialswitch.MaterialSwitch
                                 android:id="@+id/blockBrowsersDoomSwitch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="15dp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:thumbTint="?attr/switchThumb"
+                                app:trackTint="?attr/switchTrack" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/adultSitesLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/blockBrowsersLayout">
+
+                            <ImageView
+                                android:id="@+id/adultSitesIcon"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="20dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="5dp"
+                                android:src="@drawable/corn_blocker"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/adultSitesTitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="15dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Block adult sites"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="15sp"
+                                app:layout_constraintBottom_toTopOf="@+id/adultSitesSubtitle"
+                                app:layout_constraintEnd_toStartOf="@+id/blockAdultSitesSwitch"
+                                app:layout_constraintStart_toEndOf="@+id/adultSitesIcon"
+                                app:layout_constraintTop_toTopOf="@+id/adultSitesIcon" />
+
+                            <TextView
+                                android:id="@+id/adultSitesSubtitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:alpha="0.7"
+                                android:fontFamily="@font/inter18regular"
+                                android:text="In Beta"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="12sp"
+                                app:layout_constraintBottom_toBottomOf="@+id/adultSitesIcon"
+                                app:layout_constraintEnd_toStartOf="@+id/blockAdultSitesSwitch"
+                                app:layout_constraintStart_toStartOf="@+id/adultSitesTitle"
+                                app:layout_constraintTop_toBottomOf="@+id/adultSitesTitle" />
+
+                            <TextView
+                                android:id="@+id/adultListUpdate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:fontFamily="sans-serif-medium"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:text="Update list"
+                                android:textColor="?attr/tintGlobalColor"
+                                android:textSize="12sp"
+                                app:layout_constraintStart_toStartOf="@+id/adultSitesSubtitle"
+                                app:layout_constraintTop_toBottomOf="@+id/adultSitesSubtitle" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/blockAdultSitesSwitch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="15dp"
@@ -458,7 +536,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/blockBrowsersLayout">
+                            app:layout_constraintTop_toBottomOf="@+id/adultSitesLayout">
 
                             <ImageView
                                 android:id="@+id/blockingPopupDurationIcon"
@@ -539,8 +617,8 @@
                 android:id="@+id/themingCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
                 app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="4dp"
@@ -829,12 +907,11 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/permissionCard"
+                android:id="@+id/PermissionCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:visibility="visible"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
                 app:cardBackgroundColor="?attr/secondaryColor"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
@@ -844,7 +921,7 @@
                 app:strokeWidth="1dp">
 
                 <eightbitlab.com.blurview.BlurView
-                    android:id="@+id/permissionBlurX"
+                    android:id="@+id/permissionBlurAcc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:blurOverlayColor="#80FF0000">
@@ -854,20 +931,20 @@
                         android:layout_height="wrap_content">
 
                         <TextView
+                            android:id="@+id/assTxt"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
                             android:padding="8dp"
-                            android:text="@string/batter_notice"
+                            android:text="@string/access_home"
                             android:textColor="?attr/tintGlobalColor"
-                            android:textSize="13sp"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/permissionArrow"
+                            android:textSize="12sp"
+                            app:layout_constraintEnd_toStartOf="@+id/assArrow"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <ImageView
-                            android:id="@+id/permissionArrow"
+                            android:id="@+id/assArrow"
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:layout_marginStart="25dp"
@@ -875,9 +952,38 @@
                             android:contentDescription="@string/decor"
                             android:rotation="180"
                             android:src="@drawable/ic_arrow_back"
-                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintBottom_toBottomOf="@+id/assTxt"
                             app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintTop_toTopOf="@+id/assTxt"
+                            app:tint="?attr/tintGlobalColor" />
+
+                        <TextView
+                            android:id="@+id/batteryTxt"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-medium"
+                            android:padding="8dp"
+                            android:text="@string/batter_notice"
+                            android:textColor="?attr/tintGlobalColor"
+                            android:textSize="12sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@+id/batteryArrow"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/assTxt" />
+
+                        <ImageView
+                            android:id="@+id/batteryArrow"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_marginStart="25dp"
+                            android:layout_marginEnd="30dp"
+                            android:contentDescription="@string/decor"
+                            android:rotation="180"
+                            android:src="@drawable/ic_arrow_back"
+                            app:layout_constraintBottom_toBottomOf="@+id/batteryTxt"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/assArrow"
+                            app:layout_constraintTop_toTopOf="@+id/batteryTxt"
                             app:tint="?attr/tintGlobalColor" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>

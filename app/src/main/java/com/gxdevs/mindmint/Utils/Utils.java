@@ -5,13 +5,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
-import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -33,8 +31,7 @@ public class Utils {
     public static final Map<String, String> ALL_PACKAGES = new HashMap<>();
     public static final Map<String, String> ORIGINAL_PACKAGES = new HashMap<>();
     public static final Map<String, String> BROWSERS_PACKAGES = new HashMap<>();
-    public static final List<String> BLOCKED_URLS = new ArrayList<>();
-    public static final List<String> FULL_BLOCKED_URLS = new ArrayList<>();
+    public static final List<String> browserIds = new ArrayList<>();
 
     static {
         // Initialize the dictionary with both mod and original packages
@@ -62,9 +59,9 @@ public class Utils {
         BROWSERS_PACKAGES.put("com.chrome.canary", "url_bar");
 
         // Firefox browsers
-        BROWSERS_PACKAGES.put("org.mozilla.firefox", "navigation_bar");
-        BROWSERS_PACKAGES.put("org.mozilla.firefox_beta", "navigation_bar");
-        BROWSERS_PACKAGES.put("org.mozilla.fenix", "navigation_bar"); // Firefox Nightly
+        BROWSERS_PACKAGES.put("org.mozilla.firefox", "mozac_browser_toolbar_url_view");
+        BROWSERS_PACKAGES.put("org.mozilla.firefox_beta", "mozac_browser_toolbar_url_view");
+        BROWSERS_PACKAGES.put("org.mozilla.fenix", "mozac_browser_toolbar_url_view"); // Firefox Nightly
         BROWSERS_PACKAGES.put("org.mozilla.focus", "mozac_browser_toolbar_url_view"); // Firefox Focus
 
         // Microsoft Edge browsers
@@ -96,14 +93,22 @@ public class Utils {
         BROWSERS_PACKAGES.put("com.brave.browser_beta", "url_bar");
         BROWSERS_PACKAGES.put("com.brave.browser_nightly", "url_bar");
 
-        // Default blocked URLs for browser doom-scrolling (customize later)
-        BLOCKED_URLS.add("m.youtube.com/shorts");
-        BLOCKED_URLS.add("instagram.com/reel");
-        BLOCKED_URLS.add("snapchat.com/spotlight");
+        //Extras
+        BROWSERS_PACKAGES.put("org.torproject.torbrowser", "mozac_browser_toolbar_url_view");
+        BROWSERS_PACKAGES.put("com.duckduckgo.mobile.android", "omnibarTextInput");
+        BROWSERS_PACKAGES.put("idm.internet.download.manager", "search");
 
-        FULL_BLOCKED_URLS.add("instagram");
-        FULL_BLOCKED_URLS.add("youtube");
-        FULL_BLOCKED_URLS.add("snapchat");
+        browserIds.add("url_bar");
+        browserIds.add("omnibarTextInput");
+        browserIds.add("mozac_browser_toolbar_url_view");
+        browserIds.add("url_field");
+        browserIds.add("web_title");
+        browserIds.add("url_bar");
+        browserIds.add("location_bar_edit_text");
+        browserIds.add("search");
+        browserIds.add("url");
+        browserIds.add("search_content");
+        browserIds.add("edit_text");
     }
 
     public static int calculateTotalUsageScrolls(SharedPreferences sharedPreferences, String tag) {

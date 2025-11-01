@@ -5,13 +5,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Permission to draw over other apps (for overlay) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Optional feature for compatibility -->
     <uses-feature
         android:name="android.hardware.screen.portrait"
@@ -21,8 +20,8 @@
 
     <queries>
         <intent>
-            <action android:name="android.intent.action.MAIN"/>
-            <category android:name="android.intent.category.LAUNCHER"/>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
         </intent>
     </queries>
 
@@ -61,16 +60,21 @@
 
         <activity
             android:name=".Activities.CustomAppSelectionActivity"
-            android:exported="false"/>
+            android:exported="false" />
+
+        <activity
+            android:name=".Activities.SiteBlockerActivity"
+            android:exported="false"
+            android:label="Site blocker" />
 
         <activity
             android:name=".Activities.BlockingOverlayDisplayActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MindMint.TransparentOverlay"
-            android:launchMode="singleInstance"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
             android:taskAffinity=""
-            android:configChanges="orientation|screenSize|keyboardHidden" />
+            android:theme="@style/Theme.MindMint.TransparentOverlay" />
         <activity android:name="com.gxdevs.mindmint.Activities.HabitActivity" />
         <activity android:name="com.gxdevs.mindmint.Activities.HabitDetailActivity" />
         <activity android:name="com.gxdevs.mindmint.Activities.StatsActivity" />
@@ -91,7 +95,7 @@
         <service
             android:name=".Services.FocusService"
             android:exported="false"
-            android:foregroundServiceType="dataSync"/>
+            android:foregroundServiceType="dataSync" />
 
         <receiver
             android:name=".Receivers.MidnightResetReceiver"
@@ -101,7 +105,9 @@
                 <action android:name="com.gtxprime.mindmint.RESET_APP_TIMES" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".Receivers.ServiceResumeReceiver" android:exported="false"/>
+        <receiver
+            android:name=".Receivers.ServiceResumeReceiver"
+            android:exported="false" />
         <receiver
             android:name=".Receivers.BootCompletedReceiver"
             android:enabled="true"
@@ -110,7 +116,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver 
+        <receiver
             android:name=".Receivers.TaskReminderReceiver"
             android:enabled="true"
             android:exported="false" />

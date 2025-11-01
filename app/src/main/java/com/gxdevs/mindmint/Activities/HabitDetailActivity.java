@@ -154,7 +154,7 @@ public class HabitDetailActivity extends AppCompatActivity {
         for (Task t : taskManager.loadTasks()) {
             if (habit.getId().equals(t.getHabitId())) subTasks.add(t);
         }
-        subTaskAdapter = new TaskAdapter(this, subTasks, true, blurTarget);
+        subTaskAdapter = new TaskAdapter(this, subTasks, true);
         subTasksRecyclerView.setAdapter(subTaskAdapter);
 
         // Add Task launch on card (only visible/usable in edit mode, but kept for create too)
@@ -242,7 +242,6 @@ public class HabitDetailActivity extends AppCompatActivity {
             }
         });
 
-        // Save habit
         btnDone.setOnClickListener(v -> {
             habit.setName(habitTitleEdit.getText() != null ? habitTitleEdit.getText().toString().trim() : "");
             habit.setReason(reasonEdit.getText() != null ? reasonEdit.getText().toString().trim() : "");
@@ -371,6 +370,12 @@ public class HabitDetailActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("No", null)
                 .show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        applyColors();
     }
 }
 

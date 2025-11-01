@@ -16,7 +16,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.apachat.swipereveallayout.core.SwipeLayout;
-import com.apachat.swipereveallayout.core.interfaces.Swipe;
 import com.gxdevs.mindmint.Models.Task;
 import com.gxdevs.mindmint.R;
 
@@ -28,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 
 import eightbitlab.com.blurview.BlurTarget;
-import eightbitlab.com.blurview.BlurView;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
@@ -51,16 +49,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         void onTaskDelete(Task task, int position);
     }
 
-    public TaskAdapter(Context context, List<Task> taskList, BlurTarget blurTarget) {
-        this(context, taskList, false, blurTarget);
+    public TaskAdapter(Context context, List<Task> taskList) {
+        this(context, taskList, false);
     }
 
-    public TaskAdapter(Context context, List<Task> taskList, boolean manageOnly, BlurTarget blurTarget) {
+    public TaskAdapter(Context context, List<Task> taskList, boolean manageOnly) {
         this.context = context;
         this.taskList = taskList;
         this.filteredTaskList = new ArrayList<>(taskList);
         this.manageOnly = manageOnly;
-        this.blurTarget = blurTarget;
     }
 
     public void setOnTaskClickListener(OnTaskClickListener listener) {
@@ -80,7 +77,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         // Set task details
         holder.taskName.setText(task.getName());
-        
+
         // Display emoji - if not set, assign a random one
         if (task.getEmoji() == null || task.getEmoji().isEmpty()) {
             String[] emojis = new String[]{"✅", "📝", "🎯", "🔥", "💡", "⭐", "🏃", "📚", "💪", "🎨"};

@@ -285,6 +285,7 @@ public class HabitActivity extends AppCompatActivity implements HabitAdapter.OnH
     @Override
     protected void onResume() {
         super.onResume();
+        applyColors();
         load();
     }
 }

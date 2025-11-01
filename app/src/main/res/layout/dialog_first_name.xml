@@ -48,7 +48,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/first_name"
                     android:imeOptions="actionDone"
-                    android:inputType="textPersonName"
+                    android:inputType="textCapSentences"
                     android:maxLines="1"
                     android:textColor="?attr/tintGlobalColor"
                     android:textColorHint="?attr/tintGlobalColor" />

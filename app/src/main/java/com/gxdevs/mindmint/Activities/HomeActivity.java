@@ -6,7 +6,10 @@ import static android.view.View.VISIBLE;
 import static com.gxdevs.mindmint.Services.FocusService.TOTAL_FOCUSED_TIME_KEY;
 
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -15,6 +18,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.SpannableString;
@@ -237,8 +241,16 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Accessibility permission required", Toast.LENGTH_SHORT).show();
             }
         });
-        findViewById(R.id.store).setOnClickListener(v -> Toast.makeText(this, "Store coming soon!", Toast.LENGTH_SHORT).show());
 
+        findViewById(R.id.report).setOnClickListener(v -> {
+            String reportUrl = "https://forms.gle/rNiEevQ2aEDojpBi9";
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(reportUrl));
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(this, "No browser found to open URL", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         brainBlur.setupWith(blurTarget).setBlurRadius(5f);
         focusBlur.setupWith(blurTarget).setBlurRadius(5f);
@@ -382,6 +394,8 @@ public class HomeActivity extends AppCompatActivity {
         Utils.applyAppThemeFromPrefs(this);
         updateTodayTasksCount();
         updateStreakDisplay();
+        checkAndShowPermissionCard();
+        applyColors();
 
         // Update coin display
         mintCrystals.setText(String.valueOf(mintCrystalsObj.getCoins()));
@@ -866,7 +880,13 @@ public class HomeActivity extends AppCompatActivity {
         int visits = sharedPreferences.getInt(KEY_AFFIRM_VISIT_COUNT, 0);
         if (visits >= 5) {
             sharedPreferences.edit().putInt(KEY_AFFIRM_VISIT_COUNT, 0).apply();
-            showAffirmationBalloon();
+            // Randomly decide between affirmation and Instagram follow balloon
+            int choice = new java.util.Random().nextInt(2); // 0 or 1
+            if (choice == 0) {
+                showAffirmationBalloon();
+            } else {
+                showInstagramBalloon();
+            }
         } else {
             // No balloon this time
             if (balloon != null && balloon.isShowing()) {
@@ -1017,6 +1037,66 @@ public class HomeActivity extends AppCompatActivity {
         int total = yt + insta + snap;
         int healthLeft = Math.max(0, max - total);
         return (int) ((healthLeft * 100f) / max);
+    }
+
+    private void showInstagramBalloon() {
+        int bgColor;
+        if (totalWastedScrolls >= 700) {
+            bgColor = R.color.rotBrainColor;
+        } else {
+            bgColor = R.color.brainColor;
+        }
+
+        if (balloon != null && balloon.isShowing()) {
+            balloon.dismiss();
+        }
+
+        balloon = new Balloon.Builder(this)
+                .setArrowSize(10)
+                .setAutoDismissDuration(7000)
+                .setArrowOrientation(ArrowOrientation.BOTTOM)
+                .setArrowPosition(0.5f)
+                .setWidthRatio(0.7f)
+                .setTextTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL))
+                .setHeight(BalloonSizeSpec.WRAP)
+                .setTextSize(16f)
+                .setCornerRadius(12f)
+                .setAlpha(0.95f)
+                .setPadding(2)
+                .setMarginRight(5)
+                .setText("Follow us on Insta!")
+                .setTextColorResource(R.color.white)
+                .setBackgroundColorResource(bgColor)
+                .setBalloonAnimation(BalloonAnimation.ELASTIC)
+                .setLifecycleOwner(this)
+                .setOnBalloonClickListener(v -> {
+                    if (balloon != null && balloon.isShowing()) {
+                        balloon.dismiss();
+                    }
+                    openInstagramProfile();
+                })
+                .build();
+        brain.post(() -> balloon.showAlignTop(findViewById(R.id.brainHolder)));
+    }
+
+    private void openInstagramProfile() {
+        Uri uri = Uri.parse("https://instagram.com/mindmintapp");
+        Intent instaIntent = new Intent(Intent.ACTION_VIEW, uri);
+        instaIntent.setPackage("com.instagram.android");
+        try {
+            startActivity(instaIntent);
+        } catch (ActivityNotFoundException e) {
+            // Fallback to any app that can handle the link (browser, etc.)
+            Intent fallback = new Intent(Intent.ACTION_VIEW, uri);
+            try {
+                startActivity(fallback);
+            } catch (Exception ignored) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Hardcoded Text", String.valueOf(uri));
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(this, "Link copied to clipboard", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void showPeaceCoinsDialog() {

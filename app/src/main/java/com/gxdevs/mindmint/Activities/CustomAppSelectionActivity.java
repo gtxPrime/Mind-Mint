@@ -2,13 +2,13 @@ package com.gxdevs.mindmint.Activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +17,7 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.gxdevs.mindmint.Adapters.AppSelectionAdapter;
 import com.gxdevs.mindmint.Models.AppInfo;
 import com.gxdevs.mindmint.R;
@@ -35,7 +36,7 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
     private final List<AppInfo> appList = new ArrayList<>();
     private SharedPreferences sharedPreferences;
     private Set<String> blockedAppPackages;
-    private ProgressBar progressBar;
+    private CircularProgressIndicator progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,17 +78,23 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
             Intent intent = new Intent(Intent.ACTION_MAIN, null);
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-            // Get all apps that can be launched
             List<ResolveInfo> resolveInfos = pm.queryIntentActivities(intent, 0);
             List<AppInfo> installedApps = new ArrayList<>();
+            Set<String> addedPackages = new HashSet<>();
 
             for (ResolveInfo info : resolveInfos) {
-                String appName = info.loadLabel(pm).toString();
                 String packageName = info.activityInfo.packageName;
-                Drawable icon = info.loadIcon(pm);
 
                 try {
-                    if (!packageName.equals(myPackageName)) {
+                    // Avoid duplicates and skip your own app
+                    if (!packageName.equals(myPackageName) && !addedPackages.contains(packageName)) {
+                        addedPackages.add(packageName);
+
+                        // Get ApplicationInfo to fetch accurate name and icon
+                        ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+                        String appName = pm.getApplicationLabel(appInfo).toString();
+                        Drawable icon = pm.getApplicationIcon(appInfo);
+
                         boolean isBlocked = blockedAppPackages.contains(packageName);
                         installedApps.add(new AppInfo(appName, packageName, icon, isBlocked));
                     }
@@ -96,8 +103,8 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
                 }
             }
 
-            // Sort by name
-            installedApps.sort((app1, app2) -> app1.appName.compareToIgnoreCase(app2.appName));
+            // Sort alphabetically
+            installedApps.sort((a, b) -> a.appName.compareToIgnoreCase(b.appName));
 
             runOnUiThread(() -> {
                 appList.clear();
@@ -140,4 +147,10 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
         onBackPressed();
         return true;
     }
-} 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        applyColors();
+    }
+}

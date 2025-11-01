@@ -8,6 +8,7 @@ circularseekbarVersion = "1.4.1"
 colorpickerview = "2.3.0"
 coreSplashscreen = "1.0.1"
 easyreveal = "1.2"
+glide = "5.0.5"
 gson = "2.13.2"
 kotlin = "1.9.0"
 coreKtx = "1.16.0"
@@ -24,11 +25,12 @@ material = "1.13.0"
 activity = "1.10.1"
 constraintlayout = "2.2.1"
 mpandroidchart = "v3.1.0"
+okhttp = "5.2.1"
 preference = "1.2.1"
 progressview = "1.1.3"
 review = "2.0.2"
-firebaseCrashlytics = "20.0.2"
-googleGmsGoogleServices = "4.4.3"
+firebaseCrashlytics = "20.0.3"
+googleGmsGoogleServices = "4.4.4"
 googleFirebaseCrashlytics = "3.0.6"
 swipereveallayoutAndroid = "1.1.2"
 
@@ -42,6 +44,7 @@ blurview = { module = "com.github.Dimezis:BlurView", version.ref = "blurview" }
 circularprogressindicator = { module = "com.github.antonKozyriatskyi:CircularProgressIndicator", version.ref = "circularprogressindicator" }
 colorpickerview = { module = "com.github.skydoves:colorpickerview", version.ref = "colorpickerview" }
 easyreveal = { module = "com.github.Chrisvin:EasyReveal", version.ref = "easyreveal" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -64,6 +67,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 progressview = { module = "com.github.skydoves:progressview", version.ref = "progressview" }
 review = { module = "com.google.android.play:review", version.ref = "review" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }

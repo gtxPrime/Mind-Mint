@@ -145,7 +145,7 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
     private void setupRecyclerView() {
         taskList = new ArrayList<>();
-        taskAdapter = new TaskAdapter(this, taskList, blurTarget);
+        taskAdapter = new TaskAdapter(this, taskList);
         taskAdapter.setOnTaskClickListener(this);
         tasksRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         tasksRecyclerView.setAdapter(taskAdapter);
@@ -200,8 +200,7 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
             FrameLayout.LayoutParams blurParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             blurView.setLayoutParams(blurParams);
 
-            blurView.setupWith(blurTarget)
-                    .setBlurRadius(5f);
+            blurView.setupWith(blurTarget).setBlurRadius(5f);
             blurView.setClipToOutline(true);
 
             float cornerRadiusPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, getResources().getDisplayMetrics());
@@ -335,6 +334,8 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
         }
 
         saveTasks();
+        // Cancel any scheduled notifications for this task now that it's completed
+        notificationManager.cancelTaskReminder(task);
         // If this task belongs to a habit, check if all tasks for that habit are completed and mark habit done
         if (task.isHabit() && task.getHabitId() != null) {
             List<Task> tasks = taskManager.loadTasks();
@@ -514,6 +515,12 @@ public class TaskActivity extends AppCompatActivity implements TaskAdapter.OnTas
                 Toast.makeText(this, "Notification permission denied. Task reminders won't work.", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        applyColors();
     }
 }
 

@@ -13,8 +13,8 @@ android {
         applicationId "com.gxdevs.mindmint"
         minSdk 28
         targetSdk 35
-        versionCode 10
-        versionName 'Pumpkin 6'
+        versionCode 11
+        versionName 'Pumpkin 7'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -129,6 +129,10 @@ dependencies {
     //color picker
     implementation libs.colorpickerview
 
+    // Glide for image loading
+    implementation libs.glide
+
+    implementation libs.okhttp
 }
 
 

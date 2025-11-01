@@ -99,11 +99,11 @@
             app:layout_constraintTop_toTopOf="@+id/coinImg" />
 
         <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/store"
+            android:id="@+id/report"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginEnd="15dp"
-            android:src="@drawable/ic_store"
+            android:src="@drawable/ic_report"
             android:tint="?attr/tintGlobalColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/playPause"

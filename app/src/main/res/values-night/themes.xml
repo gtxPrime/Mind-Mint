@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Night overrides so custom attrs change with AppCompatDelegate night mode -->
+    <style name="Theme.NoScroll" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="tintGlobalColor">#f1f1f1</item>
+        <item name="globalBg">#0D0D0D</item>
+        <item name="secondaryColor">#1E1E2A</item>
+        <item name="switchTrack">#283039</item>
+        <item name="switchThumb">#9EABB8</item>
+        <item name="embeddedCards">@color/sexyGrey</item>
+    </style>
+
+    <style name="Theme.MyApp.Splash" parent="Theme.NoScroll">
+        <item name="materialSwitchStyle">@style/Widget.App.Switch</item>
+        <item name="android:windowBackground">@color/black</item>
+    </style>
+</resources>
+

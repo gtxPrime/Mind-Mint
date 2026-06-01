@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Optional feature for compatibility -->
     <uses-feature
         android:name="android.hardware.screen.portrait"
@@ -73,6 +74,19 @@
             android:launchMode="singleInstance"
             android:taskAffinity=""
             android:theme="@style/Theme.MindMint.TransparentOverlay" />
+            
+        <activity
+            android:name=".Activities.LockChallengeActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@style/Theme.MindMint.TransparentOverlay"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".Activities.LockTypeSelectionActivity"
+            android:exported="false" />
         <activity android:name="com.gxdevs.mindmint.Activities.HabitCreateActivity" android:windowSoftInputMode="adjustResize" />
         <activity android:name="com.gxdevs.mindmint.Activities.StatsActivity" />
         <activity android:name="com.gxdevs.mindmint.Activities.HabitStatActivity" />

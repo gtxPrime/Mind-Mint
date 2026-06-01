@@ -13,6 +13,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.RotateAnimation;
 import android.view.animation.TranslateAnimation;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -30,9 +32,15 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
     private static final String TAG = "BlockingOverlayDisplay";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private String currentBlockedAppName = "Unknown";
+    private String currentBlockedPackageName;
     private ImageView ivBlockedAppIcon;
     private boolean isReminderOnly = false;
     private boolean homeActionDispatched = false;
+
+    private Button btnUnlockApp;
+    private Button btnGoBack;
+    private com.gxdevs.mindmint.Utils.ChallengeLockManager challengeLockMgr;
+    private androidx.activity.result.ActivityResultLauncher<Intent> challengeLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +61,19 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate: ContentView SET");
 
         ivBlockedAppIcon = findViewById(R.id.iv_blocked_app_icon);
+        btnUnlockApp = findViewById(R.id.btn_unlock_app);
+        btnGoBack = findViewById(R.id.btn_go_back);
+        challengeLockMgr = new com.gxdevs.mindmint.Utils.ChallengeLockManager(this);
+
+        challengeLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        finish();
+                    } else {
+                        handleBackPress();
+                    }
+                });
 
         processIntent(getIntent());
         setupTimer();
@@ -68,7 +89,7 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
             isReminderOnly = false;
         } else {
             currentBlockedAppName = intent.getStringExtra(AppUsageAccessibilityService.EXTRA_BLOCKED_APP_NAME);
-            String currentBlockedPackageName = intent.getStringExtra(AppUsageAccessibilityService.EXTRA_BLOCKED_PACKAGE_NAME);
+            currentBlockedPackageName = intent.getStringExtra(AppUsageAccessibilityService.EXTRA_BLOCKED_PACKAGE_NAME);
             isReminderOnly = intent.getBooleanExtra(AppUsageAccessibilityService.EXTRA_IS_REMINDER_ONLY, false);
             isFocus = intent.getBooleanExtra(AppUsageAccessibilityService.EXTRA_IS_FOCUS, false);
             Log.i(TAG, "processIntent: Received blocked app name: " + currentBlockedAppName + ", package: " + currentBlockedPackageName + ", isReminder: " + isReminderOnly);
@@ -137,41 +158,82 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
         handler.removeCallbacksAndMessages(null);
         Log.d(TAG, "setupTimer: Removed any existing handler callbacks.");
 
-        // Each logical blocking session (onCreate or new blocked package via onNewIntent)
-        // gets a fresh home-action dispatch opportunity.
-        homeActionDispatched = false;
+        btnUnlockApp.setVisibility(View.GONE);
+        btnGoBack.setVisibility(View.GONE);
 
+        if (isReminderOnly) {
+            setupStandardAutoCloseTimer();
+            return;
+        }
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        String challengeType = sp.getString(com.gxdevs.mindmint.Utils.ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+
+        if ("none".equals(challengeType)) {
+            setupStandardAutoCloseTimer();
+        } else {
+            btnGoBack.setVisibility(View.VISIBLE);
+            btnGoBack.setOnClickListener(v -> handleBackPress());
+
+            TextView tv_blocking_subtitle = findViewById(R.id.tv_blocking_subtitle);
+
+            if ("oneday".equals(challengeType)) {
+                btnUnlockApp.setVisibility(View.GONE);
+                
+                if (!challengeLockMgr.isBlockerOneDayLockActive(currentBlockedPackageName)) {
+                    challengeLockMgr.startBlockerOneDayLock(currentBlockedPackageName);
+                }
+
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        long remainingMs = challengeLockMgr.getBlockerOneDayLockRemainingMs(currentBlockedPackageName);
+                        if (remainingMs <= 0) {
+                            finish();
+                            return;
+                        }
+                        long hours = remainingMs / (60 * 60 * 1000L);
+                        long minutes = (remainingMs / (60 * 1000L)) % 60;
+                        long seconds = (remainingMs / 1000L) % 60;
+                        if (tv_blocking_subtitle != null) {
+                            tv_blocking_subtitle.setText(String.format(java.util.Locale.US, 
+                                "Strict lockout active.\nTime remaining: %02dh %02dm %02ds", 
+                                hours, minutes, seconds));
+                        }
+                        handler.postDelayed(this, 1000);
+                    }
+                });
+            } else {
+                btnUnlockApp.setVisibility(View.VISIBLE);
+                btnUnlockApp.setOnClickListener(v -> {
+                    Intent challengeIntent = new Intent(this, LockChallengeActivity.class);
+                    challengeIntent.putExtra(LockChallengeActivity.EXTRA_LOCK_TYPE, challengeType);
+                    challengeIntent.putExtra(LockChallengeActivity.EXTRA_TARGET_PACKAGE, currentBlockedPackageName);
+                    challengeIntent.putExtra(LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, false);
+                    challengeLauncher.launch(challengeIntent);
+                });
+            }
+        }
+    }
+
+    private void setupStandardAutoCloseTimer() {
+        homeActionDispatched = false;
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         int popupDurationSeconds = sharedPreferences.getInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, 3);
-        Log.i(TAG, "setupTimer: Loaded popupDurationSeconds from Prefs: " + popupDurationSeconds + "s");
-
+        
         if (popupDurationSeconds < 1) {
-            Log.w(TAG, "setupTimer: popupDurationSeconds was < 1 (" + popupDurationSeconds + "s), forcing to 1s.");
             popupDurationSeconds = 1;
         }
 
-        Log.i(TAG, "setupTimer: Scheduling finish() in " + popupDurationSeconds + " seconds for app: " + currentBlockedAppName + ". Is Reminder: " + isReminderOnly);
         handler.postDelayed(() -> {
-            Log.i(TAG, "Handler postDelayed: Time elapsed for app: " + currentBlockedAppName + ". Is Reminder: " + isReminderOnly);
-
             if (!isReminderOnly && !homeActionDispatched) {
                 homeActionDispatched = true;
-                Log.d(TAG, "Sending broadcast to AppUsageAccessibilityService to perform GLOBAL_ACTION_HOME for blocking.");
                 Intent closeAppIntent = new Intent(AppUsageAccessibilityService.ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY);
                 closeAppIntent.setPackage(getPackageName());
                 sendBroadcast(closeAppIntent);
-                Log.d(TAG, "Broadcast ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY sent.");
-            } else if (homeActionDispatched) {
-                Log.d(TAG, "Home action already dispatched — skipping duplicate.");
-            } else {
-                Log.d(TAG, "Reminder time elapsed. Not sending GLOBAL_ACTION_HOME.");
             }
-
             if (!isFinishing() && !isDestroyed()) {
-                Log.i(TAG, "Handler postDelayed: Finishing BlockingOverlayDisplayActivity now.");
                 finish();
-            } else {
-                Log.w(TAG, "Handler postDelayed: Activity was already finishing or destroyed before explicit finish call.");
             }
         }, popupDurationSeconds * 1000L);
     }

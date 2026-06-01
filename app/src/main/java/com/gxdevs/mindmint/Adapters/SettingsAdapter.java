@@ -34,7 +34,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private String currentTheme;
 
     public interface OnSeekbarChangeListener {
-        void onProgressChanged(int progress);
+        void onProgressChanged(int itemId, int progress);
     }
 
     public interface OnThemeChangeListener {
@@ -370,10 +370,15 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    int seconds = progress + 3;
-                    valueText.setText(seconds + "s");
+                    if (item.getId() == 8) { // ID_POPUP_DURATION
+                        int seconds = progress + 3;
+                        valueText.setText(seconds + "s");
+                    } else { // Blocker Bypass Duration (ID_POPUP_DURATION + 10 = 18)
+                        int minutes = progress + 5;
+                        valueText.setText(minutes + "m");
+                    }
                     if (fromUser && onSeekbarChangeListener != null) {
-                        onSeekbarChangeListener.onProgressChanged(progress);
+                        onSeekbarChangeListener.onProgressChanged(item.getId(), progress);
                     }
                 }
 

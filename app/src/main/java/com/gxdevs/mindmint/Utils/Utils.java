@@ -185,7 +185,8 @@ public class Utils {
         ACCESSIBILITY,
         NOTIFICATION,
         ALARM,
-        BATTERY
+        BATTERY,
+        AUDIO
     }
 
     private static class Step {
@@ -361,6 +362,15 @@ public class Utils {
                             context.startActivity(batteryIntent);
                         }
                         break;
+
+                    case AUDIO:
+                        if (launcher != null) {
+                            launcher.launchNotification(Manifest.permission.RECORD_AUDIO);
+                        } else if (context instanceof Activity) {
+                            androidx.core.app.ActivityCompat.requestPermissions((Activity) context,
+                                    new String[]{Manifest.permission.RECORD_AUDIO}, 401);
+                        }
+                        break;
                 }
             } catch (Exception e) {
                 Intent fallbackIntent = new Intent(Settings.ACTION_SETTINGS);
@@ -422,6 +432,19 @@ public class Utils {
                         "SYSTEM STABILITY",
                         "Ensures your block sessions aren't interrupted by OS cleanup.",
                         "Ignore Optimization"
+                );
+                case AUDIO -> new PermissionConfig(
+                        "#8B5CF6", // Purple
+                        R.drawable.bell,
+                        "Microphone Access",
+                        "To use the Scream challenge to unlock restricted goals, Mind Mint needs audio recording permission.",
+                        Arrays.asList(
+                                new Step("Tap button below", "Grant"),
+                                new Step("System Dialog", "Click 'Allow'", android.R.drawable.ic_dialog_alert)
+                        ),
+                        "AUDIO PRIVACY",
+                        "We do not store or transmit any sound. Volume levels are processed locally.",
+                        "Allow Mic Access"
                 );
                 default -> getConfigForType(PermissionType.ACCESSIBILITY);
             };

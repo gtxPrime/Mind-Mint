@@ -67,9 +67,14 @@ import com.gxdevs.mindmint.Utils.SettingsLockManager;
 import com.gxdevs.mindmint.Utils.Utils;
 import com.gxdevs.mindmint.Utils.AnimUtils;
 import com.gxdevs.mindmint.Utils.WarningUtils;
+import com.gxdevs.mindmint.Utils.ChallengeLockManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
+import android.widget.LinearLayout;
+import com.google.android.material.button.MaterialButton;
 
 import com.skydoves.balloon.ArrowOrientation;
 import com.skydoves.balloon.Balloon;
@@ -113,6 +118,9 @@ public class SettingsFragment extends Fragment {
     private ActivityResultLauncher<Intent> exportLauncher;
     private ActivityResultLauncher<Intent> importLauncher;
     private ActivityResultLauncher<Intent> deviceAdminLauncher;
+    private ActivityResultLauncher<Intent> challengeLauncher;
+    private Runnable pendingAuthCallback;
+    private Runnable pendingCancelCallback;
 
     private DevicePolicyManager devicePolicyManager;
     private ComponentName deviceAdminComponent;
@@ -220,11 +228,18 @@ public class SettingsFragment extends Fragment {
         settingsItems.clear();
         buildSettingsList();
         adapter.setCurrentTheme(defaultSharedPreferences.getString(PREF_THEME_MODE, "Dark Theme"));
-        adapter.setOnSeekbarChangeListener(progress -> {
-            int minSeconds = 3;
-            int seconds = minSeconds + progress;
-            defaultSharedPreferences.edit()
-                    .putInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, seconds).apply();
+        adapter.setOnSeekbarChangeListener((itemId, progress) -> {
+            if (itemId == ID_POPUP_DURATION) {
+                int minSeconds = 3;
+                int seconds = minSeconds + progress;
+                defaultSharedPreferences.edit()
+                        .putInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, seconds).apply();
+            } else if (itemId == ID_POPUP_DURATION + 10) {
+                int minMinutes = 5;
+                int minutes = minMinutes + progress;
+                defaultSharedPreferences.edit()
+                        .putInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, minutes).apply();
+            }
         });
 
         adapter.setOnThemeChangeListener(this::applyTheme);
@@ -451,14 +466,21 @@ public class SettingsFragment extends Fragment {
                 .setIconValues(R.drawable.shape_circle, popupBg)
                 .setSeekbar(12, savedDuration - 3, savedDuration + "s"));
 
+        int savedBypass = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
+        if (savedBypass < 5) savedBypass = 5;
+        if (savedBypass > 60) savedBypass = 60;
+
+        settingsItems.add(new SettingsItem(ID_POPUP_DURATION + 10, SettingsItem.TYPE_SEEKBAR,
+                "Blocker Bypass Duration", "Customize bypass window for blocked apps",
+                R.drawable.hourglass, tealIcon)
+                .setIconValues(R.drawable.shape_circle, mobileBg)
+                .setSeekbar(55, savedBypass - 5, savedBypass + "m"));
 
         SettingsLockManager lockMgr = new SettingsLockManager(requireContext());
         boolean isLockEnabled = lockMgr.isLockEnabled();
         String subtitleText;
         if (!isLockEnabled) {
             subtitleText = "Lock settings changes";
-        } else if (lockMgr.isCustomPin()) {
-            subtitleText = "Long press to change PIN";
         } else {
             subtitleText = "Settings are protected";
         }
@@ -470,44 +492,41 @@ public class SettingsFragment extends Fragment {
                 .setSwitch(true, isLockEnabled, (buttonView, isChecked) -> {
                     SettingsLockManager lm = new SettingsLockManager(requireContext());
                     if (isChecked) {
-                        if (lm.isDeviceLock() && !lm.isDeviceLockAvailable()) {
-                            lm.setLockType(SettingsLockManager.LOCK_TYPE_CUSTOM);
-                            Toast.makeText(requireContext(), "Device lock not found. Please set a custom PIN.", Toast.LENGTH_LONG).show();
-                        }
                         lm.setLockEnabled(true);
-                        if (lm.isCustomPin() && !lm.hasCustomPin()) {
-                            lm.showSetCustomPinDialog(requireContext(), false, this::refreshList);
-                        } else {
-                            refreshList();
-                        }
+                        refreshList();
                     } else {
                         buttonView.setChecked(true);
                         authenticateToChangeSetting("Disable settings lock", () -> {
                             lm.setLockEnabled(false);
-                            lm.clearCustomPin();
                             refreshList();
                         });
                         return;
                     }
-                })
-                .setOnLongClickListener(v -> {
-                    SettingsLockManager lm = new SettingsLockManager(requireContext());
-                    if (lm.isLockEnabled() && lm.isCustomPin()) {
-                        if (lm.hasCustomPin()) {
-                            lm.showVerifyPinDialog(requireContext(), "Enter current PIN to continue", verified -> {
-                                if (verified)
-                                    lm.showSetCustomPinDialog(requireContext(), true, this::refreshList);
-                            });
-                        } else {
-                            lm.showSetCustomPinDialog(requireContext(), false, this::refreshList);
-                        }
-                        return true;
-                    }
-                    return false;
                 }));
 
         if (isLockEnabled) {
-            settingsItems.add(new SettingsItem(ID_LOCK_TYPE_TAB, SettingsItem.TYPE_LOCK_TAB, "", "", 0, 0));
+            String currentSettingsLockType = defaultSharedPreferences.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device");
+            String settingsLockLabel = getLockTypeLabel(currentSettingsLockType);
+
+            settingsItems.add(new SettingsItem(ID_LOCK_TYPE_TAB, SettingsItem.TYPE_SWITCH,
+                    "Settings Lock Type", settingsLockLabel,
+                    R.drawable.shield, purpleIcon)
+                    .setIconValues(R.drawable.shape_circle, popupBg)
+                    .setSwitch(false, false, null)
+                    .setArrow(true)
+                    .setOnClickListener(v -> showSettingsLockTypePicker()));
+
+            if ("custom".equals(currentSettingsLockType)) {
+                SettingsLockManager lm = new SettingsLockManager(requireContext());
+                String pinSubtitle = lm.hasCustomPin() ? "Tap to change PIN" : "PIN not set. Tap to create PIN.";
+                settingsItems.add(new SettingsItem(ID_SETTINGS_LOCK + 100, SettingsItem.TYPE_SWITCH,
+                        "Change Settings PIN", pinSubtitle,
+                        R.drawable.shield, tealIcon)
+                        .setIconValues(R.drawable.shape_circle, mobileBg)
+                        .setSwitch(false, false, null)
+                        .setArrow(true)
+                        .setOnClickListener(v -> handleEditCustomPin()));
+            }
         }
 
         settingsItems.add(new SettingsItem(SettingsItem.TYPE_HEADER, "PROTECTION"));
@@ -578,12 +597,16 @@ public class SettingsFragment extends Fragment {
                 .setOnClickListener(v ->
                         Toast.makeText(requireContext(), "Coming Soon \uD83D\uDE80", Toast.LENGTH_SHORT).show()));
 
+        String currentBlockerChallenge = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+        String blockerChallengeLabel = getBlockerChallengeLabel(currentBlockerChallenge);
+
         settingsItems.add(new SettingsItem(ID_LOCK_TYPES, SettingsItem.TYPE_SWITCH,
-                "Lock types", "Coming Soon \uD83D\uDE80",
+                "App Blocker Challenge", blockerChallengeLabel,
                 R.drawable.shield, purpleIcon)
                 .setIconValues(R.drawable.shape_circle, Color.parseColor("#33BF83FB"))
-                .setOnClickListener(v ->
-                        Toast.makeText(requireContext(), "Coming Soon \uD83D\uDE80", Toast.LENGTH_SHORT).show()));
+                .setSwitch(false, false, null)
+                .setArrow(true)
+                .setOnClickListener(v -> showBlockerChallengePicker()));
 
         settingsItems.add(new SettingsItem(SettingsItem.TYPE_HEADER, "APPEARANCE"));
         settingsItems.add(new SettingsItem(ID_THEME, SettingsItem.TYPE_THEME, "Theme", "", 0, 0));
@@ -907,6 +930,22 @@ public class SettingsFragment extends Fragment {
                     refreshList();
                 });
 
+        challengeLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        if (pendingAuthCallback != null) {
+                            pendingAuthCallback.run();
+                        }
+                    } else {
+                        if (pendingCancelCallback != null) {
+                            pendingCancelCallback.run();
+                        }
+                    }
+                    pendingAuthCallback = null;
+                    pendingCancelCallback = null;
+                    refreshList();
+                });
+
         deviceAdminLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     boolean active = devicePolicyManager != null
@@ -1135,25 +1174,60 @@ public class SettingsFragment extends Fragment {
     // ─── Settings Lock PIN helpers ────────────────────────────────────────────
 
     /**
-     * Authenticate via device lock or custom PIN (depending on current setting)
+     * Authenticate via device lock, custom PIN, or challenge locks (depending on current setting)
      * before allowing a sensitive change. Calls onAuthenticated when verified.
      */
     private void authenticateToChangeSetting(String reason, Runnable onAuthenticated, Runnable onCancelled) {
         SettingsLockManager lm = new SettingsLockManager(requireContext());
-        lm.authenticate((AppCompatActivity) requireActivity(), reason, new SettingsLockManager.AuthCallback() {
-            @Override
-            public void onSuccess() {
-                onAuthenticated.run();
-            }
+        if (!lm.isLockEnabled()) {
+            onAuthenticated.run();
+            return;
+        }
 
-            @Override
-            public void onFailure(String reason2) {
-                if (onCancelled != null) onCancelled.run();
-                if (!"Cancelled".equals(reason2)) {
-                    Toast.makeText(requireContext(), reason2, Toast.LENGTH_SHORT).show();
+        String settingsLockType = defaultSharedPreferences.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device");
+
+        if ("device".equals(settingsLockType) || "custom".equals(settingsLockType)) {
+            lm.authenticate((AppCompatActivity) requireActivity(), reason, new SettingsLockManager.AuthCallback() {
+                @Override
+                public void onSuccess() {
+                    onAuthenticated.run();
+                }
+
+                @Override
+                public void onFailure(String reason2) {
+                    if (onCancelled != null) onCancelled.run();
+                    if (!"Cancelled".equals(reason2)) {
+                        Toast.makeText(requireContext(), reason2, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        } else {
+            // It's a challenge lock type!
+            if ("oneday".equals(settingsLockType)) {
+                ChallengeLockManager clm = new ChallengeLockManager(requireContext());
+                if (clm.isSettingsOneDayLockActive()) {
+                    long remainingMs = clm.getSettingsOneDayLockRemainingMs();
+                    long hours = remainingMs / (60 * 60 * 1000L);
+                    long minutes = (remainingMs / (60 * 1000L)) % 60;
+                    long seconds = (remainingMs / 1000L) % 60;
+                    Toast.makeText(requireContext(),
+                            String.format(Locale.US, "Settings are locked under 1-Day lockout. Remaining: %02dh %02dm %02ds", hours, minutes, seconds),
+                            Toast.LENGTH_LONG).show();
+                    if (onCancelled != null) onCancelled.run();
+                    return;
+                } else {
+                    onAuthenticated.run();
+                    return;
                 }
             }
-        });
+
+            Intent challengeIntent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockChallengeActivity.class);
+            challengeIntent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_LOCK_TYPE, settingsLockType);
+            challengeIntent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, true);
+            this.pendingAuthCallback = onAuthenticated;
+            this.pendingCancelCallback = onCancelled;
+            challengeLauncher.launch(challengeIntent);
+        }
     }
 
     private void authenticateToChangeSetting(String reason, Runnable onAuthenticated) {
@@ -1183,5 +1257,91 @@ public class SettingsFragment extends Fragment {
         // Temporarily assign a no-op listener until refreshList triggers
         buttonView.setOnCheckedChangeListener((v, c) -> {
         });
+    }
+
+    private String getLockTypeLabel(String type) {
+        switch (type) {
+            case "device": return "Device Lock";
+            case "custom": return "Custom PIN";
+            case "math": return "Math Equation";
+            case "scream": return "Scream (Voice)";
+            case "breath": return "Hold Breath (10s)";
+            case "text": return "Type Quote";
+            case "shake": return "Shake to Unlock";
+            case "oneday": return "1-Day Lock";
+            case "window10": return "10-Min Bypass Window";
+            default: return "Device Lock";
+        }
+    }
+
+    private String getBlockerChallengeLabel(String type) {
+        switch (type) {
+            case "none": return "None";
+            case "math": return "Math Equation";
+            case "scream": return "Scream (Voice)";
+            case "breath": return "Hold Breath (10s)";
+            case "text": return "Type Quote";
+            case "shake": return "Shake to Unlock";
+            case "oneday": return "1-Day Lock";
+            case "window10": return "10-Min Bypass Window";
+            default: return "None";
+        }
+    }
+
+    private void showSettingsLockTypePicker() {
+        Intent intent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.class);
+        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_SELECTION_MODE, com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.MODE_SETTINGS);
+        String current = defaultSharedPreferences.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device");
+        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_CURRENT_VALUE, current);
+        challengeLauncher.launch(intent);
+    }
+
+    private void showBlockerChallengePicker() {
+        Intent intent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.class);
+        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_SELECTION_MODE, com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.MODE_BLOCKER);
+        String current = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_CURRENT_VALUE, current);
+        challengeLauncher.launch(intent);
+    }
+
+    private void handleEditCustomPin() {
+        SettingsLockManager lockMgr = new SettingsLockManager(requireContext());
+        if (lockMgr.hasCustomPin()) {
+            CustomDialogUtils.showCustomDialog(
+                    requireContext(),
+                    "Change Settings PIN",
+                    "Choose how you want to proceed:",
+                    "Change PIN",
+                    "Cancel",
+                    "Reset / Forgot PIN",
+                    () -> {
+                        lockMgr.showVerifyPinDialog(requireContext(), "Enter current PIN to continue", verified -> {
+                            if (verified) {
+                                lockMgr.showSetCustomPinDialog(requireContext(), true, this::refreshList);
+                            }
+                        });
+                    },
+                    () -> {},
+                    () -> {
+                        ChallengeLockManager clm = new ChallengeLockManager(requireContext());
+                        if (clm.isPinResetCooldownActive()) {
+                            long remainingMs = clm.getPinResetRemainingMs();
+                            long hours = remainingMs / (60 * 60 * 1000L);
+                            long minutes = (remainingMs / (60 * 1000L)) % 60;
+                            long seconds = (remainingMs / 1000L) % 60;
+                            Toast.makeText(requireContext(),
+                                    String.format(Locale.US, "PIN Reset Cooldown active. Time remaining: %02dh %02dm %02ds", hours, minutes, seconds),
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            Intent challengeIntent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockChallengeActivity.class);
+                            challengeIntent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_LOCK_TYPE, "pin_reset");
+                            challengeIntent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, true);
+                            challengeLauncher.launch(challengeIntent);
+                        }
+                    }
+            );
+        } else {
+            lockMgr.showSetCustomPinDialog(requireContext(), false, this::refreshList);
+        }
     }
 }

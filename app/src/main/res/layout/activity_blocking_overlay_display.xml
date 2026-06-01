@@ -47,6 +47,26 @@
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btn_unlock_app"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Unlock App"
+            android:backgroundTint="@color/brainColor"
+            android:textColor="@color/white"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_go_back"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Go Back"
+            android:textColor="#F77381"
+            android:visibility="gone" />
     </LinearLayout>
 
 </RelativeLayout>

@@ -249,6 +249,17 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
     private final Map<String, Long> lastLockInOverlayTimeMs = new HashMap<>();
     private static final long LOCK_IN_OVERLAY_DEBOUNCE_MS = 500L;
+    
+    private final Map<String, Long> packageBypassExpiryTimeMap = new HashMap<>();
+    
+    private boolean isPackageBypassed(String packageName) {
+        if (packageName == null) return false;
+        Long expiry = packageBypassExpiryTimeMap.get(packageName);
+        if (expiry != null && System.currentTimeMillis() < expiry) {
+            return true;
+        }
+        return false;
+    }
     private BroadcastReceiver screenReceiver;
     private boolean isScreenReceiverRegistered = false;
     public static final String RESTORE_NOTIFICATION = "restore_notification";
@@ -390,11 +401,19 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     performThrottledGlobalAction(GLOBAL_ACTION_HOME);
                 } else if (intent != null && ACTION_PERFORM_GLOBAL_BACK_FROM_OVERLAY.equals(intent.getAction())) {
                     performThrottledGlobalAction(GLOBAL_ACTION_BACK);
+                } else if (intent != null && "com.gxdevs.mindmint.action.APP_BYPASS_GRANTED".equals(intent.getAction())) {
+                    String pkg = intent.getStringExtra("package_name");
+                    int durationMinutes = intent.getIntExtra("duration_minutes", 10);
+                    if (pkg != null) {
+                        packageBypassExpiryTimeMap.put(pkg, System.currentTimeMillis() + (long) durationMinutes * 60 * 1000);
+                        Log.d(TAG, "Bypass granted for package: " + pkg + " for " + durationMinutes + " mins");
+                    }
                 }
             }
         };
         IntentFilter overlayIntentFilter = new IntentFilter(ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY);
         overlayIntentFilter.addAction(ACTION_PERFORM_GLOBAL_BACK_FROM_OVERLAY);
+        overlayIntentFilter.addAction("com.gxdevs.mindmint.action.APP_BYPASS_GRANTED");
         ContextCompat.registerReceiver(this, overlayCommandReceiver, overlayIntentFilter,
                 ContextCompat.RECEIVER_NOT_EXPORTED);
 
@@ -695,11 +714,16 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     if (isLockedInPref) {
                         boolean allowed = isPackageAllowedInLockedIn(eventPackageName);
                         if (!allowed) {
+                            if (isPackageBypassed(eventPackageName)) {
+                                return; // Bypassed
+                            }
                             Long lastTime = lastLockInOverlayTimeMs.get(eventPackageName);
                             if (lastTime == null || (now - lastTime) > LOCK_IN_OVERLAY_DEBOUNCE_MS) {
                                 lastLockInOverlayTimeMs.put(eventPackageName, now);
                                 Intent intent = new Intent(this, BlockingOverlayDisplayActivity.class);
                                 intent.putExtra(EXTRA_IS_FOCUS, true);
+                                intent.putExtra(EXTRA_BLOCKED_PACKAGE_NAME, eventPackageName);
+                                intent.putExtra(EXTRA_BLOCKED_APP_NAME, getAppNameFromPackageManager(eventPackageName));
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                                 startActivity(intent);
                                 resetUsageAndTimersForPackage(eventPackageName);
@@ -707,11 +731,16 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                             return;
                         }
                     } else if (customBlockedApps != null && customBlockedApps.contains(eventPackageName)) {
+                        if (isPackageBypassed(eventPackageName)) {
+                            return; // Bypassed
+                        }
                         Long lastTime = lastLockInOverlayTimeMs.get(eventPackageName);
                         if (lastTime == null || (now - lastTime) > LOCK_IN_OVERLAY_DEBOUNCE_MS) {
                             lastLockInOverlayTimeMs.put(eventPackageName, now);
                             Intent intent = new Intent(this, BlockingOverlayDisplayActivity.class);
                             intent.putExtra(EXTRA_IS_FOCUS, true);
+                            intent.putExtra(EXTRA_BLOCKED_PACKAGE_NAME, eventPackageName);
+                            intent.putExtra(EXTRA_BLOCKED_APP_NAME, getAppNameFromPackageManager(eventPackageName));
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                             startActivity(intent);
                             resetUsageAndTimersForPackage(eventPackageName);
@@ -1571,6 +1600,9 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     }
 
     private void launchOverlay(String packageName) { // Used by Global Wasted Time Blocker
+        if (isPackageBypassed(packageName)) {
+            return;
+        }
         Intent overlayIntent = new Intent();
         overlayIntent.setClassName(this, BLOCKING_OVERLAY_ACTIVITY_CLASS_NAME);
         String appName = getAppNameFromPackageManager(packageName);
@@ -2284,6 +2316,10 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         if (rootNode == null || targetViewIdName == null || packageName == null) {
             if (rootNode != null)
                 rootNode.recycle();
+            return;
+        }
+        if (isPackageBypassed(packageName)) {
+            rootNode.recycle();
             return;
         }
         List<AccessibilityNodeInfo> nodes = rootNode

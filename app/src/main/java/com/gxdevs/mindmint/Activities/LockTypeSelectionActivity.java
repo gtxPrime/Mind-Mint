@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.SeekBar;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -61,6 +62,42 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
         toolbarTitle.setText(MODE_SETTINGS.equals(mode) ? "Settings Lock Type" : "App Blocker Challenge");
 
         setupOptionsList();
+        setupBypassDurationSeekBar();
+    }
+
+    private void setupBypassDurationSeekBar() {
+        View durationCard = findViewById(R.id.durationCard);
+        if (MODE_BLOCKER.equals(mode) && !"none".equals(currentValue)) {
+            durationCard.setVisibility(View.VISIBLE);
+            
+            SeekBar seekBar = findViewById(R.id.durationSeekBar);
+            TextView valueText = findViewById(R.id.durationValueText);
+            
+            int savedBypass = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
+            if (savedBypass < 5) savedBypass = 5;
+            if (savedBypass > 60) savedBypass = 60;
+            
+            valueText.setText(savedBypass + "m");
+            seekBar.setMax(55);
+            seekBar.setProgress(savedBypass - 5);
+            
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar1, int progress, boolean fromUser) {
+                    int value = progress + 5;
+                    valueText.setText(value + "m");
+                    sharedPrefs.edit().putInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, value).apply();
+                }
+                
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar1) {}
+                
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar1) {}
+            });
+        } else {
+            durationCard.setVisibility(View.GONE);
+        }
     }
 
     private void setupOptionsList() {

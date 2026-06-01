@@ -234,11 +234,6 @@ public class SettingsFragment extends Fragment {
                 int seconds = minSeconds + progress;
                 defaultSharedPreferences.edit()
                         .putInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, seconds).apply();
-            } else if (itemId == ID_POPUP_DURATION + 10) {
-                int minMinutes = 5;
-                int minutes = minMinutes + progress;
-                defaultSharedPreferences.edit()
-                        .putInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, minutes).apply();
             }
         });
 
@@ -466,15 +461,16 @@ public class SettingsFragment extends Fragment {
                 .setIconValues(R.drawable.shape_circle, popupBg)
                 .setSeekbar(12, savedDuration - 3, savedDuration + "s"));
 
-        int savedBypass = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
-        if (savedBypass < 5) savedBypass = 5;
-        if (savedBypass > 60) savedBypass = 60;
+        String currentBlockerChallenge = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+        String blockerChallengeLabel = getBlockerChallengeLabel(currentBlockerChallenge);
 
-        settingsItems.add(new SettingsItem(ID_POPUP_DURATION + 10, SettingsItem.TYPE_SEEKBAR,
-                "Blocker Bypass Duration", "Customize bypass window for blocked apps",
-                R.drawable.hourglass, tealIcon)
-                .setIconValues(R.drawable.shape_circle, mobileBg)
-                .setSeekbar(55, savedBypass - 5, savedBypass + "m"));
+        settingsItems.add(new SettingsItem(ID_LOCK_TYPES, SettingsItem.TYPE_SWITCH,
+                "App Blocker Challenge", blockerChallengeLabel,
+                R.drawable.shield, purpleIcon)
+                .setIconValues(R.drawable.shape_circle, popupBg)
+                .setSwitch(false, false, null)
+                .setArrow(true)
+                .setOnClickListener(v -> showBlockerChallengePicker()));
 
         SettingsLockManager lockMgr = new SettingsLockManager(requireContext());
         boolean isLockEnabled = lockMgr.isLockEnabled();
@@ -597,16 +593,7 @@ public class SettingsFragment extends Fragment {
                 .setOnClickListener(v ->
                         Toast.makeText(requireContext(), "Coming Soon \uD83D\uDE80", Toast.LENGTH_SHORT).show()));
 
-        String currentBlockerChallenge = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
-        String blockerChallengeLabel = getBlockerChallengeLabel(currentBlockerChallenge);
-
-        settingsItems.add(new SettingsItem(ID_LOCK_TYPES, SettingsItem.TYPE_SWITCH,
-                "App Blocker Challenge", blockerChallengeLabel,
-                R.drawable.shield, purpleIcon)
-                .setIconValues(R.drawable.shape_circle, Color.parseColor("#33BF83FB"))
-                .setSwitch(false, false, null)
-                .setArrow(true)
-                .setOnClickListener(v -> showBlockerChallengePicker()));
+        // App Blocker Challenge shifted to BLOCKING RULES
 
         settingsItems.add(new SettingsItem(SettingsItem.TYPE_HEADER, "APPEARANCE"));
         settingsItems.add(new SettingsItem(ID_THEME, SettingsItem.TYPE_THEME, "Theme", "", 0, 0));

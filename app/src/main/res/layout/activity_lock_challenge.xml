@@ -9,50 +9,86 @@
     android:padding="24dp"
     tools:context=".Activities.LockChallengeActivity">
 
-    <androidx.cardview.widget.CardView
+    <!-- Top Bar matching Settings Header -->
+    <LinearLayout
+        android:id="@+id/headerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="8dp"
-        app:cardBackgroundColor="@color/cardColor">
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tv_challenge_top_sub"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp"
-            android:gravity="center">
+            android:fontFamily="@font/poppins_semibold"
+            android:letterSpacing="0.1"
+            android:text="VERIFICATION REQUIRED"
+            android:textAllCaps="true"
+            android:textColor="?attr/text_tertiary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
-            <!-- App or Context Title Header -->
-            <ImageView
-                android:id="@+id/iv_header_icon"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_marginBottom="12dp"
-                android:src="@drawable/shield"
-                app:tint="@color/brainColor"
-                tools:ignore="ContentDescription" />
+        <TextView
+            android:id="@+id/tv_challenge_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:lineSpacingMultiplier="0.8"
+            android:text="Lock Challenge"
+            android:textColor="?attr/text_primary"
+            android:textSize="30sp"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_challenge_title"
-                android:layout_width="wrap_content"
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/headerContainer"
+        android:layout_marginTop="20dp"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Verification Required"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp"/>
+                android:layout_centerInParent="true"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="8dp"
+                app:cardBackgroundColor="@color/cardColor">
 
-            <TextView
-                android:id="@+id/tv_challenge_subtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Complete the challenge to unlock access"
-                android:textColor="#9EAFBE"
-                android:textSize="14sp"
-                android:textAlignment="center"
-                android:layout_marginBottom="24dp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:gravity="center">
+
+                    <!-- Context Icon -->
+                    <ImageView
+                        android:id="@+id/iv_header_icon"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:layout_marginBottom="12dp"
+                        android:src="@drawable/shield"
+                        app:tint="@color/brainColor"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:id="@+id/tv_challenge_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Complete the challenge to unlock access"
+                        android:textColor="#9EAFBE"
+                        android:textSize="14sp"
+                        android:textAlignment="center"
+                        android:layout_marginBottom="24dp"/>
 
             <!-- ================= CHALLENGE CONTAINERS ================= -->
 
@@ -371,5 +407,7 @@
                 android:layout_marginTop="8dp"/>
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+            </androidx.cardview.widget.CardView>
+        </RelativeLayout>
+    </ScrollView>
 </RelativeLayout>

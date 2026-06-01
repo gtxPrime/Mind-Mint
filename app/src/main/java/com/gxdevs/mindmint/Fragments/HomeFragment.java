@@ -43,6 +43,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -83,6 +84,7 @@ import com.gxdevs.mindmint.R;
 import com.gxdevs.mindmint.Utils.HabitManager;
 import com.gxdevs.mindmint.Utils.MintCrystals;
 import com.gxdevs.mindmint.Utils.SettingsLockManager;
+import com.gxdevs.mindmint.Utils.ChallengeLockManager;
 import com.gxdevs.mindmint.Utils.StreakManager;
 import com.gxdevs.mindmint.Utils.TaskManager;
 import com.gxdevs.mindmint.Utils.UpdateLogData;
@@ -440,6 +442,32 @@ public class HomeFragment extends Fragment {
         applyLockedSwitch(snapModCheckbox, "Change Snapchat Mod", (isChecked) -> {
             if (snapSwitch.isChecked())
                 saveModState(isChecked, KEY_SNAP_MOD);
+        });
+
+        // Blocker Bypass Duration SeekBar setup
+        SeekBar durationSeekBar = bottomSheetView.findViewById(R.id.durationSeekBar);
+        TextView durationValueText = bottomSheetView.findViewById(R.id.durationValueText);
+        int savedBypass = sharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
+        if (savedBypass < 5) savedBypass = 5;
+        if (savedBypass > 60) savedBypass = 60;
+
+        durationValueText.setText(savedBypass + "m");
+        durationSeekBar.setMax(55); // Range is 55 (5 to 60)
+        durationSeekBar.setProgress(savedBypass - 5);
+
+        durationSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int value = progress + 5;
+                durationValueText.setText(value + "m");
+                sharedPreferences.edit().putInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, value).apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         crossBtn.setOnClickListener(v -> blockerSheet.dismiss());

@@ -420,17 +420,130 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/durationCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:elevation="4dp"
+            app:cardBackgroundColor="?attr/surface_nested"
+            app:cardCornerRadius="20dp"
+            app:layout_constraintTop_toBottomOf="@+id/snapCard"
+            app:strokeColor="@color/glass_stroke"
+            app:strokeWidth="2dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="18dp">
+
+                <ImageView
+                    android:id="@+id/durationLogo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/glass_circle"
+                    android:padding="10dp"
+                    android:src="@drawable/hourglass"
+                    app:tint="?attr/text_primary"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/durationTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:text="Bypass Duration"
+                    android:textColor="?attr/text_primary"
+                    android:textSize="15sp"
+                    app:layout_constraintStart_toEndOf="@+id/durationLogo"
+                    app:layout_constraintTop_toTopOf="@+id/durationLogo" />
+
+                <TextView
+                    android:id="@+id/durationSubtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="sans-serif"
+                    android:text="Bypass window for blocked apps"
+                    android:textColor="?attr/text_tertiary"
+                    android:textSize="12sp"
+                    app:layout_constraintEnd_toStartOf="@+id/durationValueText"
+                    app:layout_constraintStart_toEndOf="@+id/durationLogo"
+                    app:layout_constraintTop_toBottomOf="@+id/durationTitle" />
+
+                <TextView
+                    android:id="@+id/durationValueText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/background_outline"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:textColor="?attr/tintGlobalColor"
+                    android:textSize="14sp"
+                    app:layout_constraintTop_toTopOf="@+id/durationLogo"
+                    app:layout_constraintBottom_toBottomOf="@+id/durationLogo"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:text="10m" />
+
+                <SeekBar
+                    android:id="@+id/durationSeekBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:max="55"
+                    android:progressTint="?attr/tintGlobalColor"
+                    android:thumbTint="?attr/tintGlobalColor"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/durationLogo"
+                    app:layout_constraintTop_toBottomOf="@+id/durationSubtitle" />
+
+                <TextView
+                    android:id="@+id/labelMin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:alpha="0.6"
+                    android:fontFamily="sans-serif"
+                    android:text="5m"
+                    android:textColor="?attr/text_tertiary"
+                    android:textSize="11sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/durationSeekBar"
+                    app:layout_constraintTop_toBottomOf="@+id/durationSeekBar" />
+
+                <TextView
+                    android:id="@+id/labelMax"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:alpha="0.6"
+                    android:fontFamily="sans-serif"
+                    android:text="60m"
+                    android:textColor="?attr/text_tertiary"
+                    android:textSize="11sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/durationSeekBar"
+                    app:layout_constraintTop_toBottomOf="@+id/durationSeekBar" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView
             android:id="@+id/comingSoon"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="15dp"
             android:fontFamily="sans-serif-medium"
             android:text="@string/more_apps_coming_soon"
             android:textAlignment="center"
             android:textColor="?attr/text_tertiary"
             android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@+id/snapCard" />
+            app:layout_constraintTop_toBottomOf="@+id/durationCard" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

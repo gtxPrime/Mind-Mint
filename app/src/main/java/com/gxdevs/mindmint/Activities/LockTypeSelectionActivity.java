@@ -67,13 +67,7 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
 
     private void setupBypassDurationSeekBar() {
         View durationCard = findViewById(R.id.durationCard);
-        boolean showBypass = MODE_BLOCKER.equals(mode) && (
-                             "math".equals(currentValue) ||
-                             "scream".equals(currentValue) ||
-                             "breath".equals(currentValue) ||
-                             "text".equals(currentValue) ||
-                             "shake".equals(currentValue)
-        );
+        boolean showBypass = MODE_BLOCKER.equals(mode) && "window10".equals(currentValue);
         if (showBypass) {
             durationCard.setVisibility(View.VISIBLE);
             
@@ -100,7 +94,9 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
                 public void onStartTrackingTouch(SeekBar seekBar1) {}
                 
                 @Override
-                public void onStopTrackingTouch(SeekBar seekBar1) {}
+                public void onStopTrackingTouch(SeekBar seekBar1) {
+                    setupOptionsList();
+                }
             });
         } else {
             durationCard.setVisibility(View.GONE);
@@ -162,20 +158,33 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
         }
 
         if ("oneday".equals(option)) {
-            showOneDayLockWarning(() -> saveAndFinish(option), () -> {});
+            showOneDayLockWarning(() -> {
+                saveChoice(option);
+                finish();
+            }, () -> {});
         } else if (MODE_SETTINGS.equals(mode) && "custom".equals(option)) {
             SettingsLockManager lockMgr = new SettingsLockManager(this);
             if (!lockMgr.hasCustomPin()) {
-                lockMgr.showSetCustomPinDialog(this, false, () -> saveAndFinish(option));
+                lockMgr.showSetCustomPinDialog(this, false, () -> {
+                    saveChoice(option);
+                    finish();
+                });
             } else {
-                saveAndFinish(option);
+                saveChoice(option);
+                finish();
             }
+        } else if ("window10".equals(option)) {
+            saveChoice(option);
+            currentValue = option;
+            setupOptionsList();
+            setupBypassDurationSeekBar();
         } else {
-            saveAndFinish(option);
+            saveChoice(option);
+            finish();
         }
     }
 
-    private void saveAndFinish(String option) {
+    private void saveChoice(String option) {
         SharedPreferences.Editor editor = sharedPrefs.edit();
         if (MODE_SETTINGS.equals(mode)) {
             editor.putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, option);
@@ -191,7 +200,6 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
         Intent resultData = new Intent();
         resultData.putExtra("selected_value", option);
         setResult(RESULT_OK, resultData);
-        finish();
     }
 
     private String getLabel(String option) {
@@ -205,7 +213,10 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
             case "text" -> "Type Quote";
             case "shake" -> "Shake to Unlock";
             case "oneday" -> "1-Day Lock";
-            case "window10" -> "10-Min Bypass Window";
+            case "window10" -> {
+                int mins = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
+                yield mins + "-Min Bypass Window";
+            }
             default -> option;
         };
     }
@@ -221,7 +232,10 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
             case "text" -> "Type a long quote with special symbols.";
             case "shake" -> "Continuously shake your device for 12 seconds.";
             case "oneday" -> "Strictly lock settings/apps for 24 hours.";
-            case "window10" -> "Use a single 10-minute bypass window per day.";
+            case "window10" -> {
+                int mins = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
+                yield "Use a single " + mins + "-minute bypass window per day.";
+            }
             default -> "";
         };
     }

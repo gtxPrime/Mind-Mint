@@ -450,11 +450,7 @@ public class HomeFragment extends Fragment {
         View durationCard = bottomSheetView.findViewById(R.id.durationCard);
 
         String currentBlockerChallenge = sharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
-        boolean showBypass = "math".equals(currentBlockerChallenge) ||
-                             "scream".equals(currentBlockerChallenge) ||
-                             "breath".equals(currentBlockerChallenge) ||
-                             "text".equals(currentBlockerChallenge) ||
-                             "shake".equals(currentBlockerChallenge);
+        boolean showBypass = "window10".equals(currentBlockerChallenge);
 
         if (showBypass) {
             durationCard.setVisibility(View.VISIBLE);

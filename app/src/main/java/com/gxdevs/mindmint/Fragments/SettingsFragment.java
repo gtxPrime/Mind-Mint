@@ -1256,7 +1256,9 @@ public class SettingsFragment extends Fragment {
             case "text": return "Type Quote";
             case "shake": return "Shake to Unlock";
             case "oneday": return "1-Day Lock";
-            case "window10": return "10-Min Bypass Window";
+            case "window10":
+                int mins = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
+                return mins + "-Min Bypass Window";
             default: return "Device Lock";
         }
     }
@@ -1270,7 +1272,9 @@ public class SettingsFragment extends Fragment {
             case "text": return "Type Quote";
             case "shake": return "Shake to Unlock";
             case "oneday": return "1-Day Lock";
-            case "window10": return "10-Min Bypass Window";
+            case "window10":
+                int mins = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
+                return mins + "-Min Bypass Window";
             default: return "Normal Blocker";
         }
     }

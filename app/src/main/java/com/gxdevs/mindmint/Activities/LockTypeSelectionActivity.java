@@ -67,7 +67,14 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
 
     private void setupBypassDurationSeekBar() {
         View durationCard = findViewById(R.id.durationCard);
-        if (MODE_BLOCKER.equals(mode) && !"none".equals(currentValue)) {
+        boolean showBypass = MODE_BLOCKER.equals(mode) && (
+                             "math".equals(currentValue) ||
+                             "scream".equals(currentValue) ||
+                             "breath".equals(currentValue) ||
+                             "text".equals(currentValue) ||
+                             "shake".equals(currentValue)
+        );
+        if (showBypass) {
             durationCard.setVisibility(View.VISIBLE);
             
             SeekBar seekBar = findViewById(R.id.durationSeekBar);
@@ -189,7 +196,7 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
 
     private String getLabel(String option) {
         return switch (option) {
-            case "none" -> "None";
+            case "none" -> "Normal Blocker";
             case "device" -> "Device Lock";
             case "custom" -> "Custom PIN";
             case "math" -> "Math Equation";
@@ -205,7 +212,7 @@ public class LockTypeSelectionActivity extends AppCompatActivity {
 
     private String getDescription(String option) {
         return switch (option) {
-            case "none" -> "No locking challenge applied.";
+            case "none" -> "Normal blocker behavior by default.";
             case "device" -> "Use your phone's PIN, pattern, or biometrics.";
             case "custom" -> "Require a custom 6-digit PIN.";
             case "math" -> "Solve a moderately difficult math equation.";

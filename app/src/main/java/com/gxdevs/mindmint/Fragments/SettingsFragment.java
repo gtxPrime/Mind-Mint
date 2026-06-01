@@ -1263,7 +1263,7 @@ public class SettingsFragment extends Fragment {
 
     private String getBlockerChallengeLabel(String type) {
         switch (type) {
-            case "none": return "None";
+            case "none": return "Normal Blocker";
             case "math": return "Math Equation";
             case "scream": return "Scream (Voice)";
             case "breath": return "Hold Breath (10s)";
@@ -1271,7 +1271,7 @@ public class SettingsFragment extends Fragment {
             case "shake": return "Shake to Unlock";
             case "oneday": return "1-Day Lock";
             case "window10": return "10-Min Bypass Window";
-            default: return "None";
+            default: return "Normal Blocker";
         }
     }
 

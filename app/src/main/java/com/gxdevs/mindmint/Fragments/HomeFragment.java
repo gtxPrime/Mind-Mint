@@ -447,6 +447,21 @@ public class HomeFragment extends Fragment {
         // Blocker Bypass Duration SeekBar setup
         SeekBar durationSeekBar = bottomSheetView.findViewById(R.id.durationSeekBar);
         TextView durationValueText = bottomSheetView.findViewById(R.id.durationValueText);
+        View durationCard = bottomSheetView.findViewById(R.id.durationCard);
+
+        String currentBlockerChallenge = sharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+        boolean showBypass = "math".equals(currentBlockerChallenge) ||
+                             "scream".equals(currentBlockerChallenge) ||
+                             "breath".equals(currentBlockerChallenge) ||
+                             "text".equals(currentBlockerChallenge) ||
+                             "shake".equals(currentBlockerChallenge);
+
+        if (showBypass) {
+            durationCard.setVisibility(View.VISIBLE);
+        } else {
+            durationCard.setVisibility(View.GONE);
+        }
+
         int savedBypass = sharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
         if (savedBypass < 5) savedBypass = 5;
         if (savedBypass > 60) savedBypass = 60;

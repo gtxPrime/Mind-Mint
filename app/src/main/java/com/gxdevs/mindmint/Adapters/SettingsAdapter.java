@@ -69,6 +69,25 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.currentTheme = currentTheme;
     }
 
+    private OnBlockerIntensityChangeListener onBlockerIntensityChangeListener;
+    private OnBlockTriggerChangeListener onBlockTriggerChangeListener;
+
+    public interface OnBlockerIntensityChangeListener {
+        void onIntensityChanged(int itemId, int intensity);
+    }
+
+    public interface OnBlockTriggerChangeListener {
+        void onTriggerChanged(int itemId, String newTrigger);
+    }
+
+    public void setOnBlockerIntensityChangeListener(OnBlockerIntensityChangeListener listener) {
+        this.onBlockerIntensityChangeListener = listener;
+    }
+
+    public void setOnBlockTriggerChangeListener(OnBlockTriggerChangeListener listener) {
+        this.onBlockTriggerChangeListener = listener;
+    }
+
     @Override
     public int getItemViewType(int position) {
         return items.get(position).getType();
@@ -93,6 +112,10 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     new ScrollTabViewHolder(inflater.inflate(R.layout.item_settings_scroll_tab, parent, false));
             case SettingsItem.TYPE_LOCK_TAB ->
                     new LockTabViewHolder(inflater.inflate(R.layout.item_settings_lock_type_tab, parent, false));
+            case SettingsItem.TYPE_BLOCKER_SLIDER ->
+                    new BlockerSliderViewHolder(inflater.inflate(R.layout.item_settings_blocker_slider, parent, false));
+            case SettingsItem.TYPE_BLOCK_TRIGGER_TAB ->
+                    new BlockTriggerTabViewHolder(inflater.inflate(R.layout.item_settings_block_trigger_tab, parent, false));
             default ->
                     new PermissionViewHolder(inflater.inflate(R.layout.item_settings_permission, parent, false));
         };
@@ -121,6 +144,12 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             updateBackground(holder.itemView, position);
         } else if (holder instanceof BackupViewHolder) {
             ((BackupViewHolder) holder).bind(item);
+            updateBackground(holder.itemView, position);
+        } else if (holder instanceof BlockerSliderViewHolder) {
+            ((BlockerSliderViewHolder) holder).bind(item);
+            updateBackground(holder.itemView, position);
+        } else if (holder instanceof BlockTriggerTabViewHolder) {
+            ((BlockTriggerTabViewHolder) holder).bind(item);
             updateBackground(holder.itemView, position);
         } else if (holder instanceof PermissionViewHolder) {
             ((PermissionViewHolder) holder).bind(item);
@@ -179,7 +208,9 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 type == SettingsItem.TYPE_THEME ||
                 type == SettingsItem.TYPE_BACKUP ||
                 type == SettingsItem.TYPE_SCROLL_TAB ||
-                type == SettingsItem.TYPE_LOCK_TAB;
+                type == SettingsItem.TYPE_LOCK_TAB ||
+                type == SettingsItem.TYPE_BLOCKER_SLIDER ||
+                type == SettingsItem.TYPE_BLOCK_TRIGGER_TAB;
     }
 
     @Override
@@ -704,5 +735,142 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             return tv.data;
         }
         return ContextCompat.getColor(context, R.color.white);
+    }
+
+    class BlockerSliderViewHolder extends RecyclerView.ViewHolder {
+        TextView title, subtitle, labelNone, labelFriction, labelReminder, labelTempLock, labelPermanent;
+        SeekBar seekBar;
+        ImageView icon;
+
+        BlockerSliderViewHolder(View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.title);
+            subtitle = itemView.findViewById(R.id.subtitle);
+            icon = itemView.findViewById(R.id.icon);
+            seekBar = itemView.findViewById(R.id.seekBar);
+            labelNone = itemView.findViewById(R.id.labelNone);
+            labelFriction = itemView.findViewById(R.id.labelFriction);
+            labelReminder = itemView.findViewById(R.id.labelReminder);
+            labelTempLock = itemView.findViewById(R.id.labelTempLock);
+            labelPermanent = itemView.findViewById(R.id.labelPermanent);
+        }
+
+        void bind(SettingsItem item) {
+            title.setText(item.getTitle());
+            icon.setImageResource(item.getIconRes());
+            
+            seekBar.setMax(4);
+            seekBar.setOnSeekBarChangeListener(null);
+            seekBar.setProgress(item.getSliderProgress());
+            
+            updateIntensityUI(item.getSliderProgress());
+
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    updateIntensityUI(progress);
+                    if (fromUser && onBlockerIntensityChangeListener != null) {
+                        onBlockerIntensityChangeListener.onIntensityChanged(item.getId(), progress);
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {}
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+        }
+
+        private void updateIntensityUI(int progress) {
+            String subtitleText;
+            int tintColor;
+            
+            switch (progress) {
+                case 1:
+                    subtitleText = "Friction";
+                    tintColor = 0xFF4A90E2; // Blue
+                    break;
+                case 2:
+                    subtitleText = "Reminder";
+                    tintColor = 0xFF2ECC71; // Green
+                    break;
+                case 3:
+                    subtitleText = "Temp Lock";
+                    tintColor = 0xFFE67E22; // Orange
+                    break;
+                case 4:
+                    subtitleText = "Permanent";
+                    tintColor = 0xFFE74C3C; // Red
+                    break;
+                default:
+                    subtitleText = "None";
+                    tintColor = 0xFF95A5A6; // Gray
+                    break;
+            }
+            
+            subtitle.setText(subtitleText);
+            subtitle.setTextColor(tintColor);
+            seekBar.setProgressTintList(android.content.res.ColorStateList.valueOf(tintColor));
+            seekBar.setThumbTintList(android.content.res.ColorStateList.valueOf(tintColor));
+            icon.setColorFilter(tintColor);
+            
+            labelNone.setAlpha(progress == 0 ? 1.0f : 0.4f);
+            labelFriction.setAlpha(progress == 1 ? 1.0f : 0.4f);
+            labelReminder.setAlpha(progress == 2 ? 1.0f : 0.4f);
+            labelTempLock.setAlpha(progress == 3 ? 1.0f : 0.4f);
+            labelPermanent.setAlpha(progress == 4 ? 1.0f : 0.4f);
+        }
+    }
+
+    class BlockTriggerTabViewHolder extends RecyclerView.ViewHolder {
+        TextView tabOnScroll, tabAfterTime;
+
+        BlockTriggerTabViewHolder(View itemView) {
+            super(itemView);
+            tabOnScroll = itemView.findViewById(R.id.tabOnScroll);
+            tabAfterTime = itemView.findViewById(R.id.tabAfterTime);
+        }
+
+        void bind(SettingsItem item) {
+            String currentTrigger = item.getTriggerTab();
+            boolean isTime = "time".equals(currentTrigger);
+            applyTabStyle(isTime);
+
+            tabOnScroll.setOnClickListener(v -> {
+                if ("scroll".equals(item.getTriggerTab())) return;
+                item.setTriggerTab("scroll");
+                applyTabStyle(false);
+                if (onBlockTriggerChangeListener != null) {
+                    onBlockTriggerChangeListener.onTriggerChanged(item.getId(), "scroll");
+                }
+            });
+
+            tabAfterTime.setOnClickListener(v -> {
+                if ("time".equals(item.getTriggerTab())) return;
+                item.setTriggerTab("time");
+                applyTabStyle(true);
+                if (onBlockTriggerChangeListener != null) {
+                    onBlockTriggerChangeListener.onTriggerChanged(item.getId(), "time");
+                }
+            });
+        }
+
+        private void applyTabStyle(boolean isTime) {
+            int selectedTxt = getAttrColor(context, R.attr.text_primary);
+            int normalTxt = getAttrColor(context, R.attr.text_tertiary);
+
+            if (!isTime) {
+                tabOnScroll.setBackgroundResource(R.drawable.bg_segment_selected);
+                tabOnScroll.setTextColor(selectedTxt);
+                tabAfterTime.setBackground(null);
+                tabAfterTime.setTextColor(normalTxt);
+            } else {
+                tabAfterTime.setBackgroundResource(R.drawable.bg_segment_selected);
+                tabAfterTime.setTextColor(selectedTxt);
+                tabOnScroll.setBackground(null);
+                tabOnScroll.setTextColor(normalTxt);
+            }
+        }
     }
 }

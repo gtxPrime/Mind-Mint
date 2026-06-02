@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    tools:ignore="HardcodedText,ContentDescription">
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="16dp"
+        android:background="?attr/glass_stroke"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header Row: Icon, Name, Switch -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/ivAppIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/shape_circle"
+                android:padding="10dp"
+                android:src="@drawable/youtube"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvAppName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="YouTube Shorts"
+                android:textColor="?attr/text_primary"
+                android:textSize="15sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/switchRestricted"
+                app:layout_constraintStart_toEndOf="@+id/ivAppIcon"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchRestricted"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:thumbTint="?attr/switchThumb"
+                app:trackTint="?attr/switchTrack" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Dynamic configs (Shown only if Restricted is checked) -->
+        <LinearLayout
+            android:id="@+id/layoutAppConfig"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/glass_stroke"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Scope Picker: Reels Only vs Full App -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layoutScope"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Block Scope"
+                    android:textColor="?attr/text_secondary"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- Scope toggle container -->
+                <LinearLayout
+                    android:id="@+id/scopeToggleContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_segment_container"
+                    android:orientation="horizontal"
+                    android:padding="2dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/btnScopeSection"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:paddingHorizontal="14dp"
+                        android:text="Section"
+                        android:textColor="?attr/text_primary"
+                        android:textSize="11sp"
+                        android:background="@drawable/bg_segment_selected" />
+
+                    <TextView
+                        android:id="@+id/btnScopeFull"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:paddingHorizontal="14dp"
+                        android:text="Full App"
+                        android:textColor="?attr/text_tertiary"
+                        android:textSize="11sp" />
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Mod switch -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layoutMod"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Enable Mod Features"
+                    android:textColor="?attr/text_secondary"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/cbUseMod"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:buttonTint="?attr/tintGlobalColor"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

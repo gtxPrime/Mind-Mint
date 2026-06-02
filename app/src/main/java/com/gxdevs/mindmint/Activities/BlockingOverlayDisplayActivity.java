@@ -158,6 +158,9 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
         handler.removeCallbacksAndMessages(null);
         Log.d(TAG, "setupTimer: Removed any existing handler callbacks.");
 
+        // Reset the HOME-dispatch guard for every new blocking event.
+        homeActionDispatched = false;
+
         btnUnlockApp.setVisibility(View.GONE);
         btnGoBack.setVisibility(View.GONE);
 
@@ -166,53 +169,49 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
             return;
         }
 
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        String challengeType = sp.getString(com.gxdevs.mindmint.Utils.ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+        String challengeType = null;
+        if (getIntent() != null) {
+            challengeType = getIntent().getStringExtra("extra_challenge_type");
+        }
+        if (challengeType == null) {
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+            challengeType = sp.getString(com.gxdevs.mindmint.Utils.ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+        }
 
-        if ("none".equals(challengeType)) {
-            setupStandardAutoCloseTimer();
-        } else {
+        if ("oneday".equals(challengeType)) {
+            // 1-Day lockout: show countdown + Go Back (HOME) button.
             btnGoBack.setVisibility(View.VISIBLE);
             btnGoBack.setOnClickListener(v -> handleBackPress());
 
             TextView tv_blocking_subtitle = findViewById(R.id.tv_blocking_subtitle);
 
-            if ("oneday".equals(challengeType)) {
-                btnUnlockApp.setVisibility(View.GONE);
-                
-                if (!challengeLockMgr.isBlockerOneDayLockActive(currentBlockedPackageName)) {
-                    challengeLockMgr.startBlockerOneDayLock(currentBlockedPackageName);
-                }
-
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        long remainingMs = challengeLockMgr.getBlockerOneDayLockRemainingMs(currentBlockedPackageName);
-                        if (remainingMs <= 0) {
-                            finish();
-                            return;
-                        }
-                        long hours = remainingMs / (60 * 60 * 1000L);
-                        long minutes = (remainingMs / (60 * 1000L)) % 60;
-                        long seconds = (remainingMs / 1000L) % 60;
-                        if (tv_blocking_subtitle != null) {
-                            tv_blocking_subtitle.setText(String.format(java.util.Locale.US, 
-                                "Strict lockout active.\nTime remaining: %02dh %02dm %02ds", 
-                                hours, minutes, seconds));
-                        }
-                        handler.postDelayed(this, 1000);
-                    }
-                });
-            } else {
-                btnUnlockApp.setVisibility(View.VISIBLE);
-                btnUnlockApp.setOnClickListener(v -> {
-                    Intent challengeIntent = new Intent(this, LockChallengeActivity.class);
-                    challengeIntent.putExtra(LockChallengeActivity.EXTRA_LOCK_TYPE, challengeType);
-                    challengeIntent.putExtra(LockChallengeActivity.EXTRA_TARGET_PACKAGE, currentBlockedPackageName);
-                    challengeIntent.putExtra(LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, false);
-                    challengeLauncher.launch(challengeIntent);
-                });
+            if (!challengeLockMgr.isBlockerOneDayLockActive(currentBlockedPackageName)) {
+                challengeLockMgr.startBlockerOneDayLock(currentBlockedPackageName);
             }
+
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    long remainingMs = challengeLockMgr.getBlockerOneDayLockRemainingMs(currentBlockedPackageName);
+                    if (remainingMs <= 0) {
+                        dispatchHomeAction();
+                        finish();
+                        return;
+                    }
+                    long hours = remainingMs / (60 * 60 * 1000L);
+                    long minutes = (remainingMs / (60 * 1000L)) % 60;
+                    long seconds = (remainingMs / 1000L) % 60;
+                    if (tv_blocking_subtitle != null) {
+                        tv_blocking_subtitle.setText(String.format(java.util.Locale.US,
+                            "Strict lockout active.\nTime remaining: %02dh %02dm %02ds",
+                            hours, minutes, seconds));
+                    }
+                    handler.postDelayed(this, 1000);
+                }
+            });
+        } else {
+            // "none" or any fallback → standard auto-close + HOME after popup duration.
+            setupStandardAutoCloseTimer();
         }
     }
 
@@ -239,12 +238,32 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * Dispatch a global HOME action via the accessibility service so the user lands
+     * on the launcher instead of being dropped back into the blocked app.
+     */
+    private void dispatchHomeAction() {
+        if (!homeActionDispatched) {
+            homeActionDispatched = true;
+            Intent homeIntent = new Intent(AppUsageAccessibilityService.ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY);
+            homeIntent.setPackage(getPackageName());
+            sendBroadcast(homeIntent);
+            Log.d(TAG, "dispatchHomeAction: HOME broadcast sent.");
+        }
+    }
+
     private void handleBackPress() {
         if (isReminderOnly) {
             Log.d(TAG, "onBackPressed: Back press allowed for reminder. Finishing activity.");
             finish();
         } else {
-            Log.d(TAG, "onBackPressed: Back press ignored for blocking mode.");
+            // Blocking mode: always go home so the user is NOT dropped back into the
+            // blocked app when they press Go Back / hardware back.
+            Log.d(TAG, "onBackPressed: Blocking mode — dispatching HOME before finishing.");
+            dispatchHomeAction();
+            if (!isFinishing() && !isDestroyed()) {
+                finish();
+            }
         }
     }
 

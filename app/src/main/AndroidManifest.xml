@@ -47,6 +47,10 @@
             android:launchMode="singleTask"
             android:exported="false" />
         <activity
+            android:name=".Activities.BlockerControlActivity"
+            android:exported="false"
+            android:theme="@style/Theme.NoScroll" />
+        <activity
             android:name=".Activities.OnBoarding"
             android:exported="true"
             android:theme="@style/Theme.MyApp.Splash">

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/itemRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="25dp"
+    android:elevation="4dp"
+    android:minHeight="96dp">
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="24dp"
+        android:background="?attr/glass_stroke"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/contentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="14dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="14dp"
+            android:background="@drawable/shape_circle"
+            android:backgroundTint="?attr/popup_bg"
+            android:padding="10dp"
+            android:src="@drawable/shield"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?attr/tintGlobalColor" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="Blocking Intensity"
+            android:textColor="?attr/text_primary"
+            android:textSize="15sp"
+            app:layout_constraintStart_toEndOf="@+id/icon"
+            app:layout_constraintTop_toTopOf="@+id/icon" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFamily="@font/inter18regular"
+            android:text="None"
+            android:textColor="?attr/text_tertiary"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@+id/title"
+            app:layout_constraintTop_toBottomOf="@+id/title" />
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="14dp"
+            android:max="4"
+            android:progressTint="?attr/tintGlobalColor"
+            android:thumbTint="?attr/tintGlobalColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/icon"
+            app:layout_constraintTop_toBottomOf="@+id/subtitle" />
+
+        <!-- 5 Labeled Stops -->
+        <LinearLayout
+            android:id="@+id/labelsLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal"
+            android:weightSum="5"
+            app:layout_constraintEnd_toEndOf="@+id/seekBar"
+            app:layout_constraintStart_toStartOf="@+id/seekBar"
+            app:layout_constraintTop_toBottomOf="@+id/seekBar"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <TextView
+                android:id="@+id/labelNone"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="NONE"
+                android:alpha="0.6"
+                android:fontFamily="@font/inter18regular"
+                android:textColor="?attr/text_tertiary"
+                android:textSize="9sp" />
+
+            <TextView
+                android:id="@+id/labelFriction"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="FRICTION"
+                android:alpha="0.6"
+                android:fontFamily="@font/inter18regular"
+                android:textColor="?attr/text_tertiary"
+                android:textSize="9sp" />
+
+            <TextView
+                android:id="@+id/labelReminder"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="REMINDER"
+                android:alpha="0.6"
+                android:fontFamily="@font/inter18regular"
+                android:textColor="?attr/text_tertiary"
+                android:textSize="9sp" />
+
+            <TextView
+                android:id="@+id/labelTempLock"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="TEMP LOCK"
+                android:alpha="0.6"
+                android:fontFamily="@font/inter18regular"
+                android:textColor="?attr/text_tertiary"
+                android:textSize="9sp" />
+
+            <TextView
+                android:id="@+id/labelPermanent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="PERMANENT"
+                android:alpha="0.6"
+                android:fontFamily="@font/inter18regular"
+                android:textColor="?attr/text_tertiary"
+                android:textSize="9sp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

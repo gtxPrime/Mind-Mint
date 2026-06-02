@@ -78,6 +78,9 @@ public class MindMintApp extends Application {
     public void onCreate() {
         super.onCreate();
 
+        // Seed and migrate blocker database configs
+        com.gxdevs.mindmint.Utils.BlockerMigrationManager.migrateAndSeed(this);
+
         // 1. Bootstrap Firebase
         FirebaseApp.initializeApp(this);
 

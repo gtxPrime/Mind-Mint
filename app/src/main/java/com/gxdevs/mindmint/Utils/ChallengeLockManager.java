@@ -14,6 +14,8 @@ public class ChallengeLockManager {
     public static final String PREF_SETTINGS_LOCK_TYPE = "pref_settings_lock_type";
     public static final String PREF_BLOCKER_CHALLENGE_TYPE = "pref_blocker_challenge_type";
     public static final String PREF_BLOCKER_BYPASS_DURATION_MIN = "pref_blocker_bypass_duration_minutes";
+    public static final String PREF_BLOCKER_INTENSITY = "pref_blocker_intensity";
+    public static final String PREF_BLOCKER_TRIGGER_TYPE = "pref_blocker_trigger_type";
     
     // Cooldown and lockout keys
     public static final String PREF_MAX_SEEN_TIMESTAMP = "pref_max_seen_timestamp";

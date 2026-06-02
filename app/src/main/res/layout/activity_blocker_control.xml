@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/app_bg"
+    tools:ignore="HardcodedText,ContentDescription">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="0dp"
+            android:paddingTop="36dp">
+
+            <!-- Header Container (Settings Style) -->
+            <LinearLayout
+                android:id="@+id/headerContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="24dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvHeaderSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:letterSpacing="0.1"
+                    android:text="Customize your feel"
+                    android:textAllCaps="true"
+                    android:textColor="?attr/text_tertiary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvHeaderTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:lineSpacingMultiplier="0.8"
+                    android:text="Blockers"
+                    android:textColor="?attr/text_primary"
+                    android:textSize="30sp" />
+            </LinearLayout>
+
+            <!-- Card 1: Master Service Status -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="?attr/surface_card"
+                app:cardCornerRadius="24dp"
+                app:strokeColor="?attr/glass_stroke"
+                app:strokeWidth="1dp">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp">
+
+                    <ImageView
+                        android:id="@+id/ivStatusIcon"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/shape_circle"
+                        android:backgroundTint="#3300D6C4"
+                        android:padding="10dp"
+                        android:src="@drawable/zap"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tint="?attr/tintGlobalColor" />
+
+                    <TextView
+                        android:id="@+id/tvStatusTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="Blocker Service Status"
+                        android:textColor="?attr/text_primary"
+                        android:textSize="15sp"
+                        app:layout_constraintBottom_toTopOf="@+id/tvStatusDesc"
+                        app:layout_constraintStart_toEndOf="@+id/ivStatusIcon"
+                        app:layout_constraintTop_toTopOf="@+id/ivStatusIcon"
+                        app:layout_constraintVertical_chainStyle="packed" />
+
+                    <TextView
+                        android:id="@+id/tvStatusDesc"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="sans-serif"
+                        android:text="Service is active and blocking"
+                        android:textColor="?attr/text_tertiary"
+                        android:textSize="12sp"
+                        app:layout_constraintBottom_toBottomOf="@+id/ivStatusIcon"
+                        app:layout_constraintEnd_toStartOf="@+id/switchServiceStatus"
+                        app:layout_constraintStart_toEndOf="@+id/ivStatusIcon"
+                        app:layout_constraintTop_toBottomOf="@+id/tvStatusTitle" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchServiceStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:thumbTint="?attr/switchThumb"
+                        app:trackTint="?attr/switchTrack" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 2: Master Strictness Slider -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="?attr/surface_card"
+                app:cardCornerRadius="24dp"
+                app:strokeColor="?attr/glass_stroke"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/shape_circle"
+                            android:backgroundTint="#3300D6C4"
+                            android:padding="10dp"
+                            android:src="@drawable/shield"
+                            app:tint="?attr/tintGlobalColor" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Strictness Level"
+                            android:textColor="?attr/text_primary"
+                            android:textSize="15sp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvLevelDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="sans-serif"
+                        android:text="Choose how strictly you want to restrict apps."
+                        android:textColor="?attr/text_secondary"
+                        android:textSize="13sp" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderIntensity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:valueFrom="0.0"
+                        android:valueTo="4.0"
+                        android:stepSize="1.0"
+                        android:value="0.0"
+                        app:trackColorActive="?attr/tintGlobalColor"
+                        app:thumbColor="?attr/tintGlobalColor"
+                        app:thumbRadius="10dp"
+                        app:trackHeight="4dp" />
+
+                    <!-- Labels for Slider -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal"
+                        android:weightSum="5">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="NONE"
+                            android:textColor="?attr/text_tertiary"
+                            android:textSize="8sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="FRICTION"
+                            android:textColor="?attr/text_tertiary"
+                            android:textSize="8sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="REMIND"
+                            android:textColor="?attr/text_tertiary"
+                            android:textSize="8sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="TEMP LOCK"
+                            android:textColor="?attr/text_tertiary"
+                            android:textSize="8sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="PERM"
+                            android:textColor="?attr/text_tertiary"
+                            android:textSize="8sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 3: Dynamic Level Configuration Settings -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardLevelSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="?attr/surface_card"
+                app:cardCornerRadius="24dp"
+                app:strokeColor="?attr/glass_stroke"
+                app:strokeWidth="1dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/layoutLevelSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="12dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Restricted Apps Configurations Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/poppins_semibold"
+                android:letterSpacing="0.05"
+                android:text="RESTRICTED APPLICATIONS"
+                android:textColor="?attr/text_secondary"
+                android:textSize="11sp" />
+
+            <!-- Card 4 Container: Restricted Apps List -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="?attr/surface_card"
+                app:cardCornerRadius="24dp"
+                app:strokeColor="?attr/glass_stroke"
+                app:strokeWidth="1dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvRestrictedApps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    tools:itemCount="3"
+                    tools:listitem="@layout/item_restrictable_app" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Advanced Blocker Settings Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/poppins_semibold"
+                android:letterSpacing="0.05"
+                android:text="ADVANCED SHIELD RULES"
+                android:textColor="?attr/text_secondary"
+                android:textSize="11sp" />
+
+            <!-- Card 5 Container: Advanced Rules -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="25dp"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="?attr/surface_card"
+                app:cardCornerRadius="24dp"
+                app:strokeColor="?attr/glass_stroke"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="0dp">
+
+                    <!-- Website Blocker Row -->
+                    <LinearLayout
+                        android:id="@+id/rowWebBlocker"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="14dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/shape_circle"
+                            android:backgroundTint="#333DD7A5"
+                            android:padding="10dp"
+                            android:src="@drawable/globe"
+                            app:tint="#3DD7A5" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Browser Website Blocker"
+                                android:textColor="?attr/text_primary"
+                                android:textSize="15sp" />
+
+                            <TextView
+                                android:id="@+id/tvWebBlockerDesc"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="sans-serif"
+                                android:text="Block distracting sites in Chrome/Firefox"
+                                android:textColor="?attr/text_tertiary"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchWebBlocker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:thumbTint="?attr/switchThumb"
+                            app:trackTint="?attr/switchTrack" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:background="?attr/glass_stroke" />
+
+                    <!-- Adult sites block -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="14dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/shape_circle"
+                            android:backgroundTint="#33F43F5E"
+                            android:padding="10dp"
+                            android:src="@drawable/shield"
+                            app:tint="#F43F5E" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Block Adult Content"
+                                android:textColor="?attr/text_primary"
+                                android:textSize="15sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="sans-serif"
+                                android:text="Filters explicit search and domains"
+                                android:textColor="?attr/text_tertiary"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchAdultBlocker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:thumbTint="?attr/switchThumb"
+                            app:trackTint="?attr/switchTrack" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:background="?attr/glass_stroke" />
+
+                    <!-- Require settings password -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="14dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/shape_circle"
+                            android:backgroundTint="#3361A2F2"
+                            android:padding="10dp"
+                            android:src="@drawable/lock"
+                            app:tint="#61A2F2" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Settings Pin Lock"
+                                android:textColor="?attr/text_primary"
+                                android:textSize="15sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="sans-serif"
+                                android:text="Require PIN/passcode to edit rules"
+                                android:textColor="?attr/text_tertiary"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchSettingsLock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:thumbTint="?attr/switchThumb"
+                            app:trackTint="?attr/switchTrack" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:background="?attr/glass_stroke" />
+
+                    <!-- Prevent Uninstall / Device admin -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="14dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/shape_circle"
+                            android:backgroundTint="#33FBBF24"
+                            android:padding="10dp"
+                            android:src="@drawable/shield_alert"
+                            app:tint="#FBBF24" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="Device Admin Protection"
+                                android:textColor="?attr/text_primary"
+                                android:textSize="15sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="sans-serif"
+                                android:text="Prevent bypass through force-stop or uninstall"
+                                android:textColor="?attr/text_tertiary"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchDeviceAdmin"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:thumbTint="?attr/switchThumb"
+                            app:trackTint="?attr/switchTrack" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

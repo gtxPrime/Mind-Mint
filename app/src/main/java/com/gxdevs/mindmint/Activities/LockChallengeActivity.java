@@ -283,7 +283,8 @@ public class LockChallengeActivity extends AppCompatActivity implements SensorEv
 
     private void handleCancel() {
         if (!isSettingsLock) {
-            // Accessibility Blocker: Go Back action closes overlay and triggers Home command
+            // Blocker challenge cancelled — send user to home screen so they
+            // are not left inside the blocked app.
             Intent closeAppIntent = new Intent(AppUsageAccessibilityService.ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY);
             closeAppIntent.setPackage(getPackageName());
             sendBroadcast(closeAppIntent);

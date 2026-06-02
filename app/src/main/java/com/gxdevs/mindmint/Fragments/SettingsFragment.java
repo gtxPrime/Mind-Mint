@@ -99,6 +99,9 @@ public class SettingsFragment extends Fragment {
     private static final int ID_ROUTINES = 15;
     private static final int ID_PREVENT_UNINSTALL = 16;
     private static final int ID_LOCK_TYPES = 17;
+    private static final int ID_BLOCKER_SLIDER = 20;
+    private static final int ID_BLOCK_TRIGGER_TAB = 21;
+    private static final int ID_BLOCKER_BYPASS_DURATION = 18;
     private static final int ID_PERM_ACCESSIBILITY = 100;
     private static final int ID_PERM_NOTIFICATION = 101;
     private static final int ID_PERM_ALARM = 102;
@@ -225,6 +228,28 @@ public class SettingsFragment extends Fragment {
     }
 
     private void refreshList() {
+        if (!defaultSharedPreferences.contains(ChallengeLockManager.PREF_BLOCKER_INTENSITY)) {
+            boolean isRemindEnabled = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
+            boolean isBlockEnabled = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
+            String currentChallenge = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+            
+            int initialIntensity = 0;
+            if ("oneday".equals(currentChallenge)) {
+                initialIntensity = 4;
+            } else if (isBlockEnabled) {
+                initialIntensity = 3;
+            } else if (isRemindEnabled) {
+                initialIntensity = 2;
+            } else if (!"none".equals(currentChallenge)) {
+                initialIntensity = 1;
+            }
+            
+            defaultSharedPreferences.edit()
+                .putInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, initialIntensity)
+                .putString(ChallengeLockManager.PREF_BLOCKER_TRIGGER_TYPE, isRemindEnabled ? "scroll" : "time")
+                .apply();
+        }
+
         settingsItems.clear();
         buildSettingsList();
         adapter.setCurrentTheme(defaultSharedPreferences.getString(PREF_THEME_MODE, "Dark Theme"));
@@ -234,7 +259,22 @@ public class SettingsFragment extends Fragment {
                 int seconds = minSeconds + progress;
                 defaultSharedPreferences.edit()
                         .putInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, seconds).apply();
+            } else if (itemId == ID_BLOCKER_BYPASS_DURATION) {
+                int minutes = progress + 5;
+                defaultSharedPreferences.edit()
+                        .putInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, minutes).apply();
             }
+        });
+
+        adapter.setOnBlockerIntensityChangeListener((itemId, intensity) -> {
+            applyBlockerIntensity(intensity);
+        });
+
+        adapter.setOnBlockTriggerChangeListener((itemId, newTrigger) -> {
+            defaultSharedPreferences.edit().putString(ChallengeLockManager.PREF_BLOCKER_TRIGGER_TYPE, newTrigger).apply();
+            int intensity = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
+            saveBlockerIntensity(intensity);
+            refreshList();
         });
 
         adapter.setOnThemeChangeListener(this::applyTheme);
@@ -318,53 +358,6 @@ public class SettingsFragment extends Fragment {
 
         settingsItems.add(new SettingsItem(SettingsItem.TYPE_HEADER, "FOCUS CONTROLS"));
 
-        boolean isRemindEnabled = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
-        SettingsItem remindItem = new SettingsItem(ID_REMIND_DOOM, SettingsItem.TYPE_SWITCH, "Remind me",
-                "Get nudges to return to focus", R.drawable.bell, textSecondary)
-                .setSwitch(true, isRemindEnabled, (buttonView, isChecked) -> {
-                    lockedSwitchAction("Change Remind me", buttonView, !isChecked, isChecked, () -> {
-                        if (isChecked && !isAccessibilityPermissionGranted(requireContext())) {
-                            buttonView.setChecked(false);
-                            defaultSharedPreferences.edit()
-                                    .putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false)
-                                    .apply();
-                            shakeCard(ID_PERM_ACCESSIBILITY);
-                            return;
-                        }
-                        defaultSharedPreferences.edit()
-                                .putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, isChecked)
-                                .apply();
-                    });
-                });
-
-        if (isRemindEnabled) {
-            remindItem.setFormattedSubtitle(getRemindDoomFormattedSubtitle());
-            remindItem.setOnClickListener(v -> authenticateToChangeSetting("Edit Reminder Time", () -> showTimePickerBottomSheet(true)));
-        }
-        settingsItems.add(remindItem);
-
-        boolean isBlockEnabled = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
-        SettingsItem blockItem = new SettingsItem(ID_BLOCK_CONTENT, SettingsItem.TYPE_SWITCH, "Block content",
-                "Automatically block content", R.drawable.eye_off, redIcon)
-                .setIconValues(R.drawable.shape_circle, eyeBg)
-                .setSwitch(true, isBlockEnabled, (buttonView, isChecked) -> {
-                    lockedSwitchAction("Change Block content", buttonView, !isChecked, isChecked, () -> {
-                        if (isChecked && !isAccessibilityPermissionGranted(requireContext())) {
-                            buttonView.setChecked(false);
-                            defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false).apply();
-                            shakeCard(ID_PERM_ACCESSIBILITY);
-                            return;
-                        }
-                        defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, isChecked).apply();
-                    });
-                });
-
-        if (isBlockEnabled) {
-            blockItem.setFormattedSubtitle(getBlockTimeFormattedSubtitle());
-            blockItem.setOnClickListener(v -> authenticateToChangeSetting("Edit Block Time", () -> showTimePickerBottomSheet(false)));
-        }
-        settingsItems.add(blockItem);
-
         boolean isKeepAlive = defaultSharedPreferences.getBoolean("keepServiceAlive", false);
         settingsItems.add(new SettingsItem(ID_KEEP_ALIVE, SettingsItem.TYPE_SWITCH, "Keep service alive",
                 "Prevent OS from killing app", R.drawable.zap, grayIcon).setSwitch(true, isKeepAlive, (buttonView, isChecked) -> {
@@ -396,191 +389,15 @@ public class SettingsFragment extends Fragment {
 
         settingsItems.add(new SettingsItem(SettingsItem.TYPE_HEADER, "BLOCKING RULES"));
 
-        boolean isBrowserBlockEnabled = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false);
-        SettingsItem browserItem = new SettingsItem(ID_BROWSER_BLOCKER, SettingsItem.TYPE_SWITCH, "Blocker on browsers",
-                isBrowserBlockEnabled ? "Blocking active on browsers" : "Activate blocking on browsers",
-                R.drawable.globe, greenIcon)
-                .setIconValues(R.drawable.shape_circle, browserBg)
-                .setSwitch(true, isBrowserBlockEnabled, (buttonView, isChecked) -> {
-                    lockedSwitchAction("Change Browser Blocker", buttonView, !isChecked, isChecked, () -> {
-                        if (isChecked && !isAccessibilityPermissionGranted(requireContext())) {
-                            buttonView.setChecked(false);
-                            defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false).apply();
-                            shakeCard(ID_PERM_ACCESSIBILITY);
-                            return;
-                        }
-                        defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, isChecked)
-                                .apply();
-                        if (isChecked) {
-                            BlockedSitesManager.seedDefaultsIfFirstTimeAndEmpty(requireContext());
-                            showBrowserBlockingTutorial();
-                        }
-                    });
-                })
-                .setOnClickListener(v -> authenticateToChangeSetting("Edit Blocked Sites", () -> {
-                    if (!isAccessibilityPermissionGranted(requireContext())) {
-                        shakeCard(ID_PERM_ACCESSIBILITY);
-                        return;
-                    }
-                    startActivity(new Intent(requireContext(), SiteBlockerActivity.class));
-                }));
-        settingsItems.add(browserItem);
-
-        boolean isAdultEnabled = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false);
-        settingsItems.add(new SettingsItem(ID_ADULT_BLOCK, SettingsItem.TYPE_SWITCH, "Block adult sites", "In Beta",
-                R.drawable.shield, redIcon)
-                .setIconValues(R.drawable.shape_circle, blockBg)
-                .setSwitch(true, isAdultEnabled, (buttonView, isChecked) -> {
-                    lockedSwitchAction("Change Adult Blocker", buttonView, !isChecked, isChecked, () -> {
-                        if (isChecked && !isAccessibilityPermissionGranted(requireContext())) {
-                            buttonView.setChecked(false);
-                            defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false).apply();
-                            shakeCard(ID_PERM_ACCESSIBILITY);
-                            return;
-                        }
-                        if (isChecked) {
-                            showAdultListDownloadDialogAndEnsure();
-                        } else {
-                            defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false).apply();
-                        }
-                    });
-                })
-                .setActionText(isAdultEnabled ? "Update list" : null)
-                .setArrow(isAdultEnabled)
-                .setOnClickListener(v -> authenticateToChangeSetting("Update list", this::showAdultListDownloadDialogAndEnsure)));
-
-        int savedDuration = defaultSharedPreferences.getInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, 5);
-        if (savedDuration < 3)
-            savedDuration = 3;
-        if (savedDuration > 15)
-            savedDuration = 15;
-
-        settingsItems.add(new SettingsItem(ID_POPUP_DURATION, SettingsItem.TYPE_SEEKBAR,
-                getString(R.string.blocking_popup_duration), getString(R.string.min_5_seconds_in_seconds),
-                R.drawable.hourglass, purpleIcon)
-                .setIconValues(R.drawable.shape_circle, popupBg)
-                .setSeekbar(12, savedDuration - 3, savedDuration + "s"));
-
-        String currentBlockerChallenge = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
-        String blockerChallengeLabel = getBlockerChallengeLabel(currentBlockerChallenge);
-
-        settingsItems.add(new SettingsItem(ID_LOCK_TYPES, SettingsItem.TYPE_SWITCH,
-                "App Blocker Challenge", blockerChallengeLabel,
+        settingsItems.add(new SettingsItem(999, SettingsItem.TYPE_SWITCH, "Blocker & Lock Center",
+                "Configure app blockers, challenges, limits, and settings locks",
                 R.drawable.shield, purpleIcon)
                 .setIconValues(R.drawable.shape_circle, popupBg)
                 .setSwitch(false, false, null)
                 .setArrow(true)
-                .setOnClickListener(v -> showBlockerChallengePicker()));
-
-        SettingsLockManager lockMgr = new SettingsLockManager(requireContext());
-        boolean isLockEnabled = lockMgr.isLockEnabled();
-        String subtitleText;
-        if (!isLockEnabled) {
-            subtitleText = "Lock settings changes";
-        } else {
-            subtitleText = "Settings are protected";
-        }
-
-        settingsItems.add(new SettingsItem(ID_SETTINGS_LOCK, SettingsItem.TYPE_SWITCH,
-                "Require password", subtitleText,
-                R.drawable.shield, purpleIcon)
-                .setIconValues(R.drawable.shape_circle, popupBg)
-                .setSwitch(true, isLockEnabled, (buttonView, isChecked) -> {
-                    SettingsLockManager lm = new SettingsLockManager(requireContext());
-                    if (isChecked) {
-                        lm.setLockEnabled(true);
-                        refreshList();
-                    } else {
-                        buttonView.setChecked(true);
-                        authenticateToChangeSetting("Disable settings lock", () -> {
-                            lm.setLockEnabled(false);
-                            refreshList();
-                        });
-                        return;
-                    }
-                }));
-
-        if (isLockEnabled) {
-            String currentSettingsLockType = defaultSharedPreferences.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device");
-            String settingsLockLabel = getLockTypeLabel(currentSettingsLockType);
-
-            settingsItems.add(new SettingsItem(ID_LOCK_TYPE_TAB, SettingsItem.TYPE_SWITCH,
-                    "Settings Lock Type", settingsLockLabel,
-                    R.drawable.shield, purpleIcon)
-                    .setIconValues(R.drawable.shape_circle, popupBg)
-                    .setSwitch(false, false, null)
-                    .setArrow(true)
-                    .setOnClickListener(v -> showSettingsLockTypePicker()));
-
-            if ("custom".equals(currentSettingsLockType)) {
-                SettingsLockManager lm = new SettingsLockManager(requireContext());
-                String pinSubtitle = lm.hasCustomPin() ? "Tap to change PIN" : "PIN not set. Tap to create PIN.";
-                settingsItems.add(new SettingsItem(ID_SETTINGS_LOCK + 100, SettingsItem.TYPE_SWITCH,
-                        "Change Settings PIN", pinSubtitle,
-                        R.drawable.shield, tealIcon)
-                        .setIconValues(R.drawable.shape_circle, mobileBg)
-                        .setSwitch(false, false, null)
-                        .setArrow(true)
-                        .setOnClickListener(v -> handleEditCustomPin()));
-            }
-        }
-
-        settingsItems.add(new SettingsItem(SettingsItem.TYPE_HEADER, "PROTECTION"));
-
-        boolean isAdminActive = devicePolicyManager != null
-                && devicePolicyManager.isAdminActive(deviceAdminComponent);
-        String preventUninstallSubtitle = isAdminActive
-                ? "App is protected — cannot be force-stopped or uninstalled"
-                : "Prevent uninstall or force-stop by granting Device Admin permission";
-        settingsItems.add(new SettingsItem(ID_PREVENT_UNINSTALL, SettingsItem.TYPE_SWITCH,
-                "Prevent Uninstall", preventUninstallSubtitle,
-                R.drawable.shield, redIcon)
-                .setIconValues(R.drawable.shape_circle, Color.parseColor("#33F77381"))
-                .setSwitch(true, isAdminActive, (buttonView, isChecked) -> {
-                    android.util.Log.d("PA_SWITCH", "listener fired — isChecked=" + isChecked + "  isAdminActive=" + isAdminActive);
-                    if (isChecked) {
-                        android.util.Log.d("PA_SWITCH", "ON branch → showing warning dialog");
-                        CustomDialogUtils.showCustomDialog(
-                            requireContext(),
-                            "⚠️ Prevent Uninstall?",
-                                """
-                                        Once active, Mind Mint cannot be:
-                                        
-                                          • Uninstalled
-                                          • Force-stopped
-                                          • Have its data cleared
-                                        
-                                        The only way to remove this protection is by disabling it from Mind Mint's own Settings. \
-                                        Going through Android's App Info or Settings will not work.
-                                        
-                                        Proceed only if you're serious about staying focused.""",
-                            "Enable",
-                            "Cancel",
-                            () -> {
-                                android.util.Log.d("PA_SWITCH", "Warning confirmed → launching device admin intent");
-                                Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, deviceAdminComponent);
-                                intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                        "Grants Mind Mint Device Admin rights to prevent uninstall and force-stop while protection is active.");
-                                deviceAdminLauncher.launch(intent);
-                            },
-                            () -> {
-                                buttonView.setChecked(false);
-                            }
-                        );
-                    } else {
-                        android.util.Log.d("PA_SWITCH", "OFF branch → lockedSwitchAction");
-                        lockedSwitchAction("Disable Prevent Uninstall", buttonView, true, false, () -> {
-                            defaultSharedPreferences.edit()
-                                    .putLong(AppUsageAccessibilityService.PREF_ADMIN_GUARD_TRUSTED_TOKEN,
-                                            System.currentTimeMillis())
-                                    .commit();
-                            Toast.makeText(requireContext(),
-                                    "Tap 'Deactivate' next to Mind Mint to remove protection.",
-                                    Toast.LENGTH_LONG).show();
-                            startActivity(new Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS));
-                        });
-                    }
+                .setOnClickListener(v -> {
+                    Intent intent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.BlockerControlActivity.class);
+                    startActivity(intent);
                 }));
 
         settingsItems.add(new SettingsItem(SettingsItem.TYPE_HEADER, "UPCOMING FEATURES"));
@@ -1292,7 +1109,147 @@ public class SettingsFragment extends Fragment {
         intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_SELECTION_MODE, com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.MODE_BLOCKER);
         String current = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
         intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_CURRENT_VALUE, current);
+
+        int intensity = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
+        if (intensity == 1) { // Friction
+            intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_ALLOWED_TYPES,
+                    new String[]{"math", "scream", "breath", "text", "shake", "window10"});
+        } else if (intensity == 3) { // Temp Lock
+            intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_ALLOWED_TYPES,
+                    new String[]{"math", "scream", "breath", "text", "shake", "window10", "oneday"});
+        }
+
         challengeLauncher.launch(intent);
+    }
+
+    private void applyBlockerIntensity(int stop) {
+        int oldIntensity = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
+        if (stop == oldIntensity) return;
+
+        SettingsLockManager lm = new SettingsLockManager(requireContext());
+        if (lm.isLockEnabled()) {
+            authenticateToChangeSetting("Change Blocker Intensity", () -> {
+                confirmAndApplyBlockerIntensity(stop);
+            }, () -> {
+                refreshList();
+            });
+        } else {
+            confirmAndApplyBlockerIntensity(stop);
+        }
+    }
+
+    private void confirmAndApplyBlockerIntensity(int stop) {
+        if (stop == 4) {
+            showOneDayLockWarning(() -> {
+                saveBlockerIntensity(4);
+                refreshList();
+            }, () -> {
+                refreshList();
+            });
+        } else {
+            saveBlockerIntensity(stop);
+            refreshList();
+        }
+    }
+
+    private void saveBlockerIntensity(int stop) {
+        SharedPreferences.Editor editor = defaultSharedPreferences.edit();
+        editor.putInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, stop);
+
+        switch (stop) {
+            case 0: // None
+                editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
+                editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
+                editor.putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+                break;
+            case 1: // Friction
+                editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
+                editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
+                String ch = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+                if ("none".equals(ch) || "oneday".equals(ch)) {
+                    editor.putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "math");
+                }
+                break;
+            case 2: // Reminder
+                editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
+                editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, true);
+                editor.putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+                break;
+            case 3: // Temp Lock
+                {
+                    boolean scrollOn = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
+                    boolean timeOn = defaultSharedPreferences.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
+                    if (!scrollOn && !timeOn) {
+                        editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, true);
+                    }
+                    String ch3 = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+                    if ("none".equals(ch3) || "oneday".equals(ch3)) {
+                        editor.putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "math");
+                    }
+                }
+                break;
+            case 4: // Permanent
+                editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
+                editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
+                editor.putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "oneday");
+                break;
+        }
+        editor.apply();
+    }
+
+    private void showOneDayLockWarning(Runnable onConfirmed, Runnable onCancelled) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_custom_confirm, null);
+        builder.setView(dialogView);
+        builder.setCancelable(false);
+        android.app.AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.dialogTitle);
+        TextView tvMessage = dialogView.findViewById(R.id.dialogMessage);
+        MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
+        MaterialButton btnConfirm = dialogView.findViewById(R.id.btnConfirm);
+
+        tvTitle.setText("⚠️ Strict 1-Day Lockout");
+        tvMessage.setText("WARNING: Enabling the Permanent (1-Day) Lock will strictly lock you out of your blocked apps for 24 hours. "
+                + "This is system-enforced and CANNOT be undone, paused, or bypassed by changing the device clock or resetting PINs.\n\n"
+                + "Do you want to proceed?");
+
+        btnConfirm.setEnabled(false);
+        btnConfirm.setText("Understand (5s)");
+        btnCancel.setText("Cancel");
+
+        dialog.show();
+
+        final int[] secondsLeft = {5};
+        android.os.Handler countdownHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        Runnable countdownRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (secondsLeft[0] > 0) {
+                    btnConfirm.setText("Understand (" + secondsLeft[0] + "s)");
+                    secondsLeft[0]--;
+                    countdownHandler.postDelayed(this, 1000);
+                } else {
+                    btnConfirm.setEnabled(true);
+                    btnConfirm.setText("Understand");
+                }
+            }
+        };
+        countdownHandler.post(countdownRunnable);
+
+        btnConfirm.setOnClickListener(v -> {
+            dialog.dismiss();
+            onConfirmed.run();
+        });
+
+        btnCancel.setOnClickListener(v -> {
+            dialog.dismiss();
+            countdownHandler.removeCallbacksAndMessages(null);
+            onCancelled.run();
+        });
     }
 
     private void handleEditCustomPin() {

@@ -60,6 +60,7 @@ public class Utils {
         ALL_PACKAGES.put("com.instapro2.android", "insta");
         ALL_PACKAGES.put("com.instaflow.android", "insta");
         ALL_PACKAGES.put("cc.honista.app", "insta");
+        ALL_PACKAGES.put("com.instaprime.android", "insta");
 
         // Initialize the dictionary with only original packages
         ORIGINAL_PACKAGES.put("com.instagram.android", "insta");
@@ -446,7 +447,6 @@ public class Utils {
                         "We do not store or transmit any sound. Volume levels are processed locally.",
                         "Allow Mic Access"
                 );
-                default -> getConfigForType(PermissionType.ACCESSIBILITY);
             };
         }
 

@@ -12,6 +12,8 @@ public class SettingsItem {
     public static final int TYPE_BACKUP = 5;
     public static final int TYPE_SCROLL_TAB = 6;
     public static final int TYPE_LOCK_TAB = 7;
+    public static final int TYPE_BLOCKER_SLIDER = 8;
+    public static final int TYPE_BLOCK_TRIGGER_TAB = 9;
 
     private int id;
     private final int type;
@@ -229,5 +231,26 @@ public class SettingsItem {
 
     public boolean isExpanded() {
         return isExpanded;
+    }
+
+    private int sliderProgress;
+    private String triggerTab; // "scroll" or "time"
+
+    public SettingsItem setSliderProgress(int progress) {
+        this.sliderProgress = progress;
+        return this;
+    }
+
+    public int getSliderProgress() {
+        return sliderProgress;
+    }
+
+    public SettingsItem setTriggerTab(String triggerTab) {
+        this.triggerTab = triggerTab;
+        return this;
+    }
+
+    public String getTriggerTab() {
+        return triggerTab;
     }
 }

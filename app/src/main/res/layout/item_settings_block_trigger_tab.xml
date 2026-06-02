@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/triggerTabRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="25dp"
+    android:elevation="4dp"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="24dp"
+        android:background="?attr/glass_stroke"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="12dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/divider">
+
+        <TextView
+            android:id="@+id/tabLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter18regular"
+            android:text="Lock Trigger"
+            android:textColor="?attr/text_tertiary"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Pill tab toggle: On Scroll | After Time -->
+        <LinearLayout
+            android:id="@+id/tabContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:background="@drawable/bg_segment_container"
+            android:clipChildren="true"
+            android:clipToPadding="true"
+            android:orientation="horizontal"
+            android:padding="3dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tabOnScroll"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="On Scroll"
+                android:textColor="?attr/text_primary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tabAfterTime"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:text="After Time"
+                android:textColor="?attr/text_primary"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

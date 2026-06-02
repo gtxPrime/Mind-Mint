@@ -17,6 +17,7 @@ import com.gxdevs.mindmint.db.dao.HabitCompletionDao;
 import com.gxdevs.mindmint.db.dao.HabitDao;
 import com.gxdevs.mindmint.db.dao.TaskDao;
 import com.gxdevs.mindmint.db.dao.FocusTopicDao;
+import com.gxdevs.mindmint.db.dao.BlockedAppDao;
 import com.gxdevs.mindmint.db.entities.DailyStatsEntity;
 import com.gxdevs.mindmint.db.entities.FocusDailyStatEntity;
 import com.gxdevs.mindmint.db.entities.FocusScheduleEntity;
@@ -27,6 +28,7 @@ import com.gxdevs.mindmint.db.entities.HabitCachedStatsEntity;
 import com.gxdevs.mindmint.db.entities.HabitCompletionEntity;
 import com.gxdevs.mindmint.db.entities.HabitEntity;
 import com.gxdevs.mindmint.db.entities.TaskEntity;
+import com.gxdevs.mindmint.db.entities.BlockedAppEntity;
 import java.util.concurrent.Executors;
 
 @Database(entities = {
@@ -39,8 +41,9 @@ import java.util.concurrent.Executors;
         FocusSessionEntity.class,
         DailyStatsEntity.class,
         FocusTopicEntity.class,
-        FocusScheduleEntity.class
-}, version = 16, exportSchema = false)
+        FocusScheduleEntity.class,
+        BlockedAppEntity.class
+}, version = 17, exportSchema = false)
 public abstract class MindMintRoomDatabase extends RoomDatabase {
     private static volatile MindMintRoomDatabase INSTANCE;
 
@@ -59,6 +62,8 @@ public abstract class MindMintRoomDatabase extends RoomDatabase {
     public abstract FocusScheduleDao focusScheduleDao();
 
     public abstract DailyStatsDao dailyStatsDao();
+
+    public abstract BlockedAppDao blockedAppDao();
 
     /**
      * Migration from version 7 to 8
@@ -242,6 +247,19 @@ public abstract class MindMintRoomDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_16_17 = new Migration(16, 17) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS blocked_apps ("
+                    + "packageName TEXT NOT NULL PRIMARY KEY, "
+                    + "appName TEXT, "
+                    + "isRestricted INTEGER NOT NULL DEFAULT 0, "
+                    + "scope TEXT, "
+                    + "useMod INTEGER NOT NULL DEFAULT 0, "
+                    + "sectionViewId TEXT)");
+        }
+    };
+
 
     public static MindMintRoomDatabase getInstance(@NonNull Context context) {
         if (INSTANCE == null) {
@@ -253,7 +271,7 @@ public abstract class MindMintRoomDatabase extends RoomDatabase {
                             "mindmint.db")
                             .addMigrations(MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
                                     MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15,
-                                    MIGRATION_15_16)
+                                    MIGRATION_15_16, MIGRATION_16_17)
                             .addCallback(new Callback() {
                                 @Override
                                 public void onCreate(@NonNull SupportSQLiteDatabase db) {

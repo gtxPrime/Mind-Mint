@@ -50,6 +50,7 @@ public class Utils {
         // Initialize the dictionary with both mod and original packages
         ALL_PACKAGES.put("com.myinsta.android", "insta");
         ALL_PACKAGES.put("com.rvx.android.youtube", "yt");
+        ALL_PACKAGES.put("app.morphe.android.youtube", "yt");
         ALL_PACKAGES.put("com.revance.android.youtube", "yt");
         ALL_PACKAGES.put("com.snapchat.android", "snap");
         ALL_PACKAGES.put("com.instagram.android", "insta");

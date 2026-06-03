@@ -86,7 +86,7 @@
             android:exported="false"
             android:launchMode="singleInstance"
             android:taskAffinity=""
-            android:theme="@style/Theme.MindMint.TransparentOverlay"
+            android:theme="@style/Theme.NoScroll"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".Activities.LockTypeSelectionActivity"

@@ -173,6 +173,13 @@ public class SettingsLockManager {
                 .setView(pinView)
                 .setCancelable(true)
                 .setNegativeButton("Cancel", (d, w) -> d.cancel())
+                .setNeutralButton("Forgot PIN", (d, w) -> {
+                    d.dismiss();
+                    android.content.Intent intent = new android.content.Intent(dialogContext, com.gxdevs.mindmint.Activities.LockChallengeActivity.class);
+                    intent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_LOCK_TYPE, "pin_reset");
+                    intent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, true);
+                    dialogContext.startActivity(intent);
+                })
                 .setOnCancelListener(d -> callback.accept(false))
                 .create();
 

@@ -1,879 +1,2179 @@
-package com.gxdevs.mindmint.Activities;
+package com.gxdevs.mindmint.Activities
 
-import android.app.Dialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.CompoundButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.app.Dialog
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.res.ColorStateList
+import android.content.pm.PackageManager
+import android.graphics.Color as AndroidColor
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Dialog as ComposeDialog
+import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.preference.PreferenceManager
+import com.gxdevs.mindmint.Common.IntentActions
+import com.gxdevs.mindmint.R
+import com.gxdevs.mindmint.Services.AppUsageAccessibilityService
+import com.gxdevs.mindmint.Utils.ChallengeLockManager
+import com.gxdevs.mindmint.Utils.SettingsLockManager
+import com.gxdevs.mindmint.Utils.Utils
+import com.gxdevs.mindmint.db.MindMintRoomDatabase
+import com.gxdevs.mindmint.db.dao.BlockedAppDao
+import com.gxdevs.mindmint.db.entities.BlockedAppEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.createBitmap
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
-import androidx.preference.PreferenceManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+class BlockerControlActivity : AppCompatActivity() {
 
-import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.materialswitch.MaterialSwitch;
-import com.google.android.material.checkbox.MaterialCheckBox;
-import com.google.android.material.slider.Slider;
-import com.gxdevs.mindmint.Common.IntentActions;
-import com.gxdevs.mindmint.R;
-import com.gxdevs.mindmint.Services.AppUsageAccessibilityService;
-import com.gxdevs.mindmint.Utils.ChallengeLockManager;
-import com.gxdevs.mindmint.Utils.SettingsLockManager;
-import com.gxdevs.mindmint.Utils.Utils;
-import com.gxdevs.mindmint.db.MindMintRoomDatabase;
-import com.gxdevs.mindmint.db.dao.BlockedAppDao;
-import com.gxdevs.mindmint.db.entities.BlockedAppEntity;
+    private lateinit var sharedPrefs: SharedPreferences
+    private lateinit var database: MindMintRoomDatabase
+    private lateinit var blockedAppDao: BlockedAppDao
+    private lateinit var settingsLockMgr: SettingsLockManager
+    private lateinit var challengeLockMgr: ChallengeLockManager
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+    private val isAuthenticatedState = mutableStateOf(false)
 
-public class BlockerControlActivity extends AppCompatActivity {
-
-    private SharedPreferences sharedPrefs;
-    private MindMintRoomDatabase database;
-    private BlockedAppDao blockedAppDao;
-    private SettingsLockManager settingsLockMgr;
-    private ChallengeLockManager challengeLockMgr;
-
-    private MaterialSwitch switchServiceStatus;
-    private Slider sliderIntensity;
-    private TextView tvLevelDesc;
-    private MaterialCardView cardLevelSettings;
-    private LinearLayout layoutLevelSettings;
-    private RecyclerView rvRestrictedApps;
-    private AppAdapter appAdapter;
-
-    private MaterialSwitch switchWebBlocker;
-    private MaterialSwitch switchAdultBlocker;
-    private MaterialSwitch switchSettingsLock;
-    private MaterialSwitch switchDeviceAdmin;
-
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_blocker_control);
-
-        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        database = MindMintRoomDatabase.getInstance(this);
-        blockedAppDao = database.blockedAppDao();
-        settingsLockMgr = new SettingsLockManager(this);
-        challengeLockMgr = new ChallengeLockManager(this);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        if (toolbar != null) {
-            setSupportActionBar(toolbar);
-            if (getSupportActionBar() != null) {
-                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            }
-            toolbar.setNavigationOnClickListener(v -> finish());
-        }
-
-        // Authenticate immediately if lock is enabled
-        if (settingsLockMgr.isLockEnabled()) {
-            settingsLockMgr.authenticate(this, "Access Blocker settings", new SettingsLockManager.AuthCallback() {
-                @Override
-                public void onSuccess() {
-                    initViews();
-                    setupListeners();
-                    loadSettings();
-                }
-
-                @Override
-                public void onFailure(@Nullable String reason) {
-                    finish();
-                }
-            });
+    private val challengeLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            isAuthenticatedState.value = true
         } else {
-            initViews();
-            setupListeners();
-            loadSettings();
+            finish()
         }
     }
 
-    private void initViews() {
-        switchServiceStatus = findViewById(R.id.switchServiceStatus);
-        sliderIntensity = findViewById(R.id.sliderIntensity);
-        tvLevelDesc = findViewById(R.id.tvLevelDesc);
-        cardLevelSettings = findViewById(R.id.cardLevelSettings);
-        layoutLevelSettings = findViewById(R.id.layoutLevelSettings);
-        rvRestrictedApps = findViewById(R.id.rvRestrictedApps);
-        
-        switchWebBlocker = findViewById(R.id.switchWebBlocker);
-        switchAdultBlocker = findViewById(R.id.switchAdultBlocker);
-        switchSettingsLock = findViewById(R.id.switchSettingsLock);
-        switchDeviceAdmin = findViewById(R.id.switchDeviceAdmin);
+    private fun showAdultListDownloadDialogAndEnsure(onFinished: (Boolean) -> Unit) {
+        val builder = android.app.AlertDialog.Builder(this)
+        val dialogView = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_adult_list_progress, null)
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        val progressDialog = builder.create()
+        progressDialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(0))
+        progressDialog.show()
 
-        rvRestrictedApps.setLayoutManager(new LinearLayoutManager(this));
-        appAdapter = new AppAdapter();
-        rvRestrictedApps.setAdapter(appAdapter);
-    }
-
-    private void setupListeners() {
-        switchServiceStatus.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Note: 0 pause duration means resume, positive duration means paused
-            boolean isPaused = !isChecked;
-            if (isPaused) {
-                // Confirm with user by showing pause options
-                showPausePicker();
-            } else {
-                setServicePauseState(false, 0);
-            }
-        });
-
-        sliderIntensity.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
-            @Override
-            public void onStartTrackingTouch(@NonNull Slider slider) {}
-
-            @Override
-            public void onStopTrackingTouch(@NonNull Slider slider) {
-                int progress = (int) slider.getValue();
-                if (progress == 4) {
-                    // Strict lockout warning
-                    showOneDayLockWarning(() -> saveIntensity(4), () -> {
-                        // Revert
-                        int current = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
-                        sliderIntensity.setValue((float) current);
-                    });
-                } else {
-                    saveIntensity(progress);
-                }
-            }
-        });
-
-        sliderIntensity.addOnChangeListener((slider, value, fromUser) -> {
-            int progress = (int) value;
-            updateLevelDescription(progress);
-            updateDynamicLevelSettings(progress);
-        });
-
-        findViewById(R.id.rowWebBlocker).setOnClickListener(v -> {
-            if (!Utils.isAccessibilityPermissionGranted(this)) {
-                Toast.makeText(this, "Accessibility permission is required.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            startActivity(new Intent(this, SiteBlockerActivity.class));
-        });
-
-        switchWebBlocker.setOnCheckedChangeListener((btn, isChecked) -> {
-            sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, isChecked).apply();
-            notifyServiceConfigChanged();
-        });
-
-        switchAdultBlocker.setOnCheckedChangeListener((btn, isChecked) -> {
-            sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, isChecked).apply();
-            notifyServiceConfigChanged();
-        });
-
-        switchSettingsLock.setOnCheckedChangeListener((btn, isChecked) -> {
-            if (isChecked) {
-                settingsLockMgr.setLockEnabled(true);
-                String currentType = sharedPrefs.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device");
-                if ("custom".equals(currentType) && !settingsLockMgr.hasCustomPin()) {
-                    settingsLockMgr.showSetCustomPinDialog(this, false, () -> loadSettings());
-                }
-            } else {
-                btn.setChecked(true);
-                settingsLockMgr.authenticate(this, "Disable Settings Lock", new SettingsLockManager.AuthCallback() {
-                    @Override
-                    public void onSuccess() {
-                        settingsLockMgr.setLockEnabled(false);
-                        btn.setChecked(false);
+        com.gxdevs.mindmint.Utils.AdultDomainListManager.downloadAndBuildList(this,
+            object : com.gxdevs.mindmint.Utils.AdultDomainListManager.OnDownloadCompleteListener {
+                override fun onSuccess(mergedFileBytes: Long, sha256Hex: String?, deduped: Boolean) {
+                    runOnUiThread {
+                        progressDialog.dismiss()
+                        Toast.makeText(this@BlockerControlActivity, "List updated successfully", Toast.LENGTH_SHORT).show()
+                        onFinished(true)
                     }
-
-                    @Override
-                    public void onFailure(@Nullable String reason) {}
-                });
-            }
-        });
-
-        switchDeviceAdmin.setOnCheckedChangeListener((btn, isChecked) -> {
-            android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-            android.content.ComponentName component = new android.content.ComponentName(this, com.gxdevs.mindmint.Receivers.MindMintDeviceAdminReceiver.class);
-            boolean active = dpm != null && dpm.isAdminActive(component);
-
-            if (isChecked) {
-                if (!active) {
-                    Intent intent = new Intent(android.app.admin.DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                    intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_DEVICE_ADMIN, component);
-                    intent.putExtra(android.app.admin.DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Grants Mind Mint Device Admin rights to prevent uninstall.");
-                    startActivity(intent);
                 }
-            } else {
-                if (active) {
-                    btn.setChecked(true);
-                    settingsLockMgr.authenticate(this, "Disable Device Admin Protection", new SettingsLockManager.AuthCallback() {
-                        @Override
-                        public void onSuccess() {
-                            sharedPrefs.edit().putLong(AppUsageAccessibilityService.PREF_ADMIN_GUARD_TRUSTED_TOKEN, System.currentTimeMillis()).apply();
-                            Toast.makeText(BlockerControlActivity.this, "Disable it from security settings.", Toast.LENGTH_LONG).show();
-                            startActivity(new Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS));
-                        }
 
-                        @Override
-                        public void onFailure(@Nullable String reason) {}
-                    });
+                override fun onError(e: Exception) {
+                    runOnUiThread {
+                        progressDialog.dismiss()
+                        Toast.makeText(this@BlockerControlActivity, "Update failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        onFinished(false)
+                    }
                 }
-            }
-        });
+            }, false)
     }
 
-    private void loadSettings() {
-        boolean isPaused = sharedPrefs.getBoolean("isServicePaused", false);
-        switchServiceStatus.setChecked(!isPaused);
+    @OptIn(ExperimentalMaterial3Api::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
-        int intensity = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
-        sliderIntensity.setValue((float) intensity);
-        updateLevelDescription(intensity);
-        updateDynamicLevelSettings(intensity);
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+        database = MindMintRoomDatabase.getInstance(this)
+        blockedAppDao = database.blockedAppDao()
+        settingsLockMgr = SettingsLockManager(this)
+        challengeLockMgr = ChallengeLockManager(this)
 
-        switchWebBlocker.setChecked(sharedPrefs.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false));
-        switchAdultBlocker.setChecked(sharedPrefs.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false));
-        switchSettingsLock.setChecked(settingsLockMgr.isLockEnabled());
+        setContent {
+            val isAuthenticated by remember { isAuthenticatedState }
+            val currentLockType = remember { sharedPrefs.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device") ?: "device" }
+            val isChallengeSettingsLock = remember { settingsLockMgr.isLockEnabled && currentLockType != "device" && currentLockType != "custom" }
 
-        android.app.admin.DevicePolicyManager dpm = (android.app.admin.DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        android.content.ComponentName component = new android.content.ComponentName(this, com.gxdevs.mindmint.Receivers.MindMintDeviceAdminReceiver.class);
-        switchDeviceAdmin.setChecked(dpm != null && dpm.isAdminActive(component));
+            LaunchedEffect(Unit) {
+                if (settingsLockMgr.isLockEnabled) {
+                    if (currentLockType == "device" || currentLockType == "custom") {
+                        settingsLockMgr.authenticate(
+                            this@BlockerControlActivity,
+                            "Access Blocker settings",
+                            object : SettingsLockManager.AuthCallback {
+                                override fun onSuccess() {
+                                    isAuthenticatedState.value = true
+                                }
 
-        // Load apps list (excluding mods from UI view)
-        List<BlockedAppEntity> allApps = blockedAppDao.getAllSync();
-        List<BlockedAppEntity> displayApps = new ArrayList<>();
-        for (BlockedAppEntity app : allApps) {
-            if (isModPackage(app.packageName)) {
-                continue;
-            }
-            displayApps.add(app);
-        }
-        appAdapter.setApps(displayApps);
-    }
-
-    private void updateLevelDescription(int level) {
-        String desc;
-        switch (level) {
-            case 0:
-                desc = "NONE: All blocker features are completely turned off.";
-                break;
-            case 1:
-                desc = "FRICTION: Shows a challenge when opening. Once completed, stays open until you leave/close it.";
-                break;
-            case 2:
-                desc = "REMINDER: Periodically shows a self-dismissing warning message while scrolling.";
-                break;
-            case 3:
-                desc = "TEMP LOCK: Lock apps for the rest of the day once you reach daily scrolling or time limits.";
-                break;
-            case 4:
-                desc = "PERMANENT: Complete block of restricted apps. No bypasses, no challenges allowed.";
-                break;
-            default:
-                desc = "";
-        }
-        tvLevelDesc.setText(desc);
-    }
-
-    private void saveIntensity(int level) {
-        sharedPrefs.edit().putInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, level).apply();
-        
-        // Sync older trigger fields for accessibility service compatibility
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        if (level == 2) {
-            editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, true);
-            editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
-        } else if (level == 3) {
-            editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, true);
-            editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, true);
-        } else if (level == 4) {
-            editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
-            editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
-            editor.putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "oneday");
-        } else {
-            editor.putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
-            editor.putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
-        }
-        editor.apply();
-
-        notifyServiceConfigChanged();
-    }
-
-    private void updateDynamicLevelSettings(int level) {
-        layoutLevelSettings.removeAllViews();
-        if (level == 0) {
-            cardLevelSettings.setVisibility(View.GONE);
-            return;
-        }
-
-        cardLevelSettings.setVisibility(View.VISIBLE);
-        LayoutInflater inflater = LayoutInflater.from(this);
-
-        if (level == 1) { // FRICTION
-            View view = inflater.inflate(R.layout.item_settings_block_trigger_tab, layoutLevelSettings, false);
-            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-            if (params != null) {
-                params.leftMargin = 0;
-                params.rightMargin = 0;
-                view.setLayoutParams(params);
-            }
-            view.setElevation(0f);
-            
-            TextView tabLabel = view.findViewById(R.id.tabLabel);
-            tabLabel.setText("Challenge Type");
-            
-            LinearLayout tabContainer = view.findViewById(R.id.tabContainer);
-            tabContainer.removeAllViews();
-
-            String currentChallenge = sharedPrefs.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "math");
-            if ("none".equals(currentChallenge) || "oneday".equals(currentChallenge)) {
-                currentChallenge = "math";
-                sharedPrefs.edit().putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "math").apply();
-            }
-
-            // Create simple pill buttons
-            String[] types = {"Math", "Shake", "Scream"};
-            String[] typeKeys = {"math", "shake", "scream"};
-            for (int i = 0; i < types.length; i++) {
-                final int index = i;
-                TextView tv = new TextView(this);
-                tv.setText(types[index]);
-                tv.setTextSize(11);
-                tv.setGravity(android.view.Gravity.CENTER);
-                tv.setPadding(Utils.dpToPx(12, this), 0, Utils.dpToPx(12, this), 0);
-                tv.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-                if (typeKeys[index].equals(currentChallenge)) {
-                    tv.setBackgroundResource(R.drawable.bg_segment_selected);
-                    tv.setTextColor(ContextCompat.getColor(this, R.color.white));
-                } else {
-                    tv.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
-                }
-
-                tv.setOnClickListener(v -> {
-                    sharedPrefs.edit().putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, typeKeys[index]).apply();
-                    updateDynamicLevelSettings(1);
-                    notifyServiceConfigChanged();
-                });
-                tabContainer.addView(tv);
-            }
-            layoutLevelSettings.addView(view);
-
-        } else if (level == 2) { // REMINDER
-            // 1. Seekbar for Remind Interval
-            LinearLayout row1 = createSeekBarRow("Reminder Interval", "Popup warning interval", 1, 60, 
-                sharedPrefs.getInt(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES, 5), "m",
-                val -> {
-                    sharedPrefs.edit().putInt(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES, val).apply();
-                    notifyServiceConfigChanged();
-                });
-            layoutLevelSettings.addView(row1);
-
-            // Divider
-            View div = new View(this);
-            div.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1));
-            div.setBackgroundColor(ContextCompat.getColor(this, R.color.glass_stroke));
-            layoutLevelSettings.addView(div);
-
-            // 2. Seekbar for Popup Duration
-            LinearLayout row2 = createSeekBarRow("Popup Warning Duration", "Display length before auto-dismiss", 3, 15, 
-                sharedPrefs.getInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, 5), "s",
-                val -> {
-                    sharedPrefs.edit().putInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, val).apply();
-                    notifyServiceConfigChanged();
-                });
-            layoutLevelSettings.addView(row2);
-
-        } else if (level == 3) { // TEMP LOCK
-            // 1. Scroll Limit Selector
-            LinearLayout row1 = createSeekBarRow("Daily Scroll Limit", "Scroll limit before strict lockout", 10, 500,
-                (int) sharedPrefs.getLong("pref_daily_scroll_limit", 100), " scrolls",
-                val -> sharedPrefs.edit().putLong("pref_daily_scroll_limit", val).apply());
-            layoutLevelSettings.addView(row1);
-
-            // Divider
-            View div1 = new View(this);
-            div1.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1));
-            div1.setBackgroundColor(ContextCompat.getColor(this, R.color.glass_stroke));
-            layoutLevelSettings.addView(div1);
-
-            // 2. Daily Time Limit (minutes)
-            int currentHoursVal = (int) (sharedPrefs.getFloat(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_HOURS, 1f) * 60);
-            LinearLayout row2 = createSeekBarRow("Daily Time Limit", "Time usage allowed per day", 5, 240,
-                currentHoursVal, "m",
-                val -> {
-                    sharedPrefs.edit().putFloat(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_HOURS, (float) val / 60).apply();
-                    notifyServiceConfigChanged();
-                });
-            layoutLevelSettings.addView(row2);
-
-            // Divider
-            View div2 = new View(this);
-            div2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1));
-            div2.setBackgroundColor(ContextCompat.getColor(this, R.color.glass_stroke));
-            layoutLevelSettings.addView(div2);
-
-            // 3. Optional Hybrid Toggle
-            LinearLayout hybridRow = new LinearLayout(this);
-            hybridRow.setOrientation(LinearLayout.HORIZONTAL);
-            hybridRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-            hybridRow.setPadding(Utils.dpToPx(16, this), Utils.dpToPx(8, this), Utils.dpToPx(16, this), Utils.dpToPx(8, this));
-
-            LinearLayout infoLayout = new LinearLayout(this);
-            infoLayout.setOrientation(LinearLayout.VERTICAL);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
-            infoLayout.setLayoutParams(lp);
-
-            TextView title = new TextView(this);
-            title.setText("Require Friction on Open");
-            title.setTextSize(14);
-            title.setTextColor(ContextCompat.getColor(this, R.color.white));
-            infoLayout.addView(title);
-
-            TextView desc = new TextView(this);
-            desc.setText("Force a challenge when opening under the daily limit");
-            desc.setTextSize(11);
-            desc.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
-            infoLayout.addView(desc);
-
-            hybridRow.addView(infoLayout);
-
-            MaterialSwitch hybridSwitch = new MaterialSwitch(this);
-            hybridSwitch.setChecked(sharedPrefs.getBoolean("pref_temp_lock_friction_enabled", false));
-            hybridSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
-                sharedPrefs.edit().putBoolean("pref_temp_lock_friction_enabled", isChecked).apply();
-                notifyServiceConfigChanged();
-                updateDynamicLevelSettings(3); // Re-inflate to show/hide challenge selection if needed
-            });
-            hybridRow.addView(hybridSwitch);
-            layoutLevelSettings.addView(hybridRow);
-
-            if (sharedPrefs.getBoolean("pref_temp_lock_friction_enabled", false)) {
-                // Add challenge selection if hybrid is ON
-                View challView = inflater.inflate(R.layout.item_settings_block_trigger_tab, layoutLevelSettings, false);
-                ViewGroup.MarginLayoutParams challParams = (ViewGroup.MarginLayoutParams) challView.getLayoutParams();
-                if (challParams != null) {
-                    challParams.leftMargin = 0;
-                    challParams.rightMargin = 0;
-                    challView.setLayoutParams(challParams);
-                }
-                challView.setElevation(0f);
-
-                TextView tabLabel = challView.findViewById(R.id.tabLabel);
-                tabLabel.setText("Challenge Type");
-                
-                LinearLayout tabContainer = challView.findViewById(R.id.tabContainer);
-                tabContainer.removeAllViews();
-
-                String currentChallenge = sharedPrefs.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "math");
-                if ("none".equals(currentChallenge) || "oneday".equals(currentChallenge)) {
-                    currentChallenge = "math";
-                    sharedPrefs.edit().putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "math").apply();
-                }
-
-                String[] types = {"Math", "Shake", "Scream"};
-                String[] typeKeys = {"math", "shake", "scream"};
-                for (int i = 0; i < types.length; i++) {
-                    final int index = i;
-                    TextView tv = new TextView(this);
-                    tv.setText(types[index]);
-                    tv.setTextSize(11);
-                    tv.setGravity(android.view.Gravity.CENTER);
-                    tv.setPadding(Utils.dpToPx(12, this), 0, Utils.dpToPx(12, this), 0);
-                    tv.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-                    if (typeKeys[index].equals(currentChallenge)) {
-                        tv.setBackgroundResource(R.drawable.bg_segment_selected);
-                        tv.setTextColor(ContextCompat.getColor(this, R.color.white));
+                                override fun onFailure(reason: String?) {
+                                    finish()
+                                }
+                            }
+                        )
                     } else {
-                        tv.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
-                    }
-
-                    tv.setOnClickListener(v -> {
-                        sharedPrefs.edit().putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, typeKeys[index]).apply();
-                        updateDynamicLevelSettings(3);
-                        notifyServiceConfigChanged();
-                    });
-                    tabContainer.addView(tv);
-                }
-                layoutLevelSettings.addView(challView);
-            }
-
-        } else if (level == 4) { // PERMANENT
-            TextView warning = new TextView(this);
-            warning.setText("⚠️ WARNING: Predefined apps will be strictly blocked with no challenge bypasses possible.");
-            warning.setTextColor(Color.parseColor("#F77381")); // brand_pink/red color
-            warning.setTextSize(13);
-            warning.setGravity(android.view.Gravity.CENTER);
-            warning.setPadding(Utils.dpToPx(16, this), Utils.dpToPx(8, this), Utils.dpToPx(16, this), Utils.dpToPx(8, this));
-            layoutLevelSettings.addView(warning);
-        }
-    }
-
-    private LinearLayout createSeekBarRow(String titleStr, String subStr, int min, int max, int current, String unit, OnValueSelectedListener listener) {
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(Utils.dpToPx(16, this), Utils.dpToPx(8, this), Utils.dpToPx(16, this), Utils.dpToPx(8, this));
-
-        // Header: Title and value
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        
-        TextView title = new TextView(this);
-        title.setText(titleStr);
-        title.setTextSize(14);
-        title.setTextColor(ContextCompat.getColor(this, R.color.white));
-        title.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-        header.addView(title);
-
-        TextView value = new TextView(this);
-        value.setText(current + unit);
-        value.setTextSize(13);
-        value.setTextColor(ContextCompat.getColor(this, R.color.brainColor));
-        header.addView(value);
-
-        row.addView(header);
-
-        // Subtitle
-        TextView subtitle = new TextView(this);
-        subtitle.setText(subStr);
-        subtitle.setTextSize(11);
-        subtitle.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
-        row.addView(subtitle);
-
-        // SeekBar
-        SeekBar seekBar = new SeekBar(this);
-        seekBar.setMax(max - min);
-        seekBar.setProgress(current - min);
-        seekBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brainColor)));
-        seekBar.setThumbTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brainColor)));
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
-                int val = progress + min;
-                value.setText(val + unit);
-                if (listener != null) listener.onSelected(val);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar sb) {}
-
-            @Override
-            public void onStopTrackingTouch(SeekBar sb) {}
-        });
-        row.addView(seekBar);
-
-        return row;
-    }
-
-    interface OnValueSelectedListener {
-        void onSelected(int val);
-    }
-
-    private void showOneDayLockWarning(Runnable onConfirm, Runnable onCancel) {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("⚠️ Nuclear Mode")
-                .setMessage("Are you sure? Once Permanent Mode is active, you CANNOT bypass any locks or undo this setting for 24 hours.")
-                .setPositiveButton("Enable", (dialog, which) -> {
-                    if (onConfirm != null) onConfirm.run();
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> {
-                    if (onCancel != null) onCancel.run();
-                })
-                .setOnCancelListener(dialog -> {
-                    if (onCancel != null) onCancel.run();
-                })
-                .show();
-    }
-
-    private void showPausePicker() {
-        Dialog timerDialog = new Dialog(this);
-        timerDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        timerDialog.setContentView(R.layout.bottom_sheet_time);
-        if (timerDialog.getWindow() != null) {
-            timerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-
-        android.widget.NumberPicker hourPicker = timerDialog.findViewById(R.id.hours_selector_bottom_sheet);
-        android.widget.NumberPicker minutePicker = timerDialog.findViewById(R.id.minutes_selector_bottom_sheet);
-        android.widget.Button pauseBtn = timerDialog.findViewById(R.id.setLimitBtnBottomSheet);
-
-        hourPicker.setMinValue(0);
-        hourPicker.setMaxValue(23);
-        minutePicker.setMinValue(0);
-        minutePicker.setMaxValue(59);
-        pauseBtn.setText("Pause Blocker");
-
-        pauseBtn.setOnClickListener(v -> {
-            int h = hourPicker.getValue();
-            int m = minutePicker.getValue();
-            long pauseDuration = (h * 3600L + m * 60L) * 1000L;
-
-            if (pauseDuration > 0) {
-                setServicePauseState(true, pauseDuration);
-                Toast.makeText(this, "Blocker paused for " + h + "h " + m + "m", Toast.LENGTH_SHORT).show();
-            } else {
-                switchServiceStatus.setChecked(true);
-            }
-            timerDialog.dismiss();
-        });
-
-        timerDialog.findViewById(R.id.crossBtn).setOnClickListener(v -> {
-            switchServiceStatus.setChecked(true);
-            timerDialog.dismiss();
-        });
-
-        timerDialog.setOnCancelListener(dialog -> switchServiceStatus.setChecked(true));
-        timerDialog.show();
-    }
-
-    private void setServicePauseState(boolean isPaused, long pauseDuration) {
-        Intent intent = new Intent(IntentActions.getActionPauseService(this));
-        intent.putExtra("pause_duration", pauseDuration);
-        intent.setPackage(getPackageName());
-        sendBroadcast(intent);
-
-        sharedPrefs.edit()
-                .putBoolean("isServicePaused", isPaused)
-                .putLong("resumeTime", isPaused ? System.currentTimeMillis() + pauseDuration : 0)
-                .apply();
-    }
-
-    private void notifyServiceConfigChanged() {
-        Intent intent = new Intent(IntentActions.getActionUpdatePackages(this));
-        intent.setPackage(getPackageName());
-        sendBroadcast(intent);
-    }
-
-    // --- RECYCLER VIEW ADAPTER ---
-
-    private class AppAdapter extends RecyclerView.Adapter<AppAdapter.AppViewHolder> {
-        private final List<BlockedAppEntity> apps = new ArrayList<>();
-
-        public void setApps(List<BlockedAppEntity> newApps) {
-            apps.clear();
-            apps.addAll(newApps);
-            notifyDataSetChanged();
-        }
-
-        @NonNull
-        @Override
-        public AppViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_restrictable_app, parent, false);
-            return new AppViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull AppViewHolder holder, int position) {
-            holder.bind(apps.get(position), position);
-        }
-
-        @Override
-        public int getItemCount() {
-            return apps.size();
-        }
-
-        class AppViewHolder extends RecyclerView.ViewHolder {
-            ImageView ivAppIcon;
-            TextView tvAppName;
-            MaterialSwitch switchRestricted;
-            LinearLayout layoutAppConfig;
-            
-            View layoutScope;
-            TextView btnScopeSection;
-            TextView btnScopeFull;
-
-            View layoutMod;
-            MaterialCheckBox cbUseMod;
-            View divider;
-
-            public AppViewHolder(@NonNull View itemView) {
-                super(itemView);
-                ivAppIcon = itemView.findViewById(R.id.ivAppIcon);
-                tvAppName = itemView.findViewById(R.id.tvAppName);
-                switchRestricted = itemView.findViewById(R.id.switchRestricted);
-                layoutAppConfig = itemView.findViewById(R.id.layoutAppConfig);
-                
-                layoutScope = itemView.findViewById(R.id.layoutScope);
-                btnScopeSection = itemView.findViewById(R.id.btnScopeSection);
-                btnScopeFull = itemView.findViewById(R.id.btnScopeFull);
-
-                layoutMod = itemView.findViewById(R.id.layoutMod);
-                cbUseMod = itemView.findViewById(R.id.cbUseMod);
-                divider = itemView.findViewById(R.id.divider);
-            }
-
-            public void bind(BlockedAppEntity app, int position) {
-                tvAppName.setText(app.appName);
-
-                if (divider != null) {
-                    divider.setVisibility(position == 0 ? View.GONE : View.VISIBLE);
-                }
-
-                // Try to load launcher icon
-                PackageManager pm = itemView.getContext().getPackageManager();
-                try {
-                    Drawable icon = pm.getApplicationIcon(app.packageName);
-                    ivAppIcon.setImageDrawable(icon);
-                    ivAppIcon.setColorFilter(null);
-                    ivAppIcon.setBackground(null);
-                    ivAppIcon.setPadding(0, 0, 0, 0);
-                } catch (Exception e) {
-                    // Fallback to default with glass colored backgrounds matching Settings
-                    int iconColor;
-                    int bgTint;
-                    ivAppIcon.setPadding(Utils.dpToPx(10, itemView.getContext()), Utils.dpToPx(10, itemView.getContext()), Utils.dpToPx(10, itemView.getContext()), Utils.dpToPx(10, itemView.getContext()));
-                    ivAppIcon.setBackgroundResource(R.drawable.shape_circle);
-
-                    if (app.packageName.contains("youtube")) {
-                        ivAppIcon.setImageResource(R.drawable.youtube);
-                        iconColor = ContextCompat.getColor(itemView.getContext(), R.color.sexyYt);
-                        bgTint = Color.parseColor("#33FF0000"); // 20% transparent red
-                    } else if (app.packageName.contains("insta")) {
-                        ivAppIcon.setImageResource(R.drawable.instagram);
-                        iconColor = ContextCompat.getColor(itemView.getContext(), R.color.sexyInsta);
-                        bgTint = Color.parseColor("#33E1306C"); // 20% transparent pink
-                    } else if (app.packageName.contains("snap")) {
-                        ivAppIcon.setImageResource(R.drawable.snapchat);
-                        iconColor = ContextCompat.getColor(itemView.getContext(), R.color.sexySnap);
-                        bgTint = Color.parseColor("#33FFFC00"); // 20% transparent yellow
-                    } else {
-                        ivAppIcon.setImageResource(R.drawable.shield);
-                        iconColor = ContextCompat.getColor(itemView.getContext(), R.color.text_secondary);
-                        bgTint = Color.parseColor("#1AFFFFFF"); // 10% transparent white
-                    }
-                    ivAppIcon.setColorFilter(iconColor);
-                    ivAppIcon.setBackgroundTintList(ColorStateList.valueOf(bgTint));
-                }
-
-                switchRestricted.setOnCheckedChangeListener(null);
-                switchRestricted.setChecked(app.isRestricted);
-                layoutAppConfig.setVisibility(app.isRestricted ? View.VISIBLE : View.GONE);
-
-                switchRestricted.setOnCheckedChangeListener((btn, isChecked) -> {
-                    app.isRestricted = isChecked;
-                    blockedAppDao.update(app);
-                    syncModPackages(app);
-                    layoutAppConfig.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-                    notifyServiceConfigChanged();
-                });
-
-                // Scope setting: Section vs Full
-                boolean isSection = "section".equals(app.scope);
-                updateScopeUI(isSection);
-
-                // Predefined apps like YouTube/Instagram/Snapchat have section/doom-scrolling view IDs
-                boolean hasViewId = app.sectionViewId != null && !app.sectionViewId.trim().isEmpty();
-                layoutScope.setVisibility(hasViewId ? View.VISIBLE : View.GONE);
-                layoutMod.setVisibility(hasViewId ? View.VISIBLE : View.GONE);
-
-                btnScopeSection.setOnClickListener(v -> {
-                    app.scope = "section";
-                    blockedAppDao.update(app);
-                    syncModPackages(app);
-                    updateScopeUI(true);
-                    notifyServiceConfigChanged();
-                });
-
-                btnScopeFull.setOnClickListener(v -> {
-                    app.scope = "full";
-                    blockedAppDao.update(app);
-                    syncModPackages(app);
-                    updateScopeUI(false);
-                    notifyServiceConfigChanged();
-                });
-
-                // Mod checkbox setting
-                cbUseMod.setOnCheckedChangeListener(null);
-                cbUseMod.setChecked(app.useMod);
-                cbUseMod.setOnCheckedChangeListener((btn, isChecked) -> {
-                    app.useMod = isChecked;
-                    blockedAppDao.update(app);
-                    syncModPackages(app);
-                    notifyServiceConfigChanged();
-                });
-            }
-
-            private void syncModPackages(BlockedAppEntity parentApp) {
-                List<BlockedAppEntity> allApps = blockedAppDao.getAllSync();
-                for (BlockedAppEntity app : allApps) {
-                    if (isModPackage(app.packageName)) {
-                        boolean match = false;
-                        if (parentApp.packageName.equals("com.google.android.youtube") && app.packageName.contains("youtube")) {
-                            match = true;
-                        } else if (parentApp.packageName.equals("com.instagram.android") && (app.packageName.contains("insta") || app.packageName.contains("honista"))) {
-                            match = true;
+                        val intent = Intent(this@BlockerControlActivity, LockChallengeActivity::class.java).apply {
+                            putExtra(LockChallengeActivity.EXTRA_LOCK_TYPE, currentLockType)
+                            putExtra(LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, true)
                         }
-                        
-                        if (match) {
-                            app.isRestricted = parentApp.isRestricted && parentApp.useMod;
-                            app.scope = parentApp.scope;
-                            app.useMod = parentApp.useMod;
-                            blockedAppDao.update(app);
-                        }
+                        challengeLauncher.launch(intent)
                     }
-                }
-            }
-
-            private void updateScopeUI(boolean isSection) {
-                int selectedBg = R.drawable.bg_segment_selected;
-                int selectedTxt = ContextCompat.getColor(itemView.getContext(), R.color.white);
-                int normalTxt = ContextCompat.getColor(itemView.getContext(), R.color.text_secondary);
-
-                if (isSection) {
-                    btnScopeSection.setBackgroundResource(selectedBg);
-                    btnScopeSection.setTextColor(selectedTxt);
-                    btnScopeFull.setBackground(null);
-                    btnScopeFull.setTextColor(normalTxt);
                 } else {
-                    btnScopeSection.setBackground(null);
-                    btnScopeSection.setTextColor(normalTxt);
-                    btnScopeFull.setBackgroundResource(selectedBg);
-                    btnScopeFull.setTextColor(selectedTxt);
+                    isAuthenticatedState.value = true
+                }
+            }
+
+            if (isAuthenticated) {
+                BlockerControlScreen(
+                    onBackClick = { finish() },
+                    sharedPrefs = sharedPrefs,
+                    blockedAppDao = blockedAppDao,
+                    settingsLockMgr = settingsLockMgr,
+                    activityContext = this@BlockerControlActivity,
+                    onShowAdultListDownload = { onFinished ->
+                        showAdultListDownloadDialogAndEnsure(onFinished)
+                    }
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(themeColor(R.attr.app_bg, Color(0xFFF2F4F6))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = themeColor(R.attr.brand_pink, Color(0xFFFF6B6B))
+                    )
                 }
             }
         }
-    }
-
-    private static boolean isModPackage(String packageName) {
-        if (packageName == null) return false;
-        // YouTube mods
-        if (packageName.equals("com.rvx.android.youtube") || packageName.equals("com.revance.android.youtube")) {
-            return true;
-        }
-        // Instagram mods
-        if (packageName.equals("com.myinsta.android") || 
-            packageName.equals("com.instafel.android") || 
-            packageName.equals("com.instander.android") || 
-            packageName.equals("com.instagold.android") || 
-            packageName.equals("com.instapro2.android") || 
-            packageName.equals("com.instaflow.android") || 
-            packageName.equals("cc.honista.app") || 
-            packageName.equals("com.instaprime.android")) {
-            return true;
-        }
-        return false;
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BlockerControlScreen(
+    onBackClick: () -> Unit,
+    sharedPrefs: SharedPreferences,
+    blockedAppDao: BlockedAppDao?,
+    settingsLockMgr: SettingsLockManager,
+    activityContext: androidx.fragment.app.FragmentActivity?,
+    onShowAdultListDownload: ((Boolean) -> Unit) -> Unit
+) {
+    val context = LocalContext.current
+    rememberCoroutineScope()
+
+    val PoppinsFamily = remember { FontFamily(Font(R.font.poppins_semibold)) }
+    val InterFamily = remember { FontFamily(Font(R.font.inter18regular)) }
+
+    val appBg = themeColor(R.attr.app_bg, Color(0xFFF2F4F6))
+    val textPrimary = themeColor(R.attr.text_primary, Color(0xFF1F2937))
+    val textTertiary = themeColor(R.attr.text_tertiary, Color(0xFF94A3B8))
+    val brandPink = themeColor(R.attr.brand_pink, Color(0xFFFF6B6B))
+
+    // Preferences States
+    var isServicePaused by remember { mutableStateOf(sharedPrefs.getBoolean("isServicePaused", false)) }
+    var blockerIntensity by remember { mutableIntStateOf(sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0)) }
+    var blockWebsites by remember { mutableStateOf(sharedPrefs.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false)) }
+    var blockAdultContent by remember { mutableStateOf(sharedPrefs.getBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false)) }
+    var settingsLockEnabled by remember { mutableStateOf(settingsLockMgr.isLockEnabled) }
+    var deviceAdminActive by remember {
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager
+        val component = ComponentName(context, "com.gxdevs.mindmint.Receivers.MindMintDeviceAdminReceiver")
+        mutableStateOf(dpm?.isAdminActive(component) == true)
+    }
+
+    // Apps state from Room Database
+    var appsList by remember { mutableStateOf<List<BlockedAppEntity>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            blockedAppDao?.let { dao ->
+                val allApps = dao.getAllSync()
+                val displayApps = allApps.filter { !isModPackage(it.packageName) }
+                withContext(Dispatchers.Main) {
+                    appsList = displayApps
+                }
+            }
+        }
+    }
+
+    // Pause Dialog States
+    var showPauseDialog by remember { mutableStateOf(false) }
+    var showNuclearWarningDialog by remember { mutableStateOf(false) }
+
+    fun notifyServiceConfigChanged() {
+        activityContext?.let {
+            val intent = Intent(IntentActions.getActionUpdatePackages(it)).apply {
+                setPackage(it.packageName)
+            }
+            it.sendBroadcast(intent)
+        }
+    }
+
+    fun setServicePauseState(paused: Boolean, duration: Long) {
+        activityContext?.let {
+            val intent = Intent(IntentActions.getActionPauseService(it)).apply {
+                putExtra("pause_duration", duration)
+                setPackage(it.packageName)
+            }
+            it.sendBroadcast(intent)
+        }
+        sharedPrefs.edit {
+            putBoolean("isServicePaused", paused)
+            putLong("resumeTime", if (paused) System.currentTimeMillis() + duration else 0)
+        }
+        isServicePaused = paused
+    }
+
+    fun saveIntensity(level: Int) {
+        sharedPrefs.edit { putInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, level)}
+        sharedPrefs.edit {
+            when (level) {
+                2 -> {
+                    putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, true)
+                    putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false)
+                }
+                3 -> {
+                    putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, true)
+                    putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, true)
+                }
+                4 -> {
+                    putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false)
+                    putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false)
+                    putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "oneday")
+                }
+                else -> {
+                    putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, false)
+                    putBoolean(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false)
+                }
+            }
+        }
+        blockerIntensity = level
+        notifyServiceConfigChanged()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(appBg)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .animateContentSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp)
+        ) {
+            // Toolbar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "APP BLOCKER",
+                        fontFamily = PoppinsFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = textTertiary,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "Blocker Control",
+                        fontFamily = PoppinsFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 28.sp,
+                        color = textPrimary
+                    )
+                }
+            }
+
+            // Blocker Switch Card
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = themeColor(R.attr.surface_card, Color.White)
+                ),
+                border = BorderStroke(1.dp, themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(themeColor(R.attr.block_bg, Color(0xFFFFF1F2))),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.shield),
+                            contentDescription = "Blocker Status",
+                            tint = brandPink,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Blocker Status",
+                            fontFamily = PoppinsFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = textPrimary
+                        )
+                        Text(
+                            text = if (isServicePaused) "Blocker is currently paused" else "Active protection enabled",
+                            fontFamily = InterFamily,
+                            fontSize = 13.sp,
+                            color = textTertiary
+                        )
+                    }
+                    Switch(
+                        checked = !isServicePaused,
+                        onCheckedChange = { checked ->
+                            if (!checked) {
+                                showPauseDialog = true
+                            } else {
+                                setServicePauseState(false, 0)
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = brandPink,
+                            uncheckedThumbColor = textTertiary,
+                            uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Intensity Card
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = themeColor(R.attr.surface_card, Color.White)
+                ),
+                border = BorderStroke(1.dp, themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Blocker Intensity",
+                        fontFamily = PoppinsFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = textPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = when (blockerIntensity) {
+                            0 -> "NORMAL: Blocker is completely inactive."
+                            1 -> "FRICTION: Complete a challenge to unlock temporarily."
+                            2 -> "REMINDER: Popup warnings show periodically."
+                            3 -> "TEMP LOCK: Hard lock when daily limit is reached."
+                            4 -> "PERMANENT: Complete block with no challenge bypasses."
+                            else -> ""
+                        },
+                        fontFamily = InterFamily,
+                        fontSize = 13.sp,
+                        color = themeColor(R.attr.text_secondary, Color(0xFF64748B)),
+                        lineHeight = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    val intensityInteractionSource = remember { MutableInteractionSource() }
+                    val isPressed by intensityInteractionSource.collectIsPressedAsState()
+                    val isDragged by intensityInteractionSource.collectIsDraggedAsState()
+                    val isSliderActive = isPressed || isDragged
+
+                    val thumbHeight by animateDpAsState(
+                        targetValue = if (isSliderActive) 30.dp else 24.dp,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                    )
+                    val trackHeight by animateDpAsState(
+                        targetValue = if (isSliderActive) 18.dp else 16.dp,
+                        animationSpec = tween(200)
+                    )
+
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Slider(
+                            value = blockerIntensity.toFloat(),
+                            onValueChange = { valInt ->
+                                blockerIntensity = valInt.toInt()
+                            },
+                            onValueChangeFinished = {
+                                if (blockerIntensity == 4) {
+                                    showNuclearWarningDialog = true
+                                } else {
+                                    saveIntensity(blockerIntensity)
+                                }
+                            },
+                            valueRange = 0f..4f,
+                            steps = 3,
+                            interactionSource = intensityInteractionSource,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                thumbColor = brandPink,
+                                activeTrackColor = Color.Transparent,
+                                inactiveTrackColor = Color.Transparent,
+                                activeTickColor = Color.Transparent,
+                                inactiveTickColor = Color.Transparent
+                            ),
+                            track = { state ->
+                                val fraction = state.coercedValueAsFraction
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(trackHeight)
+                                        .clip(RoundedCornerShape(trackHeight / 2))
+                                        .background(themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .fillMaxWidth(fraction = fraction)
+                                            .clip(RoundedCornerShape(trackHeight / 2))
+                                            .background(brandPink)
+                                    )
+                                    if (fraction < 0.95f) {
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.CenterEnd)
+                                                .padding(end = 8.dp)
+                                                .size(4.dp)
+                                                .clip(CircleShape)
+                                                .background(brandPink)
+                                        )
+                                    }
+                                }
+                            },
+                            thumb = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(width = 4.dp, height = thumbHeight)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(brandPink)
+                                )
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val labels = listOf("NORMAL", "FRICTION", "REMINDER", "TEMP LOCK", "PERMANENT")
+                            labels.forEachIndexed { index, label ->
+                                val isSelected = blockerIntensity == index
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) {
+                                            if (index == 4) {
+                                                showNuclearWarningDialog = true
+                                            } else {
+                                                blockerIntensity = index
+                                                saveIntensity(index)
+                                            }
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = label,
+                                        fontFamily = PoppinsFamily,
+                                        fontSize = 7.5.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) brandPink else textTertiary,
+                                        modifier = Modifier.alpha(if (isSelected) 1f else 0.6f),
+                                        textAlign = TextAlign.Center,
+                                        softWrap = false,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Dynamic Level Settings Card
+            androidx.compose.animation.AnimatedVisibility(
+                visible = blockerIntensity > 0,
+                enter = expandVertically(animationSpec = tween(400)) + fadeIn(),
+                exit = shrinkVertically(animationSpec = tween(300)) + fadeOut()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Card(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = themeColor(R.attr.surface_nested, Color(0xFFF8FAFC))
+                        ),
+                        border = BorderStroke(1.dp, themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            when (blockerIntensity) {
+                                1 -> { // FRICTION
+                                    ChallengeSelectorSection(
+                                        sharedPrefs = sharedPrefs,
+                                        PoppinsFamily = PoppinsFamily,
+                                        brandPink = brandPink,
+                                        textPrimary = textPrimary,
+                                        textTertiary = textTertiary,
+                                        onChanged = { notifyServiceConfigChanged() }
+                                    )
+                                }
+                                2 -> { // REMINDER
+                                    ReminderIntervalSliders(
+                                        sharedPrefs = sharedPrefs,
+                                        PoppinsFamily = PoppinsFamily,
+                                        InterFamily = InterFamily,
+                                        brandPink = brandPink,
+                                        textPrimary = textPrimary,
+                                        textTertiary = textTertiary,
+                                        onChanged = { notifyServiceConfigChanged() }
+                                    )
+                                }
+                                3 -> { // TEMP LOCK
+                                    TempLockSliders(
+                                        sharedPrefs = sharedPrefs,
+                                        PoppinsFamily = PoppinsFamily,
+                                        InterFamily = InterFamily,
+                                        brandPink = brandPink,
+                                        textPrimary = textPrimary,
+                                        textTertiary = textTertiary,
+                                        onChanged = { notifyServiceConfigChanged() }
+                                    )
+                                }
+                                4 -> { // PERMANENT
+                                    Text(
+                                        text = "⚠️ WARNING: Selected apps are locked. You cannot bypass or disable blocker features until the 24h cooldown timer finishes.",
+                                        fontFamily = InterFamily,
+                                        fontSize = 13.sp,
+                                        color = brandPink,
+                                        lineHeight = 18.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Other Blocker Switches Card
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = themeColor(R.attr.surface_card, Color.White)
+                ),
+                border = BorderStroke(1.dp, themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column {
+                    // Web Blocker
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (activityContext != null && !Utils.isAccessibilityPermissionGranted(activityContext)) {
+                                    Toast.makeText(activityContext, "Accessibility permission is required.", Toast.LENGTH_SHORT).show()
+                                } else if (activityContext != null) {
+                                    val intent = ComponentName(activityContext, "com.gxdevs.mindmint.Activities.SiteBlockerActivity")
+                                    activityContext.startActivity(Intent().setComponent(intent))
+                                }
+                            }
+                            .padding(horizontal = 20.dp, vertical = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Web Blocker", fontFamily = PoppinsFamily, fontSize = 15.sp, color = textPrimary)
+                            Text(
+                                text = if (blockWebsites) "Block specified websites and urls (Tap to edit sites)" else "Block specified websites and urls",
+                                fontFamily = InterFamily,
+                                fontSize = 12.sp,
+                                color = textTertiary
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Switch(
+                            checked = blockWebsites,
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    if (activityContext != null && !Utils.isAccessibilityPermissionGranted(activityContext)) {
+                                        Toast.makeText(activityContext, "Accessibility permission is required.", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, true).apply()
+                                        blockWebsites = true
+                                        if (activityContext != null) {
+                                            com.gxdevs.mindmint.Utils.BlockedSitesManager.seedDefaultsIfFirstTimeAndEmpty(activityContext)
+                                        }
+                                        notifyServiceConfigChanged()
+                                    }
+                                } else {
+                                    sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false).apply()
+                                    blockWebsites = false
+                                    notifyServiceConfigChanged()
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = brandPink,
+                                uncheckedThumbColor = textTertiary,
+                                uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+                            )
+                        )
+                    }
+
+                    HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)), modifier = Modifier.padding(horizontal = 16.dp))
+
+                    // Adult Blocker
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = blockAdultContent) {
+                                onShowAdultListDownload { }
+                            }
+                            .padding(horizontal = 20.dp, vertical = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Block Adult Sites", fontFamily = PoppinsFamily, fontSize = 15.sp, color = textPrimary)
+                            Text(
+                                text = if (blockAdultContent) "Filters adult urls automatically (Tap to update list)" else "Filters adult urls automatically",
+                                fontFamily = InterFamily,
+                                fontSize = 12.sp,
+                                color = textTertiary
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Switch(
+                            checked = blockAdultContent,
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    if (activityContext != null && !Utils.isAccessibilityPermissionGranted(activityContext)) {
+                                        Toast.makeText(activityContext, "Accessibility permission is required.", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        onShowAdultListDownload { success ->
+                                            if (success) {
+                                                sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, true).apply()
+                                                blockAdultContent = true
+                                                notifyServiceConfigChanged()
+                                            } else {
+                                                sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false).apply()
+                                                blockAdultContent = false
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false).apply()
+                                    blockAdultContent = false
+                                    notifyServiceConfigChanged()
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = brandPink,
+                                uncheckedThumbColor = textTertiary,
+                                uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+                            )
+                        )
+                    }
+ 
+                    HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)), modifier = Modifier.padding(horizontal = 16.dp))
+ 
+                    // Settings Lock
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Settings Lock", fontFamily = PoppinsFamily, fontSize = 15.sp, color = textPrimary)
+                            Text("Protect control settings with lock type", fontFamily = InterFamily, fontSize = 12.sp, color = textTertiary)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Switch(
+                            checked = settingsLockEnabled,
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    settingsLockMgr.isLockEnabled = true
+                                    settingsLockEnabled = true
+                                    val currentType = sharedPrefs.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device")
+                                    if ("custom" == currentType && !settingsLockMgr.hasCustomPin() && activityContext != null) {
+                                        settingsLockMgr.showSetCustomPinDialog(activityContext, false) {
+                                            settingsLockEnabled = settingsLockMgr.isLockEnabled
+                                        }
+                                    }
+                                } else {
+                                    settingsLockEnabled = true // temporary revert until authed
+                                    activityContext?.let { act ->
+                                        settingsLockMgr.authenticate(act, "Disable Settings Lock", object : SettingsLockManager.AuthCallback {
+                                            override fun onSuccess() {
+                                                settingsLockMgr.isLockEnabled = false
+                                                settingsLockEnabled = false
+                                            }
+                                            override fun onFailure(reason: String?) {}
+                                        })
+                                    }
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = brandPink,
+                                uncheckedThumbColor = textTertiary,
+                                uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+                            )
+                        )
+                    }
+
+                    if (settingsLockEnabled) {
+                        Box(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 18.dp)) {
+                            SettingsLockTypeSelectorSection(
+                                sharedPrefs = sharedPrefs,
+                                settingsLockMgr = settingsLockMgr,
+                                activityContext = activityContext,
+                                PoppinsFamily = PoppinsFamily,
+                                InterFamily = InterFamily,
+                                brandPink = brandPink,
+                                textPrimary = textPrimary,
+                                textTertiary = textTertiary,
+                                onChanged = { notifyServiceConfigChanged() }
+                            )
+                        }
+                    }
+ 
+                    HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)), modifier = Modifier.padding(horizontal = 16.dp))
+ 
+                    // Device Admin
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Uninstall Protection", fontFamily = PoppinsFamily, fontSize = 15.sp, color = textPrimary)
+                            Text("Uses Device Admin privileges to secure app", fontFamily = InterFamily, fontSize = 12.sp, color = textTertiary)
+                        }
+                        Switch(
+                            checked = deviceAdminActive,
+                            onCheckedChange = { checked ->
+                                val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager
+                                val component = ComponentName(context, "com.gxdevs.mindmint.Receivers.MindMintDeviceAdminReceiver")
+                                if (checked) {
+                                    if (dpm?.isAdminActive(component) == false && activityContext != null) {
+                                        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                                            putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component)
+                                            putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Grants Mind Mint Device Admin rights to prevent uninstall.")
+                                        }
+                                        activityContext.startActivity(intent)
+                                    }
+                                } else {
+                                    deviceAdminActive = true // temp revert
+                                    activityContext?.let { act ->
+                                        settingsLockMgr.authenticate(act, "Disable Uninstall Protection", object : SettingsLockManager.AuthCallback {
+                                            override fun onSuccess() {
+                                                sharedPrefs.edit {putLong(
+                                                    AppUsageAccessibilityService.PREF_ADMIN_GUARD_TRUSTED_TOKEN,
+                                                    System.currentTimeMillis()
+                                                )
+                                                }
+                                                Toast.makeText(act, "Disable it from security settings.", Toast.LENGTH_LONG).show()
+                                                act.startActivity(Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS))
+                                            }
+                                            override fun onFailure(reason: String?) {}
+                                        })
+                                    }
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = brandPink,
+                                uncheckedThumbColor = textTertiary,
+                                uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+                            )
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Restricted Apps Section Header
+            Text(
+                text = "RESTRICTED APPS",
+                fontFamily = PoppinsFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                color = textTertiary,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp),
+                letterSpacing = 1.sp
+            )
+
+            // Restricted Apps Card List
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = themeColor(R.attr.surface_card, Color.White)
+                ),
+                border = BorderStroke(1.dp, themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column {
+                    appsList.forEachIndexed { index, app ->
+                        BlockedAppRowItem(
+                            app = app,
+                            blockedAppDao = blockedAppDao,
+                            notifyService = { notifyServiceConfigChanged() },
+                            PoppinsFamily = PoppinsFamily,
+                            InterFamily = InterFamily,
+                            textPrimary = textPrimary,
+                            textTertiary = textTertiary,
+                            brandPink = brandPink,
+                            hasDivider = index > 0
+                        )
+                    }
+                }
+            }
+        }
+
+        // Blocker Pause Dialog Picker
+        if (showPauseDialog) {
+            ComposeDialog(onDismissRequest = {
+                setServicePauseState(false, 0)
+                showPauseDialog = false
+            }) {
+                var selectedHour by remember { mutableIntStateOf(0) }
+                var selectedMinute by remember { mutableIntStateOf(30) }
+
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = themeColor(R.attr.surface_card, Color.White)
+                    ),
+                    border = BorderStroke(1.dp, themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Pause Blocker Protection",
+                            fontFamily = PoppinsFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            color = textPrimary,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Hour selector
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Hours", fontFamily = InterFamily, fontSize = 12.sp, color = textTertiary)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(themeColor(R.attr.brand_tint_bg, Color(0xFFFFF1F2)))
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = "$selectedHour h",
+                                        fontFamily = PoppinsFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                        color = brandPink
+                                    )
+                                }
+                                Row {
+                                    IconButton(onClick = { if (selectedHour > 0) selectedHour-- }) {
+                                        Text("-", fontSize = 20.sp, color = textPrimary)
+                                    }
+                                    IconButton(onClick = { if (selectedHour < 23) selectedHour++ }) {
+                                        Text("+", fontSize = 20.sp, color = textPrimary)
+                                    }
+                                }
+                            }
+
+                            // Minute selector
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Minutes", fontFamily = InterFamily, fontSize = 12.sp, color = textTertiary)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(themeColor(R.attr.brand_tint_bg, Color(0xFFFFF1F2)))
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = "$selectedMinute m",
+                                        fontFamily = PoppinsFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                        color = brandPink
+                                    )
+                                }
+                                Row {
+                                    IconButton(onClick = { if (selectedMinute >= 5) selectedMinute -= 5 }) {
+                                        Text("-", fontSize = 20.sp, color = textPrimary)
+                                    }
+                                    IconButton(onClick = { if (selectedMinute <= 50) selectedMinute += 5 }) {
+                                        Text("+", fontSize = 20.sp, color = textPrimary)
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    setServicePauseState(false, 0)
+                                    showPauseDialog = false
+                                }
+                            ) {
+                                Text("Cancel", color = textTertiary)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Button(
+                                onClick = {
+                                    val pauseDuration = (selectedHour * 3600L + selectedMinute * 60L) * 1000L
+                                    if (pauseDuration > 0) {
+                                        setServicePauseState(true, pauseDuration)
+                                        if (activityContext != null) {
+                                            Toast.makeText(activityContext, "Blocker paused for ${selectedHour}h ${selectedMinute}m", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        setServicePauseState(false, 0)
+                                    }
+                                    showPauseDialog = false
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = brandPink),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Pause Blocker", color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Strict Level 4 Nuclear Warning Dialog
+        if (showNuclearWarningDialog) {
+            var warnSecondsLeft by remember { mutableIntStateOf(5) }
+            LaunchedEffect(Unit) {
+                while (warnSecondsLeft > 0) {
+                    delay(1000L)
+                    warnSecondsLeft--
+                }
+            }
+
+            ComposeDialog(onDismissRequest = {
+                blockerIntensity = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0)
+                showNuclearWarningDialog = false
+            }) {
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = themeColor(R.attr.surface_card, Color.White)
+                    ),
+                    border = BorderStroke(1.dp, themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                    ) {
+                        Text(
+                            text = "⚠️ Enable Permanent Block?",
+                            fontFamily = PoppinsFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            color = textPrimary,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Text(
+                            text = "Are you sure? Once Permanent lock level is active, you CANNOT bypass any locks, pauses, or change control settings for the next 24 hours.",
+                            fontFamily = InterFamily,
+                            fontSize = 14.sp,
+                            color = themeColor(R.attr.text_secondary, Color(0xFF64748B)),
+                            modifier = Modifier.padding(bottom = 24.dp),
+                            lineHeight = 20.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    blockerIntensity = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0)
+                                    showNuclearWarningDialog = false
+                                },
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                Text("Cancel", color = textTertiary)
+                            }
+
+                            Button(
+                                onClick = {
+                                    saveIntensity(4)
+                                    showNuclearWarningDialog = false
+                                },
+                                enabled = warnSecondsLeft <= 0,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = brandPink,
+                                    disabledContainerColor = brandPink.copy(alpha = 0.5f)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = if (warnSecondsLeft > 0) "Understand (${warnSecondsLeft}s)" else "Understand",
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ChallengeSelectorSection(
+    sharedPrefs: SharedPreferences,
+    PoppinsFamily: FontFamily,
+    brandPink: Color,
+    textPrimary: Color,
+    textTertiary: Color,
+    onChanged: () -> Unit
+) {
+    var selectedChallenge by remember {
+        mutableStateOf(sharedPrefs.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "math") ?: "math")
+    }
+
+    Text(
+        text = "Challenge Type",
+        fontFamily = PoppinsFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        color = textPrimary,
+        modifier = Modifier.padding(bottom = 10.dp)
+    )
+
+    val challenges = listOf("math", "shake", "scream", "breath")
+    val labels = listOf("Math", "Shake", "Scream", "10s Breath")
+    val tabCount = challenges.size
+    val selectedIndex = challenges.indexOf(selectedChallenge).coerceAtLeast(0)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+            .padding(2.dp)
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val indicatorWidth = maxWidth / tabCount
+            val animatedOffset by animateDpAsState(
+                targetValue = indicatorWidth * selectedIndex,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                label = "challengeOffset"
+            )
+
+            Box(
+                modifier = Modifier
+                    .width(indicatorWidth)
+                    .fillMaxHeight()
+                    .offset(x = animatedOffset)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(brandPink)
+            )
+        }
+
+        Row(modifier = Modifier.fillMaxSize()) {
+            challenges.forEachIndexed { i, key ->
+                val isSelected = selectedChallenge == key
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            sharedPrefs.edit { putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, key) }
+                            selectedChallenge = key
+                            onChanged()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = labels[i],
+                        fontFamily = PoppinsFamily,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color.White else textTertiary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReminderIntervalSliders(
+    sharedPrefs: SharedPreferences,
+    PoppinsFamily: FontFamily,
+    InterFamily: FontFamily,
+    brandPink: Color,
+    textPrimary: Color,
+    textTertiary: Color,
+    onChanged: () -> Unit
+) {
+    var intervalMinutes by remember {
+        mutableIntStateOf(sharedPrefs.getInt(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES, 5))
+    }
+    var popupSeconds by remember {
+        mutableIntStateOf(sharedPrefs.getInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, 5))
+    }
+    var requireFriction by remember {
+        mutableStateOf(sharedPrefs.getBoolean("pref_reminder_friction_enabled", false))
+    }
+
+    // 1. Reminder Interval
+    CustomLabelSlider(
+        title = "Reminder Interval",
+        subtitle = "Popup warning interval frequency",
+        value = intervalMinutes,
+        valueRange = 1f..60f,
+        unit = "m",
+        brandPink = brandPink,
+        textPrimary = textPrimary,
+        textTertiary = textTertiary,
+        PoppinsFamily = PoppinsFamily,
+        InterFamily = InterFamily,
+        onValueChange = { intervalMinutes = it },
+        onFinished = {
+            sharedPrefs.edit {putInt(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES, intervalMinutes)}
+            onChanged()
+        }
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+    HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // 2. Warning Popup Duration
+    CustomLabelSlider(
+        title = "Popup Warning Duration",
+        subtitle = "Display length before auto-dismiss",
+        value = popupSeconds,
+        valueRange = 3f..15f,
+        unit = "s",
+        brandPink = brandPink,
+        textPrimary = textPrimary,
+        textTertiary = textTertiary,
+        PoppinsFamily = PoppinsFamily,
+        InterFamily = InterFamily,
+        onValueChange = { popupSeconds = it },
+        onFinished = {
+            sharedPrefs.edit {putInt(AppUsageAccessibilityService.PREF_BLOCKING_POPUP_DURATION_SEC, popupSeconds)}
+            onChanged()
+        }
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+    HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // 3. Friction switch for Reminder
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Require Friction on Open", fontFamily = PoppinsFamily, fontSize = 14.sp, color = textPrimary)
+            Text("Force challenge when opening app", fontFamily = InterFamily, fontSize = 11.sp, color = textTertiary)
+        }
+        Switch(
+            checked = requireFriction,
+            onCheckedChange = { checked ->
+                sharedPrefs.edit {putBoolean("pref_reminder_friction_enabled", checked)}
+                requireFriction = checked
+                onChanged()
+            },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = brandPink,
+                uncheckedThumbColor = textTertiary,
+                uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+            )
+        )
+    }
+
+    if (requireFriction) {
+        Spacer(modifier = Modifier.height(16.dp))
+        ChallengeSelectorSection(
+            sharedPrefs = sharedPrefs,
+            PoppinsFamily = PoppinsFamily,
+            brandPink = brandPink,
+            textPrimary = textPrimary,
+            textTertiary = textTertiary,
+            onChanged = onChanged
+        )
+    }
+}
+
+@Composable
+fun TempLockSliders(
+    sharedPrefs: SharedPreferences,
+    PoppinsFamily: FontFamily,
+    InterFamily: FontFamily,
+    brandPink: Color,
+    textPrimary: Color,
+    textTertiary: Color,
+    onChanged: () -> Unit
+) {
+    var limitType by remember {
+        mutableStateOf(sharedPrefs.getString("pref_temp_lock_limit_type", "both") ?: "both")
+    }
+    var scrollLimit by remember {
+        mutableIntStateOf(sharedPrefs.getLong("pref_daily_scroll_limit", 100).toInt())
+    }
+    var timeLimitMinutes by remember {
+        mutableIntStateOf((sharedPrefs.getFloat(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_HOURS, 1f) * 60).toInt())
+    }
+    var requireReminders by remember {
+        mutableStateOf(sharedPrefs.getBoolean("pref_temp_lock_reminders_enabled", false))
+    }
+    var requireFriction by remember {
+        mutableStateOf(sharedPrefs.getBoolean("pref_temp_lock_friction_enabled", false))
+    }
+
+    Text(
+        text = "Temp Lock Trigger Type",
+        fontFamily = PoppinsFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        color = textPrimary,
+        modifier = Modifier.padding(bottom = 10.dp)
+    )
+
+    val options = listOf("scroll", "time", "both")
+    val labels = listOf("Scroll Limit", "Time Limit", "Both Limits")
+    val tabCount = options.size
+    val selectedIndex = options.indexOf(limitType).coerceAtLeast(0)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+            .padding(2.dp)
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val indicatorWidth = maxWidth / tabCount
+            val animatedOffset by animateDpAsState(
+                targetValue = indicatorWidth * selectedIndex,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                label = "tempLockOffset"
+            )
+
+            Box(
+                modifier = Modifier
+                    .width(indicatorWidth)
+                    .fillMaxHeight()
+                    .offset(x = animatedOffset)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(brandPink)
+            )
+        }
+
+        Row(modifier = Modifier.fillMaxSize()) {
+            options.forEachIndexed { i, key ->
+                val isSelected = limitType == key
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            sharedPrefs.edit { putString("pref_temp_lock_limit_type", key) }
+                            limitType = key
+                            onChanged()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = labels[i],
+                        fontFamily = PoppinsFamily,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color.White else textTertiary
+                    )
+                }
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // 1. Daily Scrolls Limit
+    if (limitType == "scroll" || limitType == "both") {
+        CustomLabelSlider(
+            title = "Daily Scroll Limit",
+            subtitle = "Max scroll limit before strict lockout (Applied per app individually)",
+            value = scrollLimit,
+            valueRange = 10f..500f,
+            unit = " scrolls",
+            brandPink = brandPink,
+            textPrimary = textPrimary,
+            textTertiary = textTertiary,
+            PoppinsFamily = PoppinsFamily,
+            InterFamily = InterFamily,
+            onValueChange = { scrollLimit = it },
+            onFinished = {
+                sharedPrefs.edit { putLong("pref_daily_scroll_limit", scrollLimit.toLong()) }
+                onChanged()
+            }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    // 2. Daily Time Limit
+    if (limitType == "time" || limitType == "both") {
+        if (limitType == "both") {
+            HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        CustomLabelSlider(
+            title = "Daily Time Limit",
+            subtitle = "Time usage allowed per day (Combined across all blocked apps)",
+            value = timeLimitMinutes,
+            valueRange = 5f..240f,
+            unit = "m",
+            brandPink = brandPink,
+            textPrimary = textPrimary,
+            textTertiary = textTertiary,
+            PoppinsFamily = PoppinsFamily,
+            InterFamily = InterFamily,
+            onValueChange = { timeLimitMinutes = it },
+            onFinished = {
+                sharedPrefs.edit { putFloat(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_HOURS, timeLimitMinutes.toFloat() / 60) }
+                onChanged()
+            }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // 3. Reminders switch for Temp Lock
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Show Reminder Popups", fontFamily = PoppinsFamily, fontSize = 14.sp, color = textPrimary)
+            Text("Popup warning alerts show periodically under limit", fontFamily = InterFamily, fontSize = 11.sp, color = textTertiary)
+        }
+        Switch(
+            checked = requireReminders,
+            onCheckedChange = { checked ->
+                sharedPrefs.edit {putBoolean("pref_temp_lock_reminders_enabled", checked)}
+                requireReminders = checked
+                onChanged()
+            },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = brandPink,
+                uncheckedThumbColor = textTertiary,
+                uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+            )
+        )
+    }
+
+    if (requireReminders) {
+        Spacer(modifier = Modifier.height(16.dp))
+        ReminderIntervalSliders(
+            sharedPrefs = sharedPrefs,
+            PoppinsFamily = PoppinsFamily,
+            InterFamily = InterFamily,
+            brandPink = brandPink,
+            textPrimary = textPrimary,
+            textTertiary = textTertiary,
+            onChanged = onChanged
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+    HorizontalDivider(color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // 4. Hybrid Friction Switch Row
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Require Friction on Open", fontFamily = PoppinsFamily, fontSize = 14.sp, color = textPrimary)
+            Text("Force challenge when opening under limit", fontFamily = InterFamily, fontSize = 11.sp, color = textTertiary)
+        }
+        Switch(
+            checked = requireFriction,
+            onCheckedChange = { checked ->
+                sharedPrefs.edit {putBoolean("pref_temp_lock_friction_enabled", checked)}
+                requireFriction = checked
+                onChanged()
+            },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = brandPink,
+                uncheckedThumbColor = textTertiary,
+                uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+            )
+        )
+    }
+
+    if (requireFriction) {
+        Spacer(modifier = Modifier.height(16.dp))
+        ChallengeSelectorSection(
+            sharedPrefs = sharedPrefs,
+            PoppinsFamily = PoppinsFamily,
+            brandPink = brandPink,
+            textPrimary = textPrimary,
+            textTertiary = textTertiary,
+            onChanged = onChanged
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomLabelSlider(
+    title: String,
+    subtitle: String,
+    value: Int,
+    valueRange: ClosedFloatingPointRange<Float>,
+    unit: String,
+    brandPink: Color,
+    textPrimary: Color,
+    textTertiary: Color,
+    PoppinsFamily: FontFamily,
+    InterFamily: FontFamily,
+    onValueChange: (Int) -> Unit,
+    onFinished: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontFamily = PoppinsFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = textPrimary
+                )
+                Text(
+                    text = subtitle,
+                    fontFamily = InterFamily,
+                    fontSize = 11.sp,
+                    color = textTertiary
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(themeColor(R.attr.brand_tint_bg, Color(0xFFFFF1F2)))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "$value$unit",
+                    fontFamily = PoppinsFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = brandPink
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
+        val isDragged by interactionSource.collectIsDraggedAsState()
+        val isSliderActive = isPressed || isDragged
+
+        val thumbHeight by animateDpAsState(
+            targetValue = if (isSliderActive) 30.dp else 24.dp,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+        )
+        val trackHeight by animateDpAsState(
+            targetValue = if (isSliderActive) 18.dp else 16.dp,
+            animationSpec = tween(200)
+        )
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "${valueRange.start.toInt()}",
+                fontFamily = PoppinsFamily,
+                fontSize = 11.sp,
+                color = textTertiary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Slider(
+                value = value.toFloat(),
+                onValueChange = { onValueChange(it.toInt()) },
+                onValueChangeFinished = onFinished,
+                valueRange = valueRange,
+                interactionSource = interactionSource,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = brandPink,
+                    activeTrackColor = Color.Transparent,
+                    inactiveTrackColor = Color.Transparent,
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent
+                ),
+                track = { state ->
+                    val fraction = state.coercedValueAsFraction
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(trackHeight)
+                            .clip(RoundedCornerShape(trackHeight / 2))
+                            .background(themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(fraction = fraction)
+                                .clip(RoundedCornerShape(trackHeight / 2))
+                                .background(brandPink)
+                        )
+                        if (fraction < 0.95f) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .padding(end = 8.dp)
+                                    .size(4.dp)
+                                    .clip(CircleShape)
+                                    .background(brandPink)
+                            )
+                        }
+                    }
+                },
+                thumb = {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 4.dp, height = thumbHeight)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(brandPink)
+                    )
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "${valueRange.endInclusive.toInt()}",
+                fontFamily = PoppinsFamily,
+                fontSize = 11.sp,
+                color = textTertiary
+            )
+        }
+    }
+}
+
+@Composable
+fun BlockedAppRowItem(
+    app: BlockedAppEntity,
+    blockedAppDao: BlockedAppDao?,
+    notifyService: () -> Unit,
+    PoppinsFamily: FontFamily,
+    InterFamily: FontFamily,
+    textPrimary: Color,
+    textTertiary: Color,
+    brandPink: Color,
+    hasDivider: Boolean
+) {
+    val context = LocalContext.current
+    val sharedPrefs = remember { androidx.preference.PreferenceManager.getDefaultSharedPreferences(context) }
+    val scope = rememberCoroutineScope()
+    var isRestricted by remember { mutableStateOf(app.isRestricted) }
+    var scopeSetting by remember { mutableStateOf(app.scope ?: "full") }
+    var useModSetting by remember { mutableStateOf(app.useMod) }
+
+    fun syncModPackagesLocal(parentApp: BlockedAppEntity) {
+        scope.launch(Dispatchers.IO) {
+            blockedAppDao?.let { dao ->
+                val allApps = dao.getAllSync()
+                for (a in allApps) {
+                    if (isModPackage(a.packageName)) {
+                        var match = false
+                        if (parentApp.packageName == "com.google.android.youtube" && a.packageName.contains("youtube")) {
+                            match = true
+                        } else if (parentApp.packageName == "com.instagram.android" && (a.packageName.contains("insta") || a.packageName.contains("honista"))) {
+                            match = true
+                        }
+                        if (match) {
+                            a.isRestricted = parentApp.isRestricted && parentApp.useMod
+                            a.scope = parentApp.scope
+                            a.useMod = parentApp.useMod
+                            dao.update(a)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize()
+    ) {
+        if (hasDivider) {
+            HorizontalDivider(
+                color = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)),
+                thickness = 1.dp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // App Icon with glass colored backgrounds
+            AppIconImage(packageName = app.packageName)
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = app.appName,
+                    fontFamily = PoppinsFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                    color = textPrimary
+                )
+            }
+
+            Switch(
+                checked = isRestricted,
+                onCheckedChange = { checked ->
+                    isRestricted = checked
+                    app.isRestricted = checked
+                    sharedPrefs.edit {
+                        when (app.packageName) {
+                            "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
+                                putBoolean("ytSwitchState", checked)
+                            }
+                            "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
+                                putBoolean("instaSwitchState", checked)
+                            }
+                            "com.snapchat.android" -> {
+                                putBoolean("snapSwitchState", checked)
+                            }
+                        }
+                    }
+                    scope.launch(Dispatchers.IO) {
+                        blockedAppDao?.update(app)
+                        syncModPackagesLocal(app)
+                        withContext(Dispatchers.Main) {
+                            notifyService()
+                        }
+                    }
+                },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = brandPink,
+                    uncheckedThumbColor = textTertiary,
+                    uncheckedTrackColor = themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0))
+                )
+            )
+        }
+
+        // App config expansion
+        val hasViewId = app.sectionViewId != null && !app.sectionViewId.trim().isEmpty()
+        androidx.compose.animation.AnimatedVisibility(
+            visible = isRestricted && hasViewId,
+            enter = expandVertically(animationSpec = tween(300)) + fadeIn(),
+            exit = shrinkVertically(animationSpec = tween(200)) + fadeOut()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 76.dp, end = 16.dp, bottom = 14.dp)
+            ) {
+                // Scope Row Toggle: Section vs Full
+                Text(
+                    text = "Blocking Scope",
+                    fontFamily = PoppinsFamily,
+                    fontSize = 12.sp,
+                    color = textTertiary,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+
+                val options = listOf("section", "full")
+                val selectedIndex = options.indexOf(scopeSetting).coerceAtLeast(0)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(themeColor(R.attr.glass_stroke, Color(0xFFE2E8F0)))
+                        .padding(2.dp)
+                ) {
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val indicatorWidth = maxWidth / 2
+                        val animatedOffset by animateDpAsState(
+                            targetValue = indicatorWidth * selectedIndex,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            ),
+                            label = "appScopeOffset"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .width(indicatorWidth)
+                                .fillMaxHeight()
+                                .offset(x = animatedOffset)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(brandPink)
+                        )
+                    }
+
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    scopeSetting = "section"
+                                    app.scope = "section"
+                                    scope.launch(Dispatchers.IO) {
+                                        blockedAppDao?.update(app)
+                                        syncModPackagesLocal(app)
+                                        withContext(Dispatchers.Main) {
+                                            notifyService()
+                                        }
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Doom-scrolling",
+                                fontFamily = PoppinsFamily,
+                                fontSize = 10.sp,
+                                color = if (scopeSetting == "section") Color.White else textTertiary
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    scopeSetting = "full"
+                                    app.scope = "full"
+                                    scope.launch(Dispatchers.IO) {
+                                        blockedAppDao?.update(app)
+                                        syncModPackagesLocal(app)
+                                        withContext(Dispatchers.Main) {
+                                            notifyService()
+                                        }
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Full App",
+                                fontFamily = PoppinsFamily,
+                                fontSize = 10.sp,
+                                color = if (scopeSetting != "section") Color.White else textTertiary
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Mod Checkbox option
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = useModSetting,
+                        onCheckedChange = { checked ->
+                            useModSetting = checked
+                            app.useMod = checked
+                            scope.launch(Dispatchers.IO) {
+                                blockedAppDao?.update(app)
+                                syncModPackagesLocal(app)
+                                withContext(Dispatchers.Main) {
+                                    notifyService()
+                                }
+                            }
+                        },
+                        colors = CheckboxDefaults.colors(checkedColor = brandPink)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "Block Mod Client as well",
+                            fontFamily = PoppinsFamily,
+                            fontSize = 12.sp,
+                            color = textPrimary
+                        )
+                        Text(
+                            text = "Locks unofficial mod clones (ReVanced, Honista etc.)",
+                            fontFamily = InterFamily,
+                            fontSize = 10.sp,
+                            color = textTertiary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppIconImage(packageName: String) {
+    val context = LocalContext.current
+    var drawableIcon by remember { mutableStateOf<Drawable?>(null) }
+
+    LaunchedEffect(packageName) {
+        withContext(Dispatchers.IO) {
+            try {
+                val icon = context.packageManager.getApplicationIcon(packageName)
+                withContext(Dispatchers.Main) {
+                    drawableIcon = icon
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    if (drawableIcon != null) {
+        val imageBitmap = remember(drawableIcon) {
+            val bitmap = createBitmap(
+                drawableIcon!!.intrinsicWidth.coerceAtLeast(1),
+                drawableIcon!!.intrinsicHeight.coerceAtLeast(1)
+            )
+            val canvas = android.graphics.Canvas(bitmap)
+            drawableIcon!!.setBounds(0, 0, canvas.width, canvas.height)
+            drawableIcon!!.draw(canvas)
+            bitmap.asImageBitmap()
+        }
+        androidx.compose.foundation.Image(
+            bitmap = imageBitmap,
+            contentDescription = "App Icon",
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+        )
+    } else {
+        // Fallbacks
+        val iconRes = when {
+            packageName.contains("youtube") -> R.drawable.youtube
+            packageName.contains("insta") -> R.drawable.instagram
+            packageName.contains("snap") -> R.drawable.snapchat
+            else -> R.drawable.shield
+        }
+
+        val iconColor = when {
+            packageName.contains("youtube") -> Color(0xFFFF0000)
+            packageName.contains("insta") -> Color(0xFFE1306C)
+            packageName.contains("snap") -> Color(0xFFFFFC00)
+            else -> themeColor(R.attr.text_secondary, Color(0xFF64748B))
+        }
+
+        val bgTint = when {
+            packageName.contains("youtube") -> Color(0xFFFF0000).copy(alpha = 0.2f)
+            packageName.contains("insta") -> Color(0xFFE1306C).copy(alpha = 0.2f)
+            packageName.contains("snap") -> Color(0xFFFFFC00).copy(alpha = 0.2f)
+            else -> Color.White.copy(alpha = 0.1f)
+        }
+
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(bgTint)
+                .padding(10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = "App Icon Fallback",
+                tint = iconColor,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+private fun isModPackage(packageName: String?): Boolean {
+    if (packageName == null) return false
+    return packageName == "com.rvx.android.youtube" ||
+           packageName == "com.revance.android.youtube" ||
+           packageName == "app.morphe.android.youtube" ||
+           packageName == "com.myinsta.android" ||
+           packageName == "com.instafel.android" ||
+           packageName == "com.instander.android" ||
+           packageName == "com.instagold.android" ||
+           packageName == "com.instapro2.android" ||
+           packageName == "com.instaflow.android" ||
+           packageName == "cc.honista.app" ||
+           packageName == "com.instaprime.android"
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BlockerControlScreenPreview() {
+    BlockerControlScreen(
+        onBackClick = {},
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(LocalContext.current),
+        blockedAppDao = null,
+        settingsLockMgr = SettingsLockManager(LocalContext.current),
+        activityContext = null,
+        onShowAdultListDownload = {}
+    )
+}
+
+@Composable
+fun SettingsLockTypeSelectorSection(
+    sharedPrefs: SharedPreferences,
+    settingsLockMgr: SettingsLockManager,
+    activityContext: androidx.fragment.app.FragmentActivity?,
+    PoppinsFamily: FontFamily,
+    InterFamily: FontFamily,
+    brandPink: Color,
+    textPrimary: Color,
+    textTertiary: Color,
+    onChanged: () -> Unit
+) {
+    var selectedType by remember { mutableStateOf(sharedPrefs.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device") ?: "device") }
+
+    val options = listOf("device", "custom", "math", "text", "oneday")
+    val labels = listOf("Device credentials", "Custom PIN", "Maths Challenge", "Long sentences", "1-Day Lockout")
+
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Text(
+            text = "Select Lock Type",
+            fontFamily = PoppinsFamily,
+            fontSize = 12.sp,
+            color = textTertiary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(themeColor(R.attr.surface_nested, Color(0xFFF8FAFC)))
+                .padding(4.dp)
+        ) {
+            options.forEachIndexed { index, type ->
+                val isSelected = selectedType == type
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSelected) brandPink.copy(alpha = 0.15f) else Color.Transparent)
+                        .clickable {
+                            if (type == "custom" && !settingsLockMgr.hasCustomPin() && activityContext != null) {
+                                settingsLockMgr.showSetCustomPinDialog(activityContext, false) {
+                                    if (settingsLockMgr.hasCustomPin()) {
+                                        sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "custom") }
+                                        selectedType = "custom"
+                                        onChanged()
+                                    }
+                                }
+                            } else {
+                                sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, type) }
+                                selectedType = type
+                                onChanged()
+                            }
+                        }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = isSelected,
+                        onClick = {
+                            if (type == "custom" && !settingsLockMgr.hasCustomPin() && activityContext != null) {
+                                settingsLockMgr.showSetCustomPinDialog(activityContext, false) {
+                                    if (settingsLockMgr.hasCustomPin()) {
+                                        sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "custom") }
+                                        selectedType = "custom"
+                                        onChanged()
+                                    }
+                                }
+                            } else {
+                                sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, type) }
+                                selectedType = type
+                                onChanged()
+                            }
+                        },
+                        colors = RadioButtonDefaults.colors(selectedColor = brandPink)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = labels[index],
+                            fontFamily = PoppinsFamily,
+                            fontSize = 14.sp,
+                            color = textPrimary
+                        )
+                        val subtitle = when (type) {
+                            "device" -> "Use device PIN, pattern or biometric fingerprint"
+                            "custom" -> "Use a custom 6-digit PIN specific to Mind Mint"
+                            "math" -> "Solve a complex equation to gain access"
+                            "text" -> "Type a long quote exactly to bypass"
+                            "oneday" -> "Strict lockout: 24h cooldown timer on settings"
+                            else -> ""
+                        }
+                        Text(
+                            text = subtitle,
+                            fontFamily = InterFamily,
+                            fontSize = 11.sp,
+                            color = textTertiary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun themeColor(attr: Int, default: Color): Color {
+    val context = LocalContext.current
+    val typedValue = remember { android.util.TypedValue() }
+    val resolved = context.theme.resolveAttribute(attr, typedValue, true)
+    return if (resolved) {
+        Color(typedValue.data)
+    } else {
+        default
+    }
+}
+

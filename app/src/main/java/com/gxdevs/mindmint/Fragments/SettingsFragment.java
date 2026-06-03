@@ -1011,12 +1011,18 @@ public class SettingsFragment extends Fragment {
                 ChallengeLockManager clm = new ChallengeLockManager(requireContext());
                 if (clm.isSettingsOneDayLockActive()) {
                     long remainingMs = clm.getSettingsOneDayLockRemainingMs();
-                    long hours = remainingMs / (60 * 60 * 1000L);
-                    long minutes = (remainingMs / (60 * 1000L)) % 60;
-                    long seconds = (remainingMs / 1000L) % 60;
-                    Toast.makeText(requireContext(),
-                            String.format(Locale.US, "Settings are locked under 1-Day lockout. Remaining: %02dh %02dm %02ds", hours, minutes, seconds),
-                            Toast.LENGTH_LONG).show();
+                    if (remainingMs <= 0) {
+                        Toast.makeText(requireContext(),
+                                "Settings are locked under 1-Day lockout. (Clock tampering detected)",
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        long hours = remainingMs / (60 * 60 * 1000L);
+                        long minutes = (remainingMs / (60 * 1000L)) % 60;
+                        long seconds = (remainingMs / 1000L) % 60;
+                        Toast.makeText(requireContext(),
+                                String.format(Locale.US, "Settings are locked under 1-Day lockout. Remaining: %02dh %02dm %02ds", hours, minutes, seconds),
+                                Toast.LENGTH_LONG).show();
+                    }
                     if (onCancelled != null) onCancelled.run();
                     return;
                 } else {
@@ -1094,32 +1100,6 @@ public class SettingsFragment extends Fragment {
                 return mins + "-Min Bypass Window";
             default: return "Normal Blocker";
         }
-    }
-
-    private void showSettingsLockTypePicker() {
-        Intent intent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.class);
-        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_SELECTION_MODE, com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.MODE_SETTINGS);
-        String current = defaultSharedPreferences.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device");
-        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_CURRENT_VALUE, current);
-        challengeLauncher.launch(intent);
-    }
-
-    private void showBlockerChallengePicker() {
-        Intent intent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.class);
-        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_SELECTION_MODE, com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.MODE_BLOCKER);
-        String current = defaultSharedPreferences.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
-        intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_CURRENT_VALUE, current);
-
-        int intensity = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
-        if (intensity == 1) { // Friction
-            intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_ALLOWED_TYPES,
-                    new String[]{"math", "scream", "breath", "text", "shake", "window10"});
-        } else if (intensity == 3) { // Temp Lock
-            intent.putExtra(com.gxdevs.mindmint.Activities.LockTypeSelectionActivity.EXTRA_ALLOWED_TYPES,
-                    new String[]{"math", "scream", "breath", "text", "shake", "window10", "oneday"});
-        }
-
-        challengeLauncher.launch(intent);
     }
 
     private void applyBlockerIntensity(int stop) {
@@ -1274,12 +1254,18 @@ public class SettingsFragment extends Fragment {
                         ChallengeLockManager clm = new ChallengeLockManager(requireContext());
                         if (clm.isPinResetCooldownActive()) {
                             long remainingMs = clm.getPinResetRemainingMs();
-                            long hours = remainingMs / (60 * 60 * 1000L);
-                            long minutes = (remainingMs / (60 * 1000L)) % 60;
-                            long seconds = (remainingMs / 1000L) % 60;
-                            Toast.makeText(requireContext(),
-                                    String.format(Locale.US, "PIN Reset Cooldown active. Time remaining: %02dh %02dm %02ds", hours, minutes, seconds),
-                                    Toast.LENGTH_LONG).show();
+                            if (remainingMs <= 0) {
+                                Toast.makeText(requireContext(),
+                                        "PIN Reset Cooldown active. (Clock tampering detected)",
+                                        Toast.LENGTH_LONG).show();
+                            } else {
+                                long hours = remainingMs / (60 * 60 * 1000L);
+                                long minutes = (remainingMs / (60 * 1000L)) % 60;
+                                long seconds = (remainingMs / 1000L) % 60;
+                                Toast.makeText(requireContext(),
+                                        String.format(Locale.US, "PIN Reset Cooldown active. Time remaining: %02dh %02dm %02ds", hours, minutes, seconds),
+                                        Toast.LENGTH_LONG).show();
+                            }
                         } else {
                             Intent challengeIntent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockChallengeActivity.class);
                             challengeIntent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_LOCK_TYPE, "pin_reset");

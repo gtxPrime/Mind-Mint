@@ -192,10 +192,18 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    long remainingMs = challengeLockMgr.getBlockerOneDayLockRemainingMs(currentBlockedPackageName);
-                    if (remainingMs <= 0) {
+                    boolean isActive = challengeLockMgr.isBlockerOneDayLockActive(currentBlockedPackageName);
+                    if (!isActive) {
                         dispatchHomeAction();
                         finish();
+                        return;
+                    }
+                    long remainingMs = challengeLockMgr.getBlockerOneDayLockRemainingMs(currentBlockedPackageName);
+                    if (remainingMs <= 0) {
+                        if (tv_blocking_subtitle != null) {
+                            tv_blocking_subtitle.setText("Strict lockout active.\nClock tampering detected! Cooldown locked.");
+                        }
+                        handler.postDelayed(this, 1000);
                         return;
                     }
                     long hours = remainingMs / (60 * 60 * 1000L);

@@ -759,6 +759,10 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             title.setText(item.getTitle());
             icon.setImageResource(item.getIconRes());
             
+            if (labelNone != null) {
+                labelNone.setText("Normal");
+            }
+            
             seekBar.setMax(4);
             seekBar.setOnSeekBarChangeListener(null);
             seekBar.setProgress(item.getSliderProgress());
@@ -780,6 +784,27 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {}
             });
+
+            View.OnClickListener clickListener = v -> {
+                int progress = 0;
+                if (v == labelNone) progress = 0;
+                else if (v == labelFriction) progress = 1;
+                else if (v == labelReminder) progress = 2;
+                else if (v == labelTempLock) progress = 3;
+                else if (v == labelPermanent) progress = 4;
+                
+                seekBar.setProgress(progress);
+                updateIntensityUI(progress);
+                if (onBlockerIntensityChangeListener != null) {
+                    onBlockerIntensityChangeListener.onIntensityChanged(item.getId(), progress);
+                }
+            };
+            
+            labelNone.setOnClickListener(clickListener);
+            labelFriction.setOnClickListener(clickListener);
+            labelReminder.setOnClickListener(clickListener);
+            labelTempLock.setOnClickListener(clickListener);
+            labelPermanent.setOnClickListener(clickListener);
         }
 
         private void updateIntensityUI(int progress) {
@@ -804,7 +829,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     tintColor = 0xFFE74C3C; // Red
                     break;
                 default:
-                    subtitleText = "None";
+                    subtitleText = "Normal";
                     tintColor = 0xFF95A5A6; // Gray
                     break;
             }

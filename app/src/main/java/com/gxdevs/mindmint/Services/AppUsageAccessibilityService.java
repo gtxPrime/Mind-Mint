@@ -265,10 +265,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     };
 
     private long lastActionTime = 0L;
+    private long lastGoHomeTimeMs = 0L;
     public static boolean serviceStatus = false;
 
     private final Map<String, Long> lastLockInOverlayTimeMs = new HashMap<>();
-    private static final long LOCK_IN_OVERLAY_DEBOUNCE_MS = 500L;
+    private static final long LOCK_IN_OVERLAY_DEBOUNCE_MS = 0L;
     
     private final Map<String, Long> packageBypassExpiryTimeMap = new HashMap<>();
     
@@ -420,6 +421,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (intent != null && ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY.equals(intent.getAction())) {
+                    lastGoHomeTimeMs = System.currentTimeMillis();
+                    Log.d(TAG, "Received ACTION_PERFORM_GLOBAL_HOME_FROM_OVERLAY. Setting lastGoHomeTimeMs = " + lastGoHomeTimeMs);
                     performThrottledGlobalAction(GLOBAL_ACTION_HOME);
                 } else if (intent != null && ACTION_PERFORM_GLOBAL_BACK_FROM_OVERLAY.equals(intent.getAction())) {
                     performThrottledGlobalAction(GLOBAL_ACTION_BACK);
@@ -740,6 +743,10 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                             if (isPackageBypassed(eventPackageName)) {
                                 return; // Bypassed
                             }
+                            if (System.currentTimeMillis() - lastGoHomeTimeMs < 1500) {
+                                Log.d(TAG, "Suppressed locked-in overlay for '" + eventPackageName + "' due to cancel/go home.");
+                                return;
+                            }
                             Long lastTime = lastLockInOverlayTimeMs.get(eventPackageName);
                             if (lastTime == null || (now - lastTime) > LOCK_IN_OVERLAY_DEBOUNCE_MS) {
                                 lastLockInOverlayTimeMs.put(eventPackageName, now);
@@ -752,6 +759,10 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     } else if (customBlockedApps != null && customBlockedApps.contains(eventPackageName)) {
                         if (isPackageBypassed(eventPackageName)) {
                             return; // Bypassed
+                        }
+                        if (System.currentTimeMillis() - lastGoHomeTimeMs < 1500) {
+                            Log.d(TAG, "Suppressed custom blocked app overlay for '" + eventPackageName + "' due to cancel/go home.");
+                            return;
                         }
                         Long lastTime = lastLockInOverlayTimeMs.get(eventPackageName);
                         if (lastTime == null || (now - lastTime) > LOCK_IN_OVERLAY_DEBOUNCE_MS) {
@@ -780,12 +791,15 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     if (eventPackageName != null) {
                         String appTagForEvent = getAppTagFromAllPackages(eventPackageName);
                         if (appTagForEvent != null) {
-                            String reminderViewId = getReminderViewIdForAppTag(appTagForEvent);
-                            if (reminderViewId != null) {
-                                if (isReminderViewVisible(rootNode, eventPackageName, reminderViewId)) {
-                                    activeAppTagNow = appTagForEvent;
-                                    activeReminderViewIdNow = reminderViewId;
-                                    isTrackedViewVisibleNow = true;
+                            BlockedAppEntity config = getBlockedAppConfig(eventPackageName);
+                            if (config != null && config.isRestricted) {
+                                String reminderViewId = getReminderViewIdForAppTag(appTagForEvent);
+                                if (reminderViewId != null) {
+                                    if (isReminderViewVisible(rootNode, eventPackageName, reminderViewId)) {
+                                        activeAppTagNow = appTagForEvent;
+                                        activeReminderViewIdNow = reminderViewId;
+                                        isTrackedViewVisibleNow = true;
+                                    }
                                 }
                             }
                         }
@@ -913,19 +927,9 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             return;
         }
 
-        switch (appTag) {
-            case "yt":
-                if (isYtHomeSwitchOn)
-                    return;
-                break;
-            case "insta":
-                if (isInstaHomeSwitchOn)
-                    return;
-                break;
-            case "snap":
-                if (isSnapHomeSwitchOn)
-                    return;
-                break;
+        BlockedAppEntity config = getBlockedAppConfig(packageName);
+        if (config == null || !config.isRestricted) {
+            return;
         }
 
         String viewId;
@@ -1620,6 +1624,9 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
     private Intent buildBlockingIntent(String packageName, String challengeType, boolean isFocus) {
         String appName = getAppNameFromPackageManager(packageName);
+        BlockedAppEntity config = getBlockedAppConfig(packageName);
+        String blockScope = (config != null) ? config.scope : "full";
+
         Intent intent;
         if ("none".equals(challengeType) || "oneday".equals(challengeType)) {
             // Overlay-based blocking (auto-close or countdown)
@@ -1628,6 +1635,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             intent.putExtra(EXTRA_BLOCKED_PACKAGE_NAME, packageName);
             intent.putExtra(EXTRA_BLOCKED_APP_NAME, appName != null ? appName : packageName);
             intent.putExtra("extra_challenge_type", challengeType);
+            intent.putExtra("extra_block_scope", blockScope);
         } else {
             // Challenge-based: launch LockChallengeActivity directly so the user
             // sees the challenge screen immediately without an intermediate overlay.
@@ -1635,10 +1643,25 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             intent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_LOCK_TYPE, challengeType);
             intent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_TARGET_PACKAGE, packageName);
             intent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, false);
+            intent.putExtra("extra_block_scope", blockScope);
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return intent;
+    }
+
+    private boolean isReminderEnabledForCurrentIntensity() {
+        if (sharedPreferences == null) {
+            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        }
+        int intensity = sharedPreferences.getInt(com.gxdevs.mindmint.Utils.ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
+        if (intensity == 2) {
+            return true;
+        }
+        if (intensity == 3) {
+            return sharedPreferences.getBoolean("pref_temp_lock_reminders_enabled", false);
+        }
+        return false;
     }
 
     private void loadConfiguration() {
@@ -1653,7 +1676,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         boolean oldRemindDoomScrollingEnabled = remindDoomScrollingEnabled;
         int oldRemindDoomScrollingMinutes = remindDoomScrollingMinutes;
 
-        remindDoomScrollingEnabled = sharedPreferences.getBoolean(PREF_REMIND_DOOM_SCROLLING_ENABLED, false);
+        remindDoomScrollingEnabled = isReminderEnabledForCurrentIntensity();
         remindDoomScrollingMinutes = sharedPreferences.getInt(PREF_REMIND_DOOM_SCROLLING_MINUTES,
                 DEFAULT_REMIND_DOOM_SCROLLING_MINUTES);
         blockAfterWastedTimeEnabled = sharedPreferences.getBoolean(PREF_BLOCK_AFTER_WASTED_TIME_ENABLED, false);
@@ -2515,21 +2538,27 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     }
 
     private boolean isDailyLimitExceeded(String packageName) {
-        if (blockAfterWastedTimeEnabled) {
-            long currentGlobalDailyWastedTimeMs = 0;
-            for (long timeInSeconds : appTotalWastedTimeToday.values()) {
-                currentGlobalDailyWastedTimeMs += (timeInSeconds * 1000);
-            }
-            long globalBlockThresholdMs = (long) (blockAfterWastedTimeHours * 3600 * 1000);
-            if (currentGlobalDailyWastedTimeMs >= globalBlockThresholdMs) {
-                return true;
+        String limitType = sharedPreferences.getString("pref_temp_lock_limit_type", "both");
+
+        if ("time".equals(limitType) || "both".equals(limitType)) {
+            if (blockAfterWastedTimeEnabled) {
+                long currentGlobalDailyWastedTimeMs = 0;
+                for (long timeInSeconds : appTotalWastedTimeToday.values()) {
+                    currentGlobalDailyWastedTimeMs += (timeInSeconds * 1000);
+                }
+                long globalBlockThresholdMs = (long) (blockAfterWastedTimeHours * 3600 * 1000);
+                if (currentGlobalDailyWastedTimeMs >= globalBlockThresholdMs) {
+                    return true;
+                }
             }
         }
 
-        long scrollLimit = sharedPreferences.getLong("pref_daily_scroll_limit", 100);
-        long currentScrolls = sharedPreferences.getLong(packageName + "_scrolls", 0L);
-        if (currentScrolls >= scrollLimit) {
-            return true;
+        if ("scroll".equals(limitType) || "both".equals(limitType)) {
+            long scrollLimit = sharedPreferences.getLong("pref_daily_scroll_limit", 100);
+            long currentScrolls = sharedPreferences.getLong(packageName + "_scrolls", 0L);
+            if (currentScrolls >= scrollLimit) {
+                return true;
+            }
         }
 
         return false;
@@ -2586,6 +2615,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private void checkBlockerPipeline(String eventPackageName, AccessibilityNodeInfo rootNode) {
         if (eventPackageName == null) return;
 
+        if (System.currentTimeMillis() - lastGoHomeTimeMs < 1500) {
+            Log.d(TAG, "checkBlockerPipeline suppressed for package '" + eventPackageName + "' due to recent cancel/go home transition.");
+            return;
+        }
+
         boolean isLockedInPref = sharedPreferences.getBoolean(FocusService.PREF_IS_LOCKED_IN, false);
         boolean isFocusRunning = FocusService.isPublicFocusRun || isLockedInPref;
         boolean isLockedInActive = isFocusRunning && isLockedInPref;
@@ -2633,6 +2667,17 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     }
                     triggerFrictionChallenge(eventPackageName);
                 }
+            }
+            return;
+        }
+
+        if (intensity == 2) {
+            boolean frictionEnabled = sharedPreferences.getBoolean("pref_reminder_friction_enabled", false);
+            if (frictionEnabled) {
+                if (isPackageBypassed(eventPackageName)) {
+                    return;
+                }
+                triggerFrictionChallenge(eventPackageName);
             }
             return;
         }

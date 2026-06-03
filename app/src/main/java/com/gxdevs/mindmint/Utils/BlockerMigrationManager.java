@@ -37,7 +37,8 @@ public class BlockerMigrationManager {
             String[] ytPkgs = {
                     "com.google.android.youtube",
                     "com.rvx.android.youtube",
-                    "com.revance.android.youtube"
+                    "com.revance.android.youtube",
+                    "app.morphe.android.youtube"
             };
             for (String pkg : ytPkgs) {
                 BlockedAppEntity app = new BlockedAppEntity();
@@ -177,6 +178,19 @@ public class BlockerMigrationManager {
                     .apply();
 
             Log.d(TAG, "Legacy blocker config migration complete.");
+        }
+
+        // 3. Ensure new YouTube Mod package is registered in database if missing
+        if (dao.getByPackageName("app.morphe.android.youtube") == null) {
+            BlockedAppEntity app = new BlockedAppEntity();
+            app.packageName = "app.morphe.android.youtube";
+            app.appName = "YouTube Shorts";
+            app.isRestricted = false;
+            app.scope = "section";
+            app.useMod = false;
+            app.sectionViewId = Utils.YtViewId;
+            dao.insert(app);
+            Log.d(TAG, "Inserted missing app.morphe.android.youtube package into database.");
         }
     }
 }

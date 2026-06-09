@@ -165,6 +165,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         isSettingsLock = intent.getBooleanExtra(EXTRA_IS_SETTINGS_LOCK, false)
         blockScope = intent.getStringExtra("extra_block_scope")
 
+        updateSecureFlag()
         initChallengeData()
 
         setContent {
@@ -340,6 +341,14 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
             "oneday" -> setupOneDayLockout()
             "window10" -> {} // no-op init
             "pin_reset" -> {} // no-op init
+        }
+    }
+
+    private fun updateSecureFlag() {
+        if (lockType == "math" || lockType == "text" || lockType == "pin_reset") {
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 
@@ -1132,7 +1141,11 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 )
                 Spacer(Modifier.height(20.dp))
                 Button(
-                    onClick = { lockType = "text"; setupTextChallenge(true) },
+                    onClick = { 
+                        lockType = "text"
+                        updateSecureFlag()
+                        setupTextChallenge(true) 
+                    },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = themeColor(R.attr.surface_nested, Color(0xFFF1F5F9))),
@@ -1172,7 +1185,11 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
-                    onClick = { lockType = "text"; setupTextChallenge(true) },
+                    onClick = { 
+                        lockType = "text"
+                        updateSecureFlag()
+                        setupTextChallenge(true) 
+                    },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = themeColor(R.attr.surface_nested, Color(0xFFF1F5F9))),

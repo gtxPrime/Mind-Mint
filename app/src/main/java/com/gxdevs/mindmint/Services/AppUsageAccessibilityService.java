@@ -273,7 +273,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     
     public static final Map<String, Long> packageBypassExpiryTimeMap = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Long> lastTimeSectionVisibleMap = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<String, Boolean> wasCommentSectionOpenMap = new java.util.concurrent.ConcurrentHashMap<>();
+    private boolean wasInstaCommentSectionOpen = false;
     
     public static void grantBypass(String packageName, int durationMinutes) {
         if (packageName != null) {
@@ -791,8 +791,33 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             }
 
             rootNode = getRootInActiveWindow();
+            
+            // 1. Manage Scroll Counter Pill (runs on all event types, including scroll)
+            if (scrollCounterEnabled && eventPackageName != null) {
+                String appTagForPill = getAppTagFromAllPackages(eventPackageName);
+                if (appTagForPill != null && !isAppTagBlocked(appTagForPill)) {
+                    String pillViewId = getReminderViewIdForAppTag(appTagForPill);
+                    boolean isPillViewVisible = pillViewId != null && isReminderViewVisible(rootNode, eventPackageName, pillViewId);
+                    
+                    if ("insta".equals(appTagForPill) && isPillViewVisible && isInstaCommentSectionVisible(rootNode, eventPackageName)) {
+                        isPillViewVisible = false;
+                    }
+                    
+                    if (isPillViewVisible) {
+                        showScrollCounterPill(appTagForPill, eventPackageName);
+                    } else {
+                        hideScrollCounterPill(false);
+                    }
+                } else {
+                    hideScrollCounterPill(false);
+                }
+            } else if (scrollCounterEnabled) {
+                hideScrollCounterPill(false);
+            }
+
+            // 2. Manage Doom Scrolling Reminders
             if (eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-                if (remindDoomScrollingEnabled || scrollCounterEnabled) {
+                if (remindDoomScrollingEnabled) {
                     String activeAppTagNow = null;
                     String activeReminderViewIdNow = null;
                     boolean isTrackedViewVisibleNow = false;
@@ -800,16 +825,6 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     if (eventPackageName != null) {
                         String appTagForEvent = getAppTagFromAllPackages(eventPackageName);
                         if (appTagForEvent != null) {
-                            // Scroll counter pill: show whenever a tracked app is in foreground,
-                            // regardless of whether the app is "restricted" or the reminder view is visible.
-                            if (scrollCounterEnabled) {
-                                if (!isAppTagBlocked(appTagForEvent)) {
-                                    showScrollCounterPill(appTagForEvent, eventPackageName);
-                                } else {
-                                    hideScrollCounterPill(false);
-                                }
-                            }
-
                             // Reminder view tracking: still requires restriction + view visible
                             BlockedAppEntity config = getBlockedAppConfig(eventPackageName);
                             if (config != null && config.isRestricted) {
@@ -823,28 +838,23 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                                 }
                             }
                         }
-                    } else if (scrollCounterEnabled) {
-                        // App package is null or not tracked — hide pill
-                        hideScrollCounterPill(false);
                     }
 
                     String previouslyTrackedAppTag = currentAppTagForReminderViewTracking;
 
                     if (isTrackedViewVisibleNow) {
-                        if (remindDoomScrollingEnabled) {
-                            if (!activeAppTagNow.equals(previouslyTrackedAppTag)) {
-                                if (previouslyTrackedAppTag != null) {
-                                    endReminderViewSession(previouslyTrackedAppTag);
-                                }
+                        if (!activeAppTagNow.equals(previouslyTrackedAppTag)) {
+                            if (previouslyTrackedAppTag != null) {
+                                endReminderViewSession(previouslyTrackedAppTag);
+                            }
+                            startReminderViewSession(activeAppTagNow, activeReminderViewIdNow);
+                        } else {
+                            if (!activeRunnables.containsKey(activeAppTagNow)) {
                                 startReminderViewSession(activeAppTagNow, activeReminderViewIdNow);
-                            } else {
-                                if (!activeRunnables.containsKey(activeAppTagNow)) {
-                                    startReminderViewSession(activeAppTagNow, activeReminderViewIdNow);
-                                }
                             }
                         }
                     } else {
-                        if (remindDoomScrollingEnabled && previouslyTrackedAppTag != null) {
+                        if (previouslyTrackedAppTag != null) {
                             endReminderViewSession(previouslyTrackedAppTag);
                         }
                     }
@@ -944,11 +954,9 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             return;
         }
 
-        // Scroll counting works regardless of restriction status — it is a tracking/awareness feature.
         if (!scrollCounterEnabled) {
             return;
         }
-
 
         String viewId;
         int requiredEventType;
@@ -979,33 +987,28 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
         
-        boolean commentSectionOpen = isCommentSectionVisible(rootNode, packageName);
-        if (commentSectionOpen) {
-            wasCommentSectionOpenMap.put(packageName, true);
-            if (rootNode != null) {
+        // --- Special comment protection for Instagram ---
+        if ("insta".equals(appTag) && rootNode != null) {
+            boolean commentVisible = isInstaCommentSectionVisible(rootNode, packageName);
+            if (commentVisible) {
+                wasInstaCommentSectionOpen = true;
                 rootNode.recycle();
+                return; // Do not count scrolls while comment section is open
             }
-            return; // Ignore scroll counting when comment sheet is visible
-        }
-        
-        Boolean wasOpen = wasCommentSectionOpenMap.get(packageName);
-        if (wasOpen != null && wasOpen) {
-            wasCommentSectionOpenMap.put(packageName, false);
-            lastScrollEventTimestamp.put(appTag, System.currentTimeMillis()); // Debounce next immediate event
-            if (rootNode != null) {
+            if (wasInstaCommentSectionOpen) {
+                wasInstaCommentSectionOpen = false;
+                lastScrollEventTimestamp.put("insta", System.currentTimeMillis()); // Debounce next immediate event
                 rootNode.recycle();
+                Log.d(TAG, "Ignored scroll count on closing Instagram comment section.");
+                return;
             }
-            Log.d(TAG, "Ignored scroll count on closing comment section for: " + packageName);
-            return;
         }
 
-        // If rootNode is null, we can't verify the view - but we still know the correct
-        // event type fired for the correct package, so count it anyway as a fallback.
-        boolean viewVisible = rootNode == null || isReminderViewVisible(rootNode, packageName, viewId);
-        if (rootNode != null) {
-            rootNode.recycle();
-        }
-        if (viewVisible) {
+        if (isReminderViewVisible(rootNode, packageName, viewId)) {
+            if (rootNode != null) {
+                rootNode.recycle();
+            }
+
             long currentTime = System.currentTimeMillis();
             Long lastTimeValue = lastScrollEventTimestamp.get(appTag);
             long lastTime = lastTimeValue != null ? lastTimeValue : 0L;
@@ -1013,6 +1016,9 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                 lastScrollEventTimestamp.put(appTag, currentTime);
                 incrementScrollCount(packageName);
             }
+        } else {
+            if (rootNode != null)
+                rootNode.recycle();
         }
     }
 
@@ -1607,66 +1613,21 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         return visible;
     }
 
-    private boolean isCommentSectionVisible(AccessibilityNodeInfo rootNode, String packageName) {
+    private boolean isInstaCommentSectionVisible(AccessibilityNodeInfo rootNode, String packageName) {
         if (rootNode == null || packageName == null) return false;
-        
-        String[] commonCommentIds = {
-            "layout_comment_thread_edittext",
-            "comment_input_edit_text",
-            "comment_edittext",
-            "comment_text",
-            "layout_comment_thread_text",
-            "comment_box"
-        };
-        for (String id : commonCommentIds) {
-            List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + id);
-            if (nodes != null && !nodes.isEmpty()) {
-                boolean visible = false;
-                for (AccessibilityNodeInfo node : nodes) {
-                    if (node != null) {
-                        if (node.isVisibleToUser()) {
-                            visible = true;
-                        }
-                        node.recycle();
+        List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/bottom_sheet_drag_handle_frame");
+        boolean visible = false;
+        if (nodes != null && !nodes.isEmpty()) {
+            for (AccessibilityNodeInfo node : nodes) {
+                if (node != null) {
+                    if (node.isVisibleToUser()) {
+                        visible = true;
                     }
+                    node.recycle();
                 }
-                if (visible) return true;
             }
         }
-        
-        return scanForCommentInputRecursive(rootNode);
-    }
-
-    private boolean scanForCommentInputRecursive(AccessibilityNodeInfo node) {
-        if (node == null) return false;
-        
-        String className = node.getClassName() != null ? node.getClassName().toString() : "";
-        boolean isInput = className.contains("EditText") || className.contains("AutoCompleteTextView");
-        
-        if (isInput && node.isVisibleToUser()) {
-            CharSequence text = node.getText();
-            if (text != null && text.toString().toLowerCase().contains("comment")) return true;
-            
-            CharSequence hint = node.getHintText();
-            if (hint != null && hint.toString().toLowerCase().contains("comment")) return true;
-            
-            CharSequence contentDesc = node.getContentDescription();
-            if (contentDesc != null && contentDesc.toString().toLowerCase().contains("comment")) return true;
-            
-            String viewId = node.getViewIdResourceName();
-            if (viewId != null && viewId.toLowerCase().contains("comment")) return true;
-        }
-        
-        int childCount = node.getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            AccessibilityNodeInfo child = node.getChild(i);
-            if (child != null) {
-                boolean found = scanForCommentInputRecursive(child);
-                child.recycle();
-                if (found) return true;
-            }
-        }
-        return false;
+        return visible;
     }
 
     private void handleBlockers(String currentEventPackageName, AccessibilityEvent event) { // This handles

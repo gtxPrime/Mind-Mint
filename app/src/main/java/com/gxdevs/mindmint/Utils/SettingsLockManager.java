@@ -253,13 +253,24 @@ public class SettingsLockManager {
         }
         if (isDeviceLock()) {
             authenticateWithDevice(activity, subtitle, callback);
-        } else {
+        } else if (isCustomPin()) {
+            // Only show PIN dialog if a PIN has actually been set
+            if (!hasCustomPin()) {
+                // No PIN set yet — treat as unlocked to avoid a deadlock
+                callback.onSuccess();
+                return;
+            }
             showVerifyPinDialog(activity, subtitle, verified -> {
                 if (verified) callback.onSuccess();
                 else {
                     callback.onFailure("Cancelled");
                 }
             });
+        } else {
+            // Lock type is a challenge type (text, math, etc.) that must be handled
+            // by the calling screen. Fall through as success so we don't block the user
+            // with an unexpected PIN dialog for a challenge-based lock.
+            callback.onSuccess();
         }
     }
 

@@ -57,6 +57,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.gxdevs.mindmint.R
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.gxdevs.mindmint.Services.AppUsageAccessibilityService
 import com.gxdevs.mindmint.Utils.ChallengeLockManager
 import com.gxdevs.mindmint.Utils.SettingsLockManager
@@ -418,6 +421,10 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         brandPink: Color,
         textPrimary: Color
     ) {
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
@@ -436,12 +443,16 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 onValueChange = { mathAnswerInput.value = it },
                 label = { Text("Answer", fontFamily = interFamily) },
                 singleLine = true,
-                modifier = Modifier.width(180.dp),
+                modifier = Modifier.width(180.dp).focusRequester(focusRequester),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = brandPink,
+                    unfocusedBorderColor = textPrimary.copy(alpha = 0.3f),
                     focusedLabelColor = brandPink,
-                    cursorColor = brandPink
+                    unfocusedLabelColor = textPrimary.copy(alpha = 0.6f),
+                    cursorColor = brandPink,
+                    focusedTextColor = textPrimary,
+                    unfocusedTextColor = textPrimary
                 )
             )
         }
@@ -682,13 +693,50 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
     private fun setupTextChallenge(pinResetMode: Boolean) {
         isPinResetTypingMode.value = pinResetMode
-        if (pinResetMode) {
-            quoteToType.value = PIN_RESET_BYPASS_PARAGRAPH
+        val baseQuote = if (pinResetMode) {
+            PIN_RESET_BYPASS_PARAGRAPH
         } else {
             val index = QUOTES.indices.random()
-            quoteToType.value = QUOTES[index]
+            QUOTES[index]
         }
+        quoteToType.value = makeTextFrictionPremium(baseQuote)
         typedInputText.value = ""
+    }
+
+    private fun makeTextFrictionPremium(input: String): String {
+        var text = input.replace("—", " ").replace("-", " ")
+        val words = text.split(" ")
+        val processedWords = words.map { word ->
+            if (word.length < 3) return@map word
+            val sb = java.lang.StringBuilder()
+            for (i in word.indices) {
+                val c = word[i]
+                if (c.isLetter()) {
+                    if (i > 0 && (0..3).random() == 0) {
+                        sb.append(c.uppercaseChar())
+                    } else {
+                        sb.append(c)
+                    }
+                } else {
+                    sb.append(c)
+                }
+            }
+            sb.toString()
+        }
+        
+        val sb = java.lang.StringBuilder()
+        val symbols = arrayOf("@", "#", "%")
+        for (i in processedWords.indices) {
+            sb.append(processedWords[i])
+            if (i < processedWords.size - 1) {
+                if ((0..6).random() == 0) {
+                    sb.append(" ").append(symbols.random()).append(" ")
+                } else {
+                    sb.append(" ")
+                }
+            }
+        }
+        return sb.toString().trim().replace("  ", " ")
     }
 
     @Composable
@@ -704,6 +752,11 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         val target = quoteToType.value
         val matchedChars = typed.zip(target).count { (a, b) -> a == b }
         val progressFraction = if (target.isNotEmpty()) matchedChars.toFloat() / target.length else 0f
+        
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -753,13 +806,17 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 value = typedInputText.value,
                 onValueChange = { typedInputText.value = it },
                 label = { Text("Type the text above exactly...", fontFamily = interFamily) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 maxLines = 5,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = brandPink,
+                    unfocusedBorderColor = textPrimary.copy(alpha = 0.3f),
                     focusedLabelColor = brandPink,
-                    cursorColor = brandPink
+                    unfocusedLabelColor = textPrimary.copy(alpha = 0.6f),
+                    cursorColor = brandPink,
+                    focusedTextColor = textPrimary,
+                    unfocusedTextColor = textPrimary
                 )
             )
 
@@ -1194,6 +1251,8 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         } else {
             targetPackage?.let { pkg ->
                 val durationMinutes = challengeLockMgr.bypassDurationMinutes
+                // Grant bypass synchronously first to prevent race conditions during activity transition
+                AppUsageAccessibilityService.grantBypass(pkg, durationMinutes)
                 val intent = Intent("com.gxdevs.mindmint.action.APP_BYPASS_GRANTED").apply {
                     putExtra("package_name", pkg)
                     putExtra("duration_minutes", durationMinutes)

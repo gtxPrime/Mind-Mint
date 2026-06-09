@@ -39,7 +39,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.gxdevs.mindmint.Activities.HomeActivity;
 import com.gxdevs.mindmint.Adapters.HomePagerAdapter;
 import com.gxdevs.mindmint.Adapters.SettingsAdapter;

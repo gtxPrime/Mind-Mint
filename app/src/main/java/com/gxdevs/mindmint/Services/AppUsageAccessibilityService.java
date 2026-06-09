@@ -269,9 +269,18 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     public static boolean serviceStatus = false;
 
     private final Map<String, Long> lastLockInOverlayTimeMs = new HashMap<>();
-    private static final long LOCK_IN_OVERLAY_DEBOUNCE_MS = 0L;
+    private static final long LOCK_IN_OVERLAY_DEBOUNCE_MS = 5000L;
     
-    private final Map<String, Long> packageBypassExpiryTimeMap = new HashMap<>();
+    public static final Map<String, Long> packageBypassExpiryTimeMap = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Long> lastTimeSectionVisibleMap = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Boolean> wasCommentSectionOpenMap = new java.util.concurrent.ConcurrentHashMap<>();
+    
+    public static void grantBypass(String packageName, int durationMinutes) {
+        if (packageName != null) {
+            packageBypassExpiryTimeMap.put(packageName, System.currentTimeMillis() + (long) durationMinutes * 60 * 1000);
+            Log.d(TAG, "Static bypass granted for package: " + packageName + " for " + durationMinutes + " mins");
+        }
+    }
     
     private boolean isPackageBypassed(String packageName) {
         if (packageName == null) return false;
@@ -791,6 +800,17 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     if (eventPackageName != null) {
                         String appTagForEvent = getAppTagFromAllPackages(eventPackageName);
                         if (appTagForEvent != null) {
+                            // Scroll counter pill: show whenever a tracked app is in foreground,
+                            // regardless of whether the app is "restricted" or the reminder view is visible.
+                            if (scrollCounterEnabled) {
+                                if (!isAppTagBlocked(appTagForEvent)) {
+                                    showScrollCounterPill(appTagForEvent, eventPackageName);
+                                } else {
+                                    hideScrollCounterPill(false);
+                                }
+                            }
+
+                            // Reminder view tracking: still requires restriction + view visible
                             BlockedAppEntity config = getBlockedAppConfig(eventPackageName);
                             if (config != null && config.isRestricted) {
                                 String reminderViewId = getReminderViewIdForAppTag(appTagForEvent);
@@ -803,16 +823,14 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                                 }
                             }
                         }
+                    } else if (scrollCounterEnabled) {
+                        // App package is null or not tracked — hide pill
+                        hideScrollCounterPill(false);
                     }
 
                     String previouslyTrackedAppTag = currentAppTagForReminderViewTracking;
 
                     if (isTrackedViewVisibleNow) {
-                        if (scrollCounterEnabled && !isAppTagBlocked(activeAppTagNow)) {
-                            showScrollCounterPill(activeAppTagNow, eventPackageName);
-                        } else if (scrollCounterEnabled) {
-                            hideScrollCounterPill(false);
-                        }
                         if (remindDoomScrollingEnabled) {
                             if (!activeAppTagNow.equals(previouslyTrackedAppTag)) {
                                 if (previouslyTrackedAppTag != null) {
@@ -826,7 +844,6 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                             }
                         }
                     } else {
-                        hideScrollCounterPill(false);
                         if (remindDoomScrollingEnabled && previouslyTrackedAppTag != null) {
                             endReminderViewSession(previouslyTrackedAppTag);
                         }
@@ -927,10 +944,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             return;
         }
 
-        BlockedAppEntity config = getBlockedAppConfig(packageName);
-        if (config == null || !config.isRestricted) {
+        // Scroll counting works regardless of restriction status — it is a tracking/awareness feature.
+        if (!scrollCounterEnabled) {
             return;
         }
+
 
         String viewId;
         int requiredEventType;
@@ -960,6 +978,27 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             return;
         }
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
+        
+        boolean commentSectionOpen = isCommentSectionVisible(rootNode, packageName);
+        if (commentSectionOpen) {
+            wasCommentSectionOpenMap.put(packageName, true);
+            if (rootNode != null) {
+                rootNode.recycle();
+            }
+            return; // Ignore scroll counting when comment sheet is visible
+        }
+        
+        Boolean wasOpen = wasCommentSectionOpenMap.get(packageName);
+        if (wasOpen != null && wasOpen) {
+            wasCommentSectionOpenMap.put(packageName, false);
+            lastScrollEventTimestamp.put(appTag, System.currentTimeMillis()); // Debounce next immediate event
+            if (rootNode != null) {
+                rootNode.recycle();
+            }
+            Log.d(TAG, "Ignored scroll count on closing comment section for: " + packageName);
+            return;
+        }
+
         // If rootNode is null, we can't verify the view - but we still know the correct
         // event type fired for the correct package, so count it anyway as a fallback.
         boolean viewVisible = rootNode == null || isReminderViewVisible(rootNode, packageName, viewId);
@@ -1566,6 +1605,68 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             }
         }
         return visible;
+    }
+
+    private boolean isCommentSectionVisible(AccessibilityNodeInfo rootNode, String packageName) {
+        if (rootNode == null || packageName == null) return false;
+        
+        String[] commonCommentIds = {
+            "layout_comment_thread_edittext",
+            "comment_input_edit_text",
+            "comment_edittext",
+            "comment_text",
+            "layout_comment_thread_text",
+            "comment_box"
+        };
+        for (String id : commonCommentIds) {
+            List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByViewId(packageName + ":id/" + id);
+            if (nodes != null && !nodes.isEmpty()) {
+                boolean visible = false;
+                for (AccessibilityNodeInfo node : nodes) {
+                    if (node != null) {
+                        if (node.isVisibleToUser()) {
+                            visible = true;
+                        }
+                        node.recycle();
+                    }
+                }
+                if (visible) return true;
+            }
+        }
+        
+        return scanForCommentInputRecursive(rootNode);
+    }
+
+    private boolean scanForCommentInputRecursive(AccessibilityNodeInfo node) {
+        if (node == null) return false;
+        
+        String className = node.getClassName() != null ? node.getClassName().toString() : "";
+        boolean isInput = className.contains("EditText") || className.contains("AutoCompleteTextView");
+        
+        if (isInput && node.isVisibleToUser()) {
+            CharSequence text = node.getText();
+            if (text != null && text.toString().toLowerCase().contains("comment")) return true;
+            
+            CharSequence hint = node.getHintText();
+            if (hint != null && hint.toString().toLowerCase().contains("comment")) return true;
+            
+            CharSequence contentDesc = node.getContentDescription();
+            if (contentDesc != null && contentDesc.toString().toLowerCase().contains("comment")) return true;
+            
+            String viewId = node.getViewIdResourceName();
+            if (viewId != null && viewId.toLowerCase().contains("comment")) return true;
+        }
+        
+        int childCount = node.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                boolean found = scanForCommentInputRecursive(child);
+                child.recycle();
+                if (found) return true;
+            }
+        }
+        return false;
     }
 
     private void handleBlockers(String currentEventPackageName, AccessibilityEvent event) { // This handles
@@ -2592,12 +2693,15 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
     private void manageFrictionSessions(String activePackageName) {
         if (activePackageName == null) return;
-        synchronized (cachedBlockedApps) {
-            for (BlockedAppEntity app : cachedBlockedApps) {
-                if (!app.packageName.equals(activePackageName)) {
-                    if (isEssentialPackageOrLauncher(activePackageName)) {
-                        packageBypassExpiryTimeMap.remove(app.packageName);
-                    } else if (!activePackageName.equals("com.gxdevs.mindmint") && !activePackageName.equals(getPackageName())) {
+        
+        boolean isLauncher = dynamicLauncherPackages.contains(activePackageName) || activePackageName.toLowerCase().contains("launcher");
+        boolean isEssential = isEssentialPackage(activePackageName) || LOCKED_IN_ESSENTIAL_WHITELIST.contains(activePackageName);
+        boolean isOurApp = activePackageName.equals("com.gxdevs.mindmint") || activePackageName.equals(getPackageName());
+        
+        if (isLauncher || (!isEssential && !isOurApp)) {
+            synchronized (cachedBlockedApps) {
+                for (BlockedAppEntity app : cachedBlockedApps) {
+                    if (!app.packageName.equals(activePackageName)) {
                         packageBypassExpiryTimeMap.remove(app.packageName);
                     }
                 }
@@ -2638,6 +2742,21 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         } else if ("section".equals(config.scope)) {
             if (config.sectionViewId != null && !config.sectionViewId.trim().isEmpty()) {
                 isTriggered = isReminderViewVisible(rootNode, eventPackageName, config.sectionViewId);
+            }
+        }
+
+        if ("section".equals(config.scope)) {
+            if (isTriggered) {
+                lastTimeSectionVisibleMap.put(eventPackageName, System.currentTimeMillis());
+            } else {
+                Long lastTimeVisible = lastTimeSectionVisibleMap.get(eventPackageName);
+                if (lastTimeVisible != null && (System.currentTimeMillis() - lastTimeVisible > 3000)) {
+                    if (isPackageBypassed(eventPackageName)) {
+                        packageBypassExpiryTimeMap.remove(eventPackageName);
+                        Log.d(TAG, "Section invisible for > 3s. Cleared bypass for: " + eventPackageName);
+                    }
+                    lastTimeSectionVisibleMap.remove(eventPackageName);
+                }
             }
         }
 

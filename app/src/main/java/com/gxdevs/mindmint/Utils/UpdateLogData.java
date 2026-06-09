@@ -9,13 +9,23 @@ public class UpdateLogData {
         public static List<UpdateLogItem> getLogs() {
                 List<UpdateLogItem> list = new ArrayList<>();
 
-                addVersion(list, "Pumpkin 12 (Current)",
-                        "Improved prevent uninstall working",
-                        "Added subtle animations",
-                        "Added option to add apps to whitelist while Lock In mode",
-                        "Fixed bugs in Locked In mode",
-                        "Made the blocking more robust",
-                        "Fixed minor bugs");
+                addVersion(list, "Pumpkin 13 (Current)",
+                                "Redesigned the Blocker Control and Lock Challenge screens for a cleaner look",
+                                "Unified the App Blocker settings for better reliability",
+                                "Added different challenge types: Scream, Shake, Maths and Breathing",
+                                "Added screenshot and screen recording protection to all challenge screens",
+                                "Prevented false scroll counts when opening or closing Instagram comments",
+                                "Live scroll counter pill now shows strictly inside Reels/Shorts/Spotlights feeds",
+                                "Smarter section-scoped blockers: challenge triggers once per visit to Reels/Shorts",
+                                "Various bugs and performance fixes");
+
+                addVersion(list, "Pumpkin 12",
+                                "Improved prevent uninstall working",
+                                "Added subtle animations",
+                                "Added option to add apps to whitelist while Lock In mode",
+                                "Fixed bugs in Locked In mode",
+                                "Made the blocking more robust",
+                                "Fixed minor bugs");
 
                 addVersion(list, "Pumpkin 11",
                                 "Prevent uninstall - stop anyone from removing the app without your permission",

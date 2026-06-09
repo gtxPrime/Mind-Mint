@@ -107,6 +107,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
     private var screamSustainedMs = 0.0
     private val SCREAM_TARGET_MS = 3000.0
     private var lastScreamUpdateMs: Long = 0L  // B6: tracks actual timestamp between updates
+    private var audioFocusRequest: Any? = null
 
     // Scream States
     private val screamVolume = mutableIntStateOf(0)
@@ -492,6 +493,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
     private fun startScreamDetection() {
         if (isRecording) return
         isRecording = true
+        requestMuteBackgroundAudio()
 
         val sampleRate = 8000
         val channelConfig = AudioFormat.CHANNEL_IN_MONO
@@ -503,6 +505,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
             Log.e(TAG, "AudioRecord initialization failed.")
             isRecording = false
+            abandonMuteBackgroundAudio()
             return
         }
 
@@ -538,7 +541,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         val delta = if (lastScreamUpdateMs > 0L) (now - lastScreamUpdateMs).toDouble() else 100.0
         lastScreamUpdateMs = now
 
-        if (currentVolume >= 80) {
+        if (currentVolume >= 92) {
             screamSustainedMs += delta
             val timeLeft = Math.max(0.0, (SCREAM_TARGET_MS - screamSustainedMs) / 1000.0)
             screamTimeLeft.value = String.format(Locale.US, "Hold it: %.1fs", timeLeft)
@@ -569,6 +572,48 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
             Log.e(TAG, "Error stopping audio recorder", e)
         }
         audioRecord = null
+        abandonMuteBackgroundAudio()
+    }
+
+    private fun requestMuteBackgroundAudio() {
+        try {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager ?: return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val attributes = android.media.AudioAttributes.Builder()
+                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+                val request = android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setAudioAttributes(attributes)
+                    .setOnAudioFocusChangeListener { }
+                    .build()
+                audioFocusRequest = request
+                audioManager.requestAudioFocus(request)
+            } else {
+                @Suppress("DEPRECATION")
+                audioManager.requestAudioFocus(null, android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to request audio focus", e)
+        }
+    }
+
+    private fun abandonMuteBackgroundAudio() {
+        try {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager ?: return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val request = audioFocusRequest as? android.media.AudioFocusRequest
+                if (request != null) {
+                    audioManager.abandonAudioFocusRequest(request)
+                    audioFocusRequest = null
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                audioManager.abandonAudioFocus(null)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to abandon audio focus", e)
+        }
     }
 
     @Composable

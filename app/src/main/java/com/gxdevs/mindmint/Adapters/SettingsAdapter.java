@@ -675,7 +675,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             String lockType = prefs.getString(
                     com.gxdevs.mindmint.Utils.SettingsLockManager.PREF_LOCK_TYPE,
-                    com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_DEVICE);
+                    com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM);
             boolean isCustom = com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM.equals(lockType);
             applyTabStyle(isCustom);
 
@@ -695,7 +695,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             tabCustomPin.setOnClickListener(v -> {
                 // If it is already custom, don't change
-                String current = prefs.getString(com.gxdevs.mindmint.Utils.SettingsLockManager.PREF_LOCK_TYPE, com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_DEVICE);
+                String current = prefs.getString(com.gxdevs.mindmint.Utils.SettingsLockManager.PREF_LOCK_TYPE, com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM);
                 if (com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM.equals(current)) return;
 
                 if (onLockTabActionListener != null) {

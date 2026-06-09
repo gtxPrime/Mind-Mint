@@ -8,7 +8,6 @@ import android.Manifest;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.AlarmManager;
-import android.app.AlertDialog;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -16,53 +15,40 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.PowerManager;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.ImageSpan;
-import android.text.style.StyleSpan;
-import android.text.style.UnderlineSpan;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.gxdevs.mindmint.Activities.CustomAppSelectionActivity;
 import com.gxdevs.mindmint.Activities.HomeActivity;
-import com.gxdevs.mindmint.Activities.SiteBlockerActivity;
+import com.gxdevs.mindmint.Adapters.HomePagerAdapter;
 import com.gxdevs.mindmint.Adapters.SettingsAdapter;
 import com.gxdevs.mindmint.Models.SettingsItem;
 import com.gxdevs.mindmint.R;
 import com.gxdevs.mindmint.Receivers.MindMintDeviceAdminReceiver;
 import com.gxdevs.mindmint.Services.AppUsageAccessibilityService;
-import com.gxdevs.mindmint.Utils.CustomDialogUtils;
-import com.gxdevs.mindmint.Utils.AdultDomainListManager;
 import com.gxdevs.mindmint.Utils.AlarmUtils;
 import com.gxdevs.mindmint.Utils.BackupManager;
-import com.gxdevs.mindmint.Utils.BlockedSitesManager;
 import com.gxdevs.mindmint.Utils.SettingsLockManager;
 import com.gxdevs.mindmint.Utils.Utils;
 import com.gxdevs.mindmint.Utils.AnimUtils;
@@ -73,34 +59,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import android.widget.LinearLayout;
 import com.google.android.material.button.MaterialButton;
-
-import com.skydoves.balloon.ArrowOrientation;
-import com.skydoves.balloon.Balloon;
-import com.skydoves.balloon.BalloonAnimation;
-import com.skydoves.balloon.BalloonSizeSpec;
 
 public class SettingsFragment extends Fragment {
 
-    private static final int ID_REMIND_DOOM = 1;
-    private static final int ID_BLOCK_CONTENT = 2;
     private static final int ID_KEEP_ALIVE = 3;
-    private static final int ID_CUSTOM_APP = 4;
-    private static final int ID_BROWSER_BLOCKER = 5;
-    private static final int ID_ADULT_BLOCK = 7;
     private static final int ID_POPUP_DURATION = 8;
     private static final int ID_THEME = 9;
     private static final int ID_SCROLL_COUNTER = 10;
     private static final int ID_SCROLL_TAB = 11;
-    private static final int ID_SETTINGS_LOCK = 12;
-    private static final int ID_LOCK_TYPE_TAB = 13;
-    private static final int ID_ALWAYS_LOCK_IN = 14;
     private static final int ID_ROUTINES = 15;
-    private static final int ID_PREVENT_UNINSTALL = 16;
-    private static final int ID_LOCK_TYPES = 17;
-    private static final int ID_BLOCKER_SLIDER = 20;
-    private static final int ID_BLOCK_TRIGGER_TAB = 21;
     private static final int ID_BLOCKER_BYPASS_DURATION = 18;
     private static final int ID_PERM_ACCESSIBILITY = 100;
     private static final int ID_PERM_NOTIFICATION = 101;
@@ -108,30 +76,22 @@ public class SettingsFragment extends Fragment {
     private static final int ID_PERM_BATTERY = 103;
     private static final int ID_BACKUP = 104;
     public static final String PREF_THEME_MODE = "pref_theme_mode";
-    private static final String PREF_BROWSER_BLOCK_TUTORIAL_SHOWN = "pref_browser_block_tutorial_shown";
-
     private SharedPreferences defaultSharedPreferences;
     private RecyclerView recyclerView;
     private SettingsAdapter adapter;
     private List<SettingsItem> settingsItems;
-
     private ActivityResultLauncher<Intent> batteryOptimizationLauncher;
     private ActivityResultLauncher<Intent> accessibilityLauncher;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<Intent> exportLauncher;
     private ActivityResultLauncher<Intent> importLauncher;
-    private ActivityResultLauncher<Intent> deviceAdminLauncher;
     private ActivityResultLauncher<Intent> challengeLauncher;
     private Runnable pendingAuthCallback;
     private Runnable pendingCancelCallback;
-
     private DevicePolicyManager devicePolicyManager;
     private ComponentName deviceAdminComponent;
-
-    private BottomSheetDialog timerPicker;
     private boolean batteryOptimizationIgnored = false;
     private boolean isImportOverride = false;
-    /** Guards entrance animation — only plays on first tab visit. */
     private boolean firstResume = true;
 
     @Override
@@ -203,11 +163,11 @@ public class SettingsFragment extends Fragment {
     }
 
     /** Returns true only when this fragment is the page currently shown by the host ViewPager2. */
-    private boolean isCurrentPage(int expectedPageIndex) {
-        if (getActivity() instanceof com.gxdevs.mindmint.Activities.HomeActivity) {
-            androidx.viewpager2.widget.ViewPager2 vp =
-                    getActivity().findViewById(com.gxdevs.mindmint.R.id.nav_host_container);
-            if (vp != null) return vp.getCurrentItem() == expectedPageIndex;
+    private boolean isCurrentPage() {
+        if (getActivity() instanceof HomeActivity) {
+            ViewPager2 vp =
+                    getActivity().findViewById(R.id.nav_host_container);
+            if (vp != null) return vp.getCurrentItem() == HomePagerAdapter.PAGE_SETTINGS;
         }
         return true;
     }
@@ -218,7 +178,7 @@ public class SettingsFragment extends Fragment {
         // Run entrance animation only the first time this tab is actually VISIBLE.
         // ViewPager2 with offscreenPageLimit calls onResume for ALL pre-loaded fragments
         // when the Activity resumes — guard against that.
-        if (firstResume && isCurrentPage(com.gxdevs.mindmint.Adapters.HomePagerAdapter.PAGE_SETTINGS)) {
+        if (firstResume && isCurrentPage()) {
             firstResume = false;
             View headerContainer = getView() != null ? getView().findViewById(R.id.headerContainer) : null;
             if (headerContainer != null) headerContainer.post(() -> AnimUtils.enterSlideUp(headerContainer, 0));
@@ -281,7 +241,7 @@ public class SettingsFragment extends Fragment {
         adapter.setOnLockTabActionListener(new SettingsAdapter.OnLockTabActionListener() {
             @Override
             public void onRequestLockTypeChange(String newLockType, Runnable onSuccess) {
-                authenticateToChangeSetting("Change lock type", () -> {
+                authenticateToChangeSetting(() -> {
                     SettingsLockManager lockMgr = new SettingsLockManager(requireContext());
                     if (SettingsLockManager.LOCK_TYPE_DEVICE.equals(newLockType)) {
                         if (!lockMgr.isDeviceLockAvailable()) {
@@ -342,16 +302,9 @@ public class SettingsFragment extends Fragment {
     }
 
     private void buildSettingsList() {
-        int eyeBg = getThemeColor(R.attr.eye_bg);
         int mobileBg = getThemeColor(R.attr.mobile_bg);
-        int browserBg = getThemeColor(R.attr.browser_bg);
-        int blockBg = getThemeColor(R.attr.block_bg);
         int popupBg = getThemeColor(R.attr.popup_bg);
-        int textSecondary = getThemeColor(R.attr.text_secondary);
 
-        int redIcon = Color.parseColor("#F77381");
-        int blueIcon = Color.parseColor("#61A2F2");
-        int greenIcon = Color.parseColor("#3DD7A5");
         int purpleIcon = Color.parseColor("#BF83FB");
         int grayIcon = Color.parseColor("#ABABAB");
         int tealIcon = Color.parseColor("#009688");
@@ -420,49 +373,6 @@ public class SettingsFragment extends Fragment {
                 "Import or export your data", R.drawable.backup, tealIcon).setIconValues(R.drawable.shape_circle, mobileBg));
 
         addPermissionCards();
-    }
-
-    private void showBrowserBlockingTutorial() {
-        if (defaultSharedPreferences.getBoolean(PREF_BROWSER_BLOCK_TUTORIAL_SHOWN, false)) {
-            return;
-        }
-
-        int pos = -1;
-        for (int i = 0; i < settingsItems.size(); i++) {
-            if (settingsItems.get(i).getId() == ID_BROWSER_BLOCKER) {
-                pos = i;
-                break;
-            }
-        }
-
-        if (pos != -1) {
-            final int finalPos = pos;
-            recyclerView.post(() -> {
-                RecyclerView.ViewHolder vh = recyclerView.findViewHolderForAdapterPosition(finalPos);
-                if (vh != null) {
-                    Balloon balloon = new Balloon.Builder(requireContext())
-                            .setArrowSize(10)
-                            .setArrowOrientation(ArrowOrientation.BOTTOM)
-                            .setArrowPosition(0.5f)
-                            .setWidthRatio(0.7f)
-                            .setHeight(BalloonSizeSpec.WRAP)
-                            .setTextSize(14f)
-                            .setCornerRadius(10f)
-                            .setAlpha(0.9f)
-                            .setPadding(8)
-                            .setText("Tap to add more sites")
-                            .setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                            .setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.brainColor))
-                            .setBalloonAnimation(BalloonAnimation.ELASTIC)
-                            .setDismissWhenClicked(true)
-                            .setLifecycleOwner(getViewLifecycleOwner())
-                            .setOnBalloonDismissListener(() -> defaultSharedPreferences.edit()
-                                    .putBoolean(PREF_BROWSER_BLOCK_TUTORIAL_SHOWN, true).apply())
-                            .build();
-                    balloon.showAlignTop(vh.itemView);
-                }
-            });
-        }
     }
 
     private void addPermissionCards() {
@@ -656,77 +566,13 @@ public class SettingsFragment extends Fragment {
         set.start();
 
         // Haptic
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            android.os.Vibrator v = (android.os.Vibrator) requireContext().getSystemService(android.content.Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Vibrator v = (Vibrator) requireContext().getSystemService(android.content.Context.VIBRATOR_SERVICE);
             if (v != null)
-                v.vibrate(android.os.VibrationEffect.createOneShot(40, android.os.VibrationEffect.EFFECT_HEAVY_CLICK));
+                v.vibrate(VibrationEffect.createOneShot(40, android.os.VibrationEffect.EFFECT_HEAVY_CLICK));
         }
     }
 
-
-    private CharSequence getRemindDoomFormattedSubtitle() {
-        int minutes = defaultSharedPreferences.getInt(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES, AppUsageAccessibilityService.DEFAULT_REMIND_DOOM_SCROLLING_MINUTES);
-        String reminderText = "Remind me to stop scroll at every " + minutes + " minutes ";
-        SpannableString spannable = new SpannableString(reminderText);
-        int start = reminderText.indexOf(String.valueOf(minutes));
-        int end = start + String.valueOf(minutes).length() + " minutes".length();
-        int cyan = ContextCompat.getColor(requireContext(), R.color.cyan);
-        spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        spannable.setSpan(new ForegroundColorSpan(cyan), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        spannable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        Drawable icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_edit);
-        if (icon != null) {
-            DrawableCompat.setTint(icon, cyan);
-            int size = (int) (13 * getResources().getDisplayMetrics().scaledDensity);
-            icon.setBounds(0, 0, size, size);
-            ImageSpan imageSpan = new ImageSpan(icon, ImageSpan.ALIGN_BOTTOM);
-            SpannableStringBuilder builder = new SpannableStringBuilder(spannable);
-            builder.append(" ");
-            builder.setSpan(imageSpan, builder.length() - 1, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            return builder;
-        }
-        return spannable;
-    }
-
-    private CharSequence getBlockTimeFormattedSubtitle() {
-        float hours = defaultSharedPreferences.getFloat(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_HOURS, AppUsageAccessibilityService.DEFAULT_BLOCK_AFTER_WASTED_TIME_HOURS);
-        int wholeHours = (int) hours;
-        int minutes = Math.round((hours - wholeHours) * 60);
-        String timeText = formatTimeDisplay(wholeHours, minutes);
-        String displayText = "Block content after " + timeText + " ";
-
-        SpannableString spannable = new SpannableString(displayText);
-        int start = displayText.indexOf(timeText);
-        int end = start + timeText.length();
-        int cyan = ContextCompat.getColor(requireContext(), R.color.cyan);
-
-        spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        spannable.setSpan(new ForegroundColorSpan(cyan), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        spannable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        Drawable icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_edit);
-        if (icon != null) {
-            DrawableCompat.setTint(icon, cyan);
-            int size = (int) (13 * getResources().getDisplayMetrics().scaledDensity);
-            icon.setBounds(0, 0, size, size);
-            ImageSpan imageSpan = new ImageSpan(icon, ImageSpan.ALIGN_BOTTOM);
-            SpannableStringBuilder builder = new SpannableStringBuilder(spannable);
-            builder.append(" ");
-            builder.setSpan(imageSpan, builder.length() - 1, builder.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            return builder;
-        }
-        return spannable;
-    }
-
-    private String formatTimeDisplay(int hours, int minutes) {
-        if (hours == 0)
-            return minutes + " minutes";
-        else if (minutes == 0)
-            return hours + " hours";
-        else
-            return hours + "h " + minutes + "m";
-    }
 
     private void registerForPermission() {
         batteryOptimizationLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -750,7 +596,7 @@ public class SettingsFragment extends Fragment {
                     refreshList();
                 });
 
-        deviceAdminLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+        ActivityResultLauncher<Intent> deviceAdminLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     boolean active = devicePolicyManager != null
                             && devicePolicyManager.isAdminActive(deviceAdminComponent);
@@ -852,107 +698,6 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    private void showTimePickerBottomSheet(boolean isRemindDoomScrolling) {
-        if (!isAccessibilityPermissionGranted(requireContext())) {
-            shakeCard(ID_PERM_ACCESSIBILITY);
-            return;
-        }
-        timerPicker = new BottomSheetDialog(requireContext());
-        View bottomSheetView = LayoutInflater.from(requireContext()).inflate(R.layout.bottom_sheet_time, null);
-
-        NumberPicker hourPicker = bottomSheetView.findViewById(R.id.hours_selector_bottom_sheet);
-        NumberPicker minutePicker = bottomSheetView.findViewById(R.id.minutes_selector_bottom_sheet);
-        Button setLimitBtn = bottomSheetView.findViewById(R.id.setLimitBtnBottomSheet);
-        TextView hoursLabel = bottomSheetView.findViewById(R.id.hours_textView_bottom_sheet);
-
-        if (isRemindDoomScrolling) {
-            hourPicker.setVisibility(View.GONE);
-            hoursLabel.setVisibility(View.GONE);
-            minutePicker.setMinValue(1);
-            minutePicker.setMaxValue(59);
-            int current = defaultSharedPreferences.getInt(
-                    AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES,
-                    AppUsageAccessibilityService.DEFAULT_REMIND_DOOM_SCROLLING_MINUTES);
-            minutePicker.setValue(current);
-            setLimitBtn.setText(R.string.set_reminder_time);
-        } else {
-            hourPicker.setVisibility(View.VISIBLE);
-            hoursLabel.setVisibility(View.VISIBLE);
-            hourPicker.setMinValue(0);
-            hourPicker.setMaxValue(23);
-            minutePicker.setMinValue(0);
-            minutePicker.setMaxValue(59);
-            float current = defaultSharedPreferences.getFloat(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_HOURS,
-                    AppUsageAccessibilityService.DEFAULT_BLOCK_AFTER_WASTED_TIME_HOURS);
-            int h = (int) current;
-            int m = Math.round((current - h) * 60);
-            hourPicker.setValue(h);
-            minutePicker.setValue(m);
-            setLimitBtn.setText(R.string.set_block_time);
-        }
-
-        setLimitBtn.setOnClickListener(v -> {
-            if (isRemindDoomScrolling) {
-                defaultSharedPreferences.edit().putInt(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_MINUTES,
-                        minutePicker.getValue()).apply();
-                Toast.makeText(requireContext(), "Reminder set", Toast.LENGTH_SHORT).show();
-            } else {
-                float val = hourPicker.getValue() + (minutePicker.getValue() / 60.0f);
-                defaultSharedPreferences.edit().putFloat(AppUsageAccessibilityService.PREF_BLOCK_AFTER_WASTED_TIME_HOURS, val).apply();
-                Toast.makeText(requireContext(), "Block time set", Toast.LENGTH_SHORT).show();
-            }
-            timerPicker.dismiss();
-            refreshList();
-        });
-
-        bottomSheetView.findViewById(R.id.crossBtn).setOnClickListener(v -> timerPicker.dismiss());
-        timerPicker.setContentView(bottomSheetView);
-        timerPicker.show();
-    }
-
-    private void showAdultListDownloadDialogAndEnsure() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        // Inflate custom layout
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_adult_list_progress, null);
-        builder.setView(dialogView);
-        builder.setCancelable(false);
-
-        AlertDialog progressDialog = builder.create();
-        // Set background transparent for the CardView radius to work
-        if (progressDialog.getWindow() != null) {
-            progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-        }
-        progressDialog.show();
-
-        AdultDomainListManager.downloadAndBuildList(requireContext(),
-                new AdultDomainListManager.OnDownloadCompleteListener() {
-                    @Override
-                    public void onSuccess(long mergedFileBytes, String sha256Hex, boolean deduped) {
-                        if (getActivity() == null)
-                            return;
-                        getActivity().runOnUiThread(() -> {
-                            progressDialog.dismiss();
-                            Toast.makeText(requireContext(), "List updated successfully", Toast.LENGTH_SHORT).show();
-                            defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, true).apply();
-                            refreshList();
-                        });
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        if (getActivity() == null)
-                            return;
-                        getActivity().runOnUiThread(() -> {
-                            progressDialog.dismiss();
-                            Toast.makeText(requireContext(), "Update failed: " + e.getMessage(), Toast.LENGTH_SHORT)
-                                    .show();
-                            defaultSharedPreferences.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false).apply();
-                            refreshList();
-                        });
-                    }
-                }, false);
-    }
-
     private void applyTheme(String theme) {
         String current = defaultSharedPreferences.getString(PREF_THEME_MODE, "Dark Theme");
         if (!theme.equals(current)) {
@@ -991,7 +736,7 @@ public class SettingsFragment extends Fragment {
         String settingsLockType = defaultSharedPreferences.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device");
 
         if ("device".equals(settingsLockType) || "custom".equals(settingsLockType)) {
-            lm.authenticate((AppCompatActivity) requireActivity(), reason, new SettingsLockManager.AuthCallback() {
+            lm.authenticate(requireActivity(), reason, new SettingsLockManager.AuthCallback() {
                 @Override
                 public void onSuccess() {
                     onAuthenticated.run();
@@ -1024,11 +769,10 @@ public class SettingsFragment extends Fragment {
                                 Toast.LENGTH_LONG).show();
                     }
                     if (onCancelled != null) onCancelled.run();
-                    return;
                 } else {
                     onAuthenticated.run();
-                    return;
                 }
+                return;
             }
 
             Intent challengeIntent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockChallengeActivity.class);
@@ -1040,8 +784,8 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    private void authenticateToChangeSetting(String reason, Runnable onAuthenticated) {
-        authenticateToChangeSetting(reason, onAuthenticated, null);
+    private void authenticateToChangeSetting(Runnable onAuthenticated) {
+        authenticateToChangeSetting("Change lock type", onAuthenticated, null);
     }
 
     private void lockedSwitchAction(String reason, android.widget.CompoundButton buttonView, boolean originalState, boolean isChecked, Runnable onVerifiedAndChanged) {
@@ -1059,7 +803,7 @@ public class SettingsFragment extends Fragment {
         buttonView.setChecked(originalState);
 
         authenticateToChangeSetting(reason, () -> {
-            buttonView.setChecked(isChecked);
+            buttonView.setChecked(false);
             onVerifiedAndChanged.run();
             refreshList(); // Restore listeners by refreshing list
         }, this::refreshList); // If cancelled or failed, refresh list to rebind the switch!
@@ -1069,50 +813,15 @@ public class SettingsFragment extends Fragment {
         });
     }
 
-    private String getLockTypeLabel(String type) {
-        switch (type) {
-            case "device": return "Device Lock";
-            case "custom": return "Custom PIN";
-            case "math": return "Math Equation";
-            case "scream": return "Scream (Voice)";
-            case "breath": return "Hold Breath (10s)";
-            case "text": return "Type Quote";
-            case "shake": return "Shake to Unlock";
-            case "oneday": return "1-Day Lock";
-            case "window10":
-                int mins = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
-                return mins + "-Min Bypass Window";
-            default: return "Device Lock";
-        }
-    }
-
-    private String getBlockerChallengeLabel(String type) {
-        switch (type) {
-            case "none": return "Normal Blocker";
-            case "math": return "Math Equation";
-            case "scream": return "Scream (Voice)";
-            case "breath": return "Hold Breath (10s)";
-            case "text": return "Type Quote";
-            case "shake": return "Shake to Unlock";
-            case "oneday": return "1-Day Lock";
-            case "window10":
-                int mins = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_BYPASS_DURATION_MIN, 10);
-                return mins + "-Min Bypass Window";
-            default: return "Normal Blocker";
-        }
-    }
-
     private void applyBlockerIntensity(int stop) {
         int oldIntensity = defaultSharedPreferences.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
         if (stop == oldIntensity) return;
 
         SettingsLockManager lm = new SettingsLockManager(requireContext());
-        if (lm.isLockEnabled()) {
+        if (lm.isLockEnabled() && stop < oldIntensity) {
             authenticateToChangeSetting("Change Blocker Intensity", () -> {
                 confirmAndApplyBlockerIntensity(stop);
-            }, () -> {
-                refreshList();
-            });
+            }, this::refreshList);
         } else {
             confirmAndApplyBlockerIntensity(stop);
         }
@@ -1123,9 +832,7 @@ public class SettingsFragment extends Fragment {
             showOneDayLockWarning(() -> {
                 saveBlockerIntensity(4);
                 refreshList();
-            }, () -> {
-                refreshList();
-            });
+            }, this::refreshList);
         } else {
             saveBlockerIntensity(stop);
             refreshList();
@@ -1203,8 +910,24 @@ public class SettingsFragment extends Fragment {
 
         dialog.show();
 
+        Handler countdownHandler = getHandler(btnConfirm);
+
+        btnConfirm.setOnClickListener(v -> {
+            dialog.dismiss();
+            onConfirmed.run();
+        });
+
+        btnCancel.setOnClickListener(v -> {
+            dialog.dismiss();
+            countdownHandler.removeCallbacksAndMessages(null);
+            onCancelled.run();
+        });
+    }
+
+    @NonNull
+    private Handler getHandler(MaterialButton btnConfirm) {
         final int[] secondsLeft = {5};
-        android.os.Handler countdownHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        Handler countdownHandler = new Handler(android.os.Looper.getMainLooper());
         Runnable countdownRunnable = new Runnable() {
             @Override
             public void run() {
@@ -1219,63 +942,7 @@ public class SettingsFragment extends Fragment {
             }
         };
         countdownHandler.post(countdownRunnable);
-
-        btnConfirm.setOnClickListener(v -> {
-            dialog.dismiss();
-            onConfirmed.run();
-        });
-
-        btnCancel.setOnClickListener(v -> {
-            dialog.dismiss();
-            countdownHandler.removeCallbacksAndMessages(null);
-            onCancelled.run();
-        });
+        return countdownHandler;
     }
 
-    private void handleEditCustomPin() {
-        SettingsLockManager lockMgr = new SettingsLockManager(requireContext());
-        if (lockMgr.hasCustomPin()) {
-            CustomDialogUtils.showCustomDialog(
-                    requireContext(),
-                    "Change Settings PIN",
-                    "Choose how you want to proceed:",
-                    "Change PIN",
-                    "Cancel",
-                    "Reset / Forgot PIN",
-                    () -> {
-                        lockMgr.showVerifyPinDialog(requireContext(), "Enter current PIN to continue", verified -> {
-                            if (verified) {
-                                lockMgr.showSetCustomPinDialog(requireContext(), true, this::refreshList);
-                            }
-                        });
-                    },
-                    () -> {},
-                    () -> {
-                        ChallengeLockManager clm = new ChallengeLockManager(requireContext());
-                        if (clm.isPinResetCooldownActive()) {
-                            long remainingMs = clm.getPinResetRemainingMs();
-                            if (remainingMs <= 0) {
-                                Toast.makeText(requireContext(),
-                                        "PIN Reset Cooldown active. (Clock tampering detected)",
-                                        Toast.LENGTH_LONG).show();
-                            } else {
-                                long hours = remainingMs / (60 * 60 * 1000L);
-                                long minutes = (remainingMs / (60 * 1000L)) % 60;
-                                long seconds = (remainingMs / 1000L) % 60;
-                                Toast.makeText(requireContext(),
-                                        String.format(Locale.US, "PIN Reset Cooldown active. Time remaining: %02dh %02dm %02ds", hours, minutes, seconds),
-                                        Toast.LENGTH_LONG).show();
-                            }
-                        } else {
-                            Intent challengeIntent = new Intent(requireContext(), com.gxdevs.mindmint.Activities.LockChallengeActivity.class);
-                            challengeIntent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_LOCK_TYPE, "pin_reset");
-                            challengeIntent.putExtra(com.gxdevs.mindmint.Activities.LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, true);
-                            challengeLauncher.launch(challengeIntent);
-                        }
-                    }
-            );
-        } else {
-            lockMgr.showSetCustomPinDialog(requireContext(), false, this::refreshList);
-        }
-    }
 }

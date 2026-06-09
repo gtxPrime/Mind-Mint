@@ -1,5 +1,6 @@
 package com.gxdevs.mindmint.Activities
 
+import android.app.AlertDialog
 import android.app.Dialog
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
@@ -8,17 +9,23 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.ColorStateList
 import android.content.pm.PackageManager
+import android.graphics.Canvas
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.provider.Settings
+import android.util.TypedValue
+import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,6 +66,7 @@ import com.gxdevs.mindmint.Services.AppUsageAccessibilityService
 import com.gxdevs.mindmint.Utils.ChallengeLockManager
 import com.gxdevs.mindmint.Utils.SettingsLockManager
 import com.gxdevs.mindmint.Utils.Utils
+import com.gxdevs.mindmint.Activities.LockChallengeActivity
 import com.gxdevs.mindmint.db.MindMintRoomDatabase
 import com.gxdevs.mindmint.db.dao.BlockedAppDao
 import com.gxdevs.mindmint.db.entities.BlockedAppEntity
@@ -69,6 +77,10 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
+import androidx.fragment.app.FragmentActivity
+import com.gxdevs.mindmint.Utils.AdultDomainListManager
+import com.gxdevs.mindmint.Utils.BlockedSitesManager
 
 class BlockerControlActivity : AppCompatActivity() {
 
@@ -80,7 +92,7 @@ class BlockerControlActivity : AppCompatActivity() {
 
     private val isAuthenticatedState = mutableStateOf(false)
 
-    private val challengeLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
+    private val challengeLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             isAuthenticatedState.value = true
         } else {
@@ -89,16 +101,16 @@ class BlockerControlActivity : AppCompatActivity() {
     }
 
     private fun showAdultListDownloadDialogAndEnsure(onFinished: (Boolean) -> Unit) {
-        val builder = android.app.AlertDialog.Builder(this)
-        val dialogView = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_adult_list_progress, null)
+        val builder = AlertDialog.Builder(this)
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_adult_list_progress, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
         val progressDialog = builder.create()
-        progressDialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(0))
+        progressDialog.window?.setBackgroundDrawable(0.toDrawable())
         progressDialog.show()
 
-        com.gxdevs.mindmint.Utils.AdultDomainListManager.downloadAndBuildList(this,
-            object : com.gxdevs.mindmint.Utils.AdultDomainListManager.OnDownloadCompleteListener {
+        AdultDomainListManager.downloadAndBuildList(this,
+            object : AdultDomainListManager.OnDownloadCompleteListener {
                 override fun onSuccess(mergedFileBytes: Long, sha256Hex: String?, deduped: Boolean) {
                     runOnUiThread {
                         progressDialog.dismiss()
@@ -128,38 +140,40 @@ class BlockerControlActivity : AppCompatActivity() {
         settingsLockMgr = SettingsLockManager(this)
         challengeLockMgr = ChallengeLockManager(this)
 
-        setContent {
-            val isAuthenticated by remember { isAuthenticatedState }
-            val currentLockType = remember { sharedPrefs.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device") ?: "device" }
-            val isChallengeSettingsLock = remember { settingsLockMgr.isLockEnabled && currentLockType != "device" && currentLockType != "custom" }
-
-            LaunchedEffect(Unit) {
-                if (settingsLockMgr.isLockEnabled) {
-                    if (currentLockType == "device" || currentLockType == "custom") {
-                        settingsLockMgr.authenticate(
-                            this@BlockerControlActivity,
-                            "Access Blocker settings",
-                            object : SettingsLockManager.AuthCallback {
-                                override fun onSuccess() {
-                                    isAuthenticatedState.value = true
-                                }
-
-                                override fun onFailure(reason: String?) {
-                                    finish()
-                                }
-                            }
-                        )
+        // B1/S1: Properly gate entry with real auth — no more hardcoded = true
+        if (settingsLockMgr.isLockEnabled) {
+            val lockType = sharedPrefs.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device") ?: "device"
+            when (lockType) {
+                "device", "custom" -> {
+                    settingsLockMgr.authenticate(this, "Access Blocker & Lock Center", object : SettingsLockManager.AuthCallback {
+                        override fun onSuccess() { isAuthenticatedState.value = true }
+                        override fun onFailure(reason: String?) { finish() }
+                    })
+                }
+                "oneday" -> {
+                    if (challengeLockMgr.isSettingsOneDayLockActive) {
+                        Toast.makeText(this, "Settings are locked under a 1-Day lockout.", Toast.LENGTH_LONG).show()
+                        finish()
                     } else {
-                        val intent = Intent(this@BlockerControlActivity, LockChallengeActivity::class.java).apply {
-                            putExtra(LockChallengeActivity.EXTRA_LOCK_TYPE, currentLockType)
+                        isAuthenticatedState.value = true
+                    }
+                }
+                else -> {
+                    // Math, text, shake, etc. — launch the challenge screen
+                    challengeLauncher.launch(
+                        Intent(this, LockChallengeActivity::class.java).apply {
+                            putExtra(LockChallengeActivity.EXTRA_LOCK_TYPE, lockType)
                             putExtra(LockChallengeActivity.EXTRA_IS_SETTINGS_LOCK, true)
                         }
-                        challengeLauncher.launch(intent)
-                    }
-                } else {
-                    isAuthenticatedState.value = true
+                    )
                 }
             }
+        } else {
+            isAuthenticatedState.value = true
+        }
+
+        setContent {
+            val isAuthenticated by remember { isAuthenticatedState }
 
             if (isAuthenticated) {
                 BlockerControlScreen(
@@ -195,11 +209,11 @@ fun BlockerControlScreen(
     sharedPrefs: SharedPreferences,
     blockedAppDao: BlockedAppDao?,
     settingsLockMgr: SettingsLockManager,
-    activityContext: androidx.fragment.app.FragmentActivity?,
+    activityContext: FragmentActivity?,
     onShowAdultListDownload: ((Boolean) -> Unit) -> Unit
 ) {
     val context = LocalContext.current
-    rememberCoroutineScope()
+    // B4: removed unused rememberCoroutineScope()
 
     val PoppinsFamily = remember { FontFamily(Font(R.font.poppins_semibold)) }
     val InterFamily = remember { FontFamily(Font(R.font.inter18regular)) }
@@ -239,6 +253,25 @@ fun BlockerControlScreen(
     var showPauseDialog by remember { mutableStateOf(false) }
     var showNuclearWarningDialog by remember { mutableStateOf(false) }
 
+    // U3: Live countdown text shown while the blocker is paused
+    var pauseCountdownText by remember { mutableStateOf("") }
+    LaunchedEffect(isServicePaused) {
+        if (isServicePaused) {
+            while (true) {
+                val resumeTime = sharedPrefs.getLong("resumeTime", 0L)
+                val remaining = resumeTime - System.currentTimeMillis()
+                if (remaining <= 0) { isServicePaused = false; pauseCountdownText = ""; break }
+                val h = remaining / 3_600_000L
+                val m = (remaining / 60_000L) % 60
+                val s = (remaining / 1_000L) % 60
+                pauseCountdownText = "%02dh %02dm %02ds".format(h, m, s)
+                delay(1000L)
+            }
+        } else {
+            pauseCountdownText = ""
+        }
+    }
+
     fun notifyServiceConfigChanged() {
         activityContext?.let {
             val intent = Intent(IntentActions.getActionUpdatePackages(it)).apply {
@@ -264,8 +297,9 @@ fun BlockerControlScreen(
     }
 
     fun saveIntensity(level: Int) {
-        sharedPrefs.edit { putInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, level)}
+        // B3: Combined into a single atomic edit{} call (was two separate calls)
         sharedPrefs.edit {
+            putInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, level)
             when (level) {
                 2 -> {
                     putBoolean(AppUsageAccessibilityService.PREF_REMIND_DOOM_SCROLLING_ENABLED, true)
@@ -287,6 +321,10 @@ fun BlockerControlScreen(
             }
         }
         blockerIntensity = level
+        if (level == 4) {
+            // U8: Also lock settings for 24h when PERMANENT is activated
+            ChallengeLockManager(context).startSettingsOneDayLock()
+        }
         notifyServiceConfigChanged()
     }
 
@@ -371,7 +409,10 @@ fun BlockerControlScreen(
                             color = textPrimary
                         )
                         Text(
-                            text = if (isServicePaused) "Blocker is currently paused" else "Active protection enabled",
+                            text = if (isServicePaused) {
+                                if (pauseCountdownText.isNotEmpty()) "Paused — resumes in $pauseCountdownText"
+                                else "Blocker is currently paused"
+                            } else "Active protection enabled",
                             fontFamily = InterFamily,
                             fontSize = 13.sp,
                             color = textTertiary
@@ -381,7 +422,17 @@ fun BlockerControlScreen(
                         checked = !isServicePaused,
                         onCheckedChange = { checked ->
                             if (!checked) {
-                                showPauseDialog = true
+                                // S5: PERMANENT mode cannot be paused
+                                if (blockerIntensity == 4) {
+                                    Toast.makeText(activityContext, "Cannot pause — Permanent lock is active.", Toast.LENGTH_SHORT).show()
+                                } else if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                    settingsLockMgr.authenticate(activityContext, "Pause Blocker Protection", object : SettingsLockManager.AuthCallback {
+                                        override fun onSuccess() { showPauseDialog = true }
+                                        override fun onFailure(reason: String?) {}
+                                    })
+                                } else {
+                                    showPauseDialog = true
+                                }
                             } else {
                                 setServicePauseState(false, 0)
                             }
@@ -456,10 +507,36 @@ fun BlockerControlScreen(
                                 blockerIntensity = valInt.toInt()
                             },
                             onValueChangeFinished = {
-                                if (blockerIntensity == 4) {
-                                    showNuclearWarningDialog = true
-                                } else {
-                                    saveIntensity(blockerIntensity)
+                                val currentIntensity = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0)
+                                if (blockerIntensity != currentIntensity) {
+                                    if (blockerIntensity < currentIntensity) {
+                                        if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                            settingsLockMgr.authenticate(activityContext, "Decrease Blocker Intensity", object : SettingsLockManager.AuthCallback {
+                                                override fun onSuccess() {
+                                                    if (blockerIntensity == 4) {
+                                                        showNuclearWarningDialog = true
+                                                    } else {
+                                                        saveIntensity(blockerIntensity)
+                                                    }
+                                                }
+                                                override fun onFailure(reason: String?) {
+                                                    blockerIntensity = currentIntensity
+                                                }
+                                            })
+                                        } else {
+                                            if (blockerIntensity == 4) {
+                                                showNuclearWarningDialog = true
+                                            } else {
+                                                saveIntensity(blockerIntensity)
+                                            }
+                                        }
+                                    } else {
+                                        if (blockerIntensity == 4) {
+                                            showNuclearWarningDialog = true
+                                        } else {
+                                            saveIntensity(blockerIntensity)
+                                        }
+                                    }
                                 }
                             },
                             valueRange = 0f..4f,
@@ -525,11 +602,40 @@ fun BlockerControlScreen(
                                             interactionSource = remember { MutableInteractionSource() },
                                             indication = null
                                         ) {
-                                            if (index == 4) {
-                                                showNuclearWarningDialog = true
-                                            } else {
-                                                blockerIntensity = index
-                                                saveIntensity(index)
+                                            val currentIntensity = sharedPrefs.getInt(ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0)
+                                            if (index != currentIntensity) {
+                                                if (index < currentIntensity) {
+                                                    if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                                        settingsLockMgr.authenticate(activityContext, "Decrease Blocker Intensity", object : SettingsLockManager.AuthCallback {
+                                                            override fun onSuccess() {
+                                                                if (index == 4) {
+                                                                    showNuclearWarningDialog = true
+                                                                } else {
+                                                                    blockerIntensity = index
+                                                                    saveIntensity(index)
+                                                                }
+                                                            }
+                                                            // B2: Revert label to saved value on auth failure
+                                                            override fun onFailure(reason: String?) {
+                                                                blockerIntensity = currentIntensity
+                                                            }
+                                                        })
+                                                    } else {
+                                                        if (index == 4) {
+                                                            showNuclearWarningDialog = true
+                                                        } else {
+                                                            blockerIntensity = index
+                                                            saveIntensity(index)
+                                                        }
+                                                    }
+                                                } else {
+                                                    if (index == 4) {
+                                                        showNuclearWarningDialog = true
+                                                    } else {
+                                                        blockerIntensity = index
+                                                        saveIntensity(index)
+                                                    }
+                                                }
                                             }
                                         },
                                     contentAlignment = Alignment.Center
@@ -553,7 +659,7 @@ fun BlockerControlScreen(
             }
 
             // Dynamic Level Settings Card
-            androidx.compose.animation.AnimatedVisibility(
+            AnimatedVisibility(
                 visible = blockerIntensity > 0,
                 enter = expandVertically(animationSpec = tween(400)) + fadeIn(),
                 exit = shrinkVertically(animationSpec = tween(300)) + fadeOut()
@@ -576,6 +682,8 @@ fun BlockerControlScreen(
                                 1 -> { // FRICTION
                                     ChallengeSelectorSection(
                                         sharedPrefs = sharedPrefs,
+                                        settingsLockMgr = settingsLockMgr,
+                                        activityContext = activityContext,
                                         PoppinsFamily = PoppinsFamily,
                                         brandPink = brandPink,
                                         textPrimary = textPrimary,
@@ -586,6 +694,8 @@ fun BlockerControlScreen(
                                 2 -> { // REMINDER
                                     ReminderIntervalSliders(
                                         sharedPrefs = sharedPrefs,
+                                        settingsLockMgr = settingsLockMgr,
+                                        activityContext = activityContext,
                                         PoppinsFamily = PoppinsFamily,
                                         InterFamily = InterFamily,
                                         brandPink = brandPink,
@@ -597,6 +707,8 @@ fun BlockerControlScreen(
                                 3 -> { // TEMP LOCK
                                     TempLockSliders(
                                         sharedPrefs = sharedPrefs,
+                                        settingsLockMgr = settingsLockMgr,
+                                        activityContext = activityContext,
                                         PoppinsFamily = PoppinsFamily,
                                         InterFamily = InterFamily,
                                         brandPink = brandPink,
@@ -666,17 +778,43 @@ fun BlockerControlScreen(
                                     if (activityContext != null && !Utils.isAccessibilityPermissionGranted(activityContext)) {
                                         Toast.makeText(activityContext, "Accessibility permission is required.", Toast.LENGTH_SHORT).show()
                                     } else {
-                                        sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, true).apply()
+                                        sharedPrefs.edit {
+                                            putBoolean(
+                                                AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED,
+                                                true
+                                            )
+                                        }
                                         blockWebsites = true
                                         if (activityContext != null) {
-                                            com.gxdevs.mindmint.Utils.BlockedSitesManager.seedDefaultsIfFirstTimeAndEmpty(activityContext)
+                                            BlockedSitesManager.seedDefaultsIfFirstTimeAndEmpty(activityContext)
                                         }
                                         notifyServiceConfigChanged()
                                     }
                                 } else {
-                                    sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED, false).apply()
-                                    blockWebsites = false
-                                    notifyServiceConfigChanged()
+                                    if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                        settingsLockMgr.authenticate(activityContext, "Disable Web Blocker", object : SettingsLockManager.AuthCallback {
+                                            override fun onSuccess() {
+                                                sharedPrefs.edit {
+                                                    putBoolean(
+                                                        AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED,
+                                                        false
+                                                    )
+                                                }
+                                                blockWebsites = false
+                                                notifyServiceConfigChanged()
+                                            }
+                                            override fun onFailure(reason: String?) {}
+                                        })
+                                    } else {
+                                        sharedPrefs.edit {
+                                            putBoolean(
+                                                AppUsageAccessibilityService.PREF_BLOCK_BROWSERS_DOOMSCROLLING_ENABLED,
+                                                false
+                                            )
+                                        }
+                                        blockWebsites = false
+                                        notifyServiceConfigChanged()
+                                    }
                                 }
                             },
                             colors = SwitchDefaults.colors(
@@ -715,23 +853,37 @@ fun BlockerControlScreen(
                             onCheckedChange = { checked ->
                                 if (checked) {
                                     if (activityContext != null && !Utils.isAccessibilityPermissionGranted(activityContext)) {
-                                        Toast.makeText(activityContext, "Accessibility permission is required.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            activityContext,
+                                            "Accessibility permission is required.",
+                                            Toast.LENGTH_SHORT).show()
                                     } else {
                                         onShowAdultListDownload { success ->
                                             if (success) {
-                                                sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, true).apply()
+                                                sharedPrefs.edit {putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, true)}
                                                 blockAdultContent = true
                                                 notifyServiceConfigChanged()
                                             } else {
-                                                sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false).apply()
+                                                sharedPrefs.edit {putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false)}
                                                 blockAdultContent = false
                                             }
                                         }
                                     }
                                 } else {
-                                    sharedPrefs.edit().putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false).apply()
-                                    blockAdultContent = false
-                                    notifyServiceConfigChanged()
+                                    if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                        settingsLockMgr.authenticate(activityContext, "Disable Adult Sites Blocker", object : SettingsLockManager.AuthCallback {
+                                            override fun onSuccess() {
+                                                sharedPrefs.edit {putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false)}
+                                                blockAdultContent = false
+                                                notifyServiceConfigChanged()
+                                            }
+                                            override fun onFailure(reason: String?) {}
+                                        })
+                                    } else {
+                                        sharedPrefs.edit {putBoolean(AppUsageAccessibilityService.PREF_BLOCK_ADULT_SITES_ENABLED, false)}
+                                        blockAdultContent = false
+                                        notifyServiceConfigChanged()
+                                    }
                                 }
                             },
                             colors = SwitchDefaults.colors(
@@ -761,13 +913,15 @@ fun BlockerControlScreen(
                             checked = settingsLockEnabled,
                             onCheckedChange = { checked ->
                                 if (checked) {
-                                    settingsLockMgr.isLockEnabled = true
-                                    settingsLockEnabled = true
                                     val currentType = sharedPrefs.getString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "device")
                                     if ("custom" == currentType && !settingsLockMgr.hasCustomPin() && activityContext != null) {
                                         settingsLockMgr.showSetCustomPinDialog(activityContext, false) {
-                                            settingsLockEnabled = settingsLockMgr.isLockEnabled
+                                            settingsLockMgr.isLockEnabled = true
+                                            settingsLockEnabled = true
                                         }
+                                    } else {
+                                        settingsLockMgr.isLockEnabled = true
+                                        settingsLockEnabled = true
                                     }
                                 } else {
                                     settingsLockEnabled = true // temporary revert until authed
@@ -844,7 +998,7 @@ fun BlockerControlScreen(
                                                 )
                                                 }
                                                 Toast.makeText(act, "Disable it from security settings.", Toast.LENGTH_LONG).show()
-                                                act.startActivity(Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS))
+                                                act.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))
                                             }
                                             override fun onFailure(reason: String?) {}
                                         })
@@ -1016,15 +1170,14 @@ fun BlockerControlScreen(
                             Button(
                                 onClick = {
                                     val pauseDuration = (selectedHour * 3600L + selectedMinute * 60L) * 1000L
+                                    // E4: Prevent zero-duration from silently calling resume
                                     if (pauseDuration > 0) {
                                         setServicePauseState(true, pauseDuration)
-                                        if (activityContext != null) {
-                                            Toast.makeText(activityContext, "Blocker paused for ${selectedHour}h ${selectedMinute}m", Toast.LENGTH_SHORT).show()
-                                        }
+                                        Toast.makeText(activityContext, "Blocker paused for ${selectedHour}h ${selectedMinute}m", Toast.LENGTH_SHORT).show()
+                                        showPauseDialog = false
                                     } else {
-                                        setServicePauseState(false, 0)
+                                        Toast.makeText(activityContext, "Please select a pause duration greater than 0 minutes.", Toast.LENGTH_SHORT).show()
                                     }
-                                    showPauseDialog = false
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = brandPink),
                                 shape = RoundedCornerShape(12.dp)
@@ -1127,6 +1280,8 @@ fun BlockerControlScreen(
 @Composable
 fun ChallengeSelectorSection(
     sharedPrefs: SharedPreferences,
+    settingsLockMgr: SettingsLockManager,
+    activityContext: FragmentActivity?,
     PoppinsFamily: FontFamily,
     brandPink: Color,
     textPrimary: Color,
@@ -1147,7 +1302,7 @@ fun ChallengeSelectorSection(
     )
 
     val challenges = listOf("math", "shake", "scream", "breath")
-    val labels = listOf("Math", "Shake", "Scream", "10s Breath")
+    val labels = listOf("Math", "Shake", "Scream", "10 sec")
     val tabCount = challenges.size
     val selectedIndex = challenges.indexOf(selectedChallenge).coerceAtLeast(0)
 
@@ -1192,9 +1347,22 @@ fun ChallengeSelectorSection(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            sharedPrefs.edit { putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, key) }
-                            selectedChallenge = key
-                            onChanged()
+                            if (selectedChallenge != key) {
+                                if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                    settingsLockMgr.authenticate(activityContext, "Change Challenge Type", object : SettingsLockManager.AuthCallback {
+                                        override fun onSuccess() {
+                                            sharedPrefs.edit { putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, key) }
+                                            selectedChallenge = key
+                                            onChanged()
+                                        }
+                                        override fun onFailure(reason: String?) {}
+                                    })
+                                } else {
+                                    sharedPrefs.edit { putString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, key) }
+                                    selectedChallenge = key
+                                    onChanged()
+                                }
+                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -1214,6 +1382,8 @@ fun ChallengeSelectorSection(
 @Composable
 fun ReminderIntervalSliders(
     sharedPrefs: SharedPreferences,
+    settingsLockMgr: SettingsLockManager,
+    activityContext: FragmentActivity?,
     PoppinsFamily: FontFamily,
     InterFamily: FontFamily,
     brandPink: Color,
@@ -1306,6 +1476,8 @@ fun ReminderIntervalSliders(
         Spacer(modifier = Modifier.height(16.dp))
         ChallengeSelectorSection(
             sharedPrefs = sharedPrefs,
+            settingsLockMgr = settingsLockMgr,
+            activityContext = activityContext,
             PoppinsFamily = PoppinsFamily,
             brandPink = brandPink,
             textPrimary = textPrimary,
@@ -1318,6 +1490,8 @@ fun ReminderIntervalSliders(
 @Composable
 fun TempLockSliders(
     sharedPrefs: SharedPreferences,
+    settingsLockMgr: SettingsLockManager,
+    activityContext: FragmentActivity?,
     PoppinsFamily: FontFamily,
     InterFamily: FontFamily,
     brandPink: Color,
@@ -1396,9 +1570,22 @@ fun TempLockSliders(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            sharedPrefs.edit { putString("pref_temp_lock_limit_type", key) }
-                            limitType = key
-                            onChanged()
+                            if (limitType != key) {
+                                if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                    settingsLockMgr.authenticate(activityContext, "Change Temp Lock Trigger Type", object : SettingsLockManager.AuthCallback {
+                                        override fun onSuccess() {
+                                            sharedPrefs.edit { putString("pref_temp_lock_limit_type", key) }
+                                            limitType = key
+                                            onChanged()
+                                        }
+                                        override fun onFailure(reason: String?) {}
+                                    })
+                                } else {
+                                    sharedPrefs.edit { putString("pref_temp_lock_limit_type", key) }
+                                    limitType = key
+                                    onChanged()
+                                }
+                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -1496,6 +1683,8 @@ fun TempLockSliders(
         Spacer(modifier = Modifier.height(16.dp))
         ReminderIntervalSliders(
             sharedPrefs = sharedPrefs,
+            settingsLockMgr = settingsLockMgr,
+            activityContext = activityContext,
             PoppinsFamily = PoppinsFamily,
             InterFamily = InterFamily,
             brandPink = brandPink,
@@ -1538,6 +1727,8 @@ fun TempLockSliders(
         Spacer(modifier = Modifier.height(16.dp))
         ChallengeSelectorSection(
             sharedPrefs = sharedPrefs,
+            settingsLockMgr = settingsLockMgr,
+            activityContext = activityContext,
             PoppinsFamily = PoppinsFamily,
             brandPink = brandPink,
             textPrimary = textPrimary,
@@ -1700,7 +1891,7 @@ fun BlockedAppRowItem(
     hasDivider: Boolean
 ) {
     val context = LocalContext.current
-    val sharedPrefs = remember { androidx.preference.PreferenceManager.getDefaultSharedPreferences(context) }
+    val sharedPrefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
     val scope = rememberCoroutineScope()
     var isRestricted by remember { mutableStateOf(app.isRestricted) }
     var scopeSetting by remember { mutableStateOf(app.scope ?: "full") }
@@ -1767,26 +1958,83 @@ fun BlockedAppRowItem(
             Switch(
                 checked = isRestricted,
                 onCheckedChange = { checked ->
-                    isRestricted = checked
-                    app.isRestricted = checked
-                    sharedPrefs.edit {
-                        when (app.packageName) {
-                            "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
-                                putBoolean("ytSwitchState", checked)
-                            }
-                            "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
-                                putBoolean("instaSwitchState", checked)
-                            }
-                            "com.snapchat.android" -> {
-                                putBoolean("snapSwitchState", checked)
+                    if (checked) {
+                        isRestricted = true
+                        app.isRestricted = true
+                        sharedPrefs.edit {
+                            when (app.packageName) {
+                                "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
+                                    putBoolean("ytSwitchState", true)
+                                }
+                                "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
+                                    putBoolean("instaSwitchState", true)
+                                }
+                                "com.snapchat.android" -> {
+                                    putBoolean("snapSwitchState", true)
+                                }
                             }
                         }
-                    }
-                    scope.launch(Dispatchers.IO) {
-                        blockedAppDao?.update(app)
-                        syncModPackagesLocal(app)
-                        withContext(Dispatchers.Main) {
-                            notifyService()
+                        scope.launch(Dispatchers.IO) {
+                            blockedAppDao?.update(app)
+                            syncModPackagesLocal(app)
+                            withContext(Dispatchers.Main) {
+                                notifyService()
+                            }
+                        }
+                    } else {
+                        val settingsLockMgr = SettingsLockManager(context)
+                        val activityContext = context as? FragmentActivity
+                        if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                            settingsLockMgr.authenticate(activityContext, "Remove App Restriction", object : SettingsLockManager.AuthCallback {
+                                override fun onSuccess() {
+                                    isRestricted = false
+                                    app.isRestricted = false
+                                    sharedPrefs.edit {
+                                        when (app.packageName) {
+                                            "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
+                                                putBoolean("ytSwitchState", false)
+                                            }
+                                            "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
+                                                putBoolean("instaSwitchState", false)
+                                            }
+                                            "com.snapchat.android" -> {
+                                                putBoolean("snapSwitchState", false)
+                                            }
+                                        }
+                                    }
+                                    scope.launch(Dispatchers.IO) {
+                                        blockedAppDao?.update(app)
+                                        syncModPackagesLocal(app)
+                                        withContext(Dispatchers.Main) {
+                                            notifyService()
+                                        }
+                                    }
+                                }
+                                override fun onFailure(reason: String?) {}
+                            })
+                        } else {
+                            isRestricted = false
+                            app.isRestricted = false
+                            sharedPrefs.edit {
+                                when (app.packageName) {
+                                    "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
+                                        putBoolean("ytSwitchState", false)
+                                    }
+                                    "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
+                                        putBoolean("instaSwitchState", false)
+                                    }
+                                    "com.snapchat.android" -> {
+                                        putBoolean("snapSwitchState", false)
+                                    }
+                                }
+                            }
+                            scope.launch(Dispatchers.IO) {
+                                blockedAppDao?.update(app)
+                                syncModPackagesLocal(app)
+                                withContext(Dispatchers.Main) {
+                                    notifyService()
+                                }
+                            }
                         }
                     }
                 },
@@ -1801,7 +2049,7 @@ fun BlockedAppRowItem(
 
         // App config expansion
         val hasViewId = app.sectionViewId != null && !app.sectionViewId.trim().isEmpty()
-        androidx.compose.animation.AnimatedVisibility(
+        AnimatedVisibility(
             visible = isRestricted && hasViewId,
             enter = expandVertically(animationSpec = tween(300)) + fadeIn(),
             exit = shrinkVertically(animationSpec = tween(200)) + fadeOut()
@@ -1862,13 +2110,34 @@ fun BlockedAppRowItem(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    scopeSetting = "section"
-                                    app.scope = "section"
-                                    scope.launch(Dispatchers.IO) {
-                                        blockedAppDao?.update(app)
-                                        syncModPackagesLocal(app)
-                                        withContext(Dispatchers.Main) {
-                                            notifyService()
+                                    if (scopeSetting != "section") {
+                                        val settingsLockMgr = SettingsLockManager(context)
+                                        val activityContext = context as? FragmentActivity
+                                        if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                            settingsLockMgr.authenticate(activityContext, "Change Blocking Scope", object : SettingsLockManager.AuthCallback {
+                                                override fun onSuccess() {
+                                                    scopeSetting = "section"
+                                                    app.scope = "section"
+                                                    scope.launch(Dispatchers.IO) {
+                                                        blockedAppDao?.update(app)
+                                                        syncModPackagesLocal(app)
+                                                        withContext(Dispatchers.Main) {
+                                                            notifyService()
+                                                        }
+                                                    }
+                                                }
+                                                override fun onFailure(reason: String?) {}
+                                            })
+                                        } else {
+                                            scopeSetting = "section"
+                                            app.scope = "section"
+                                            scope.launch(Dispatchers.IO) {
+                                                blockedAppDao?.update(app)
+                                                syncModPackagesLocal(app)
+                                                withContext(Dispatchers.Main) {
+                                                    notifyService()
+                                                }
+                                            }
                                         }
                                     }
                                 },
@@ -1891,13 +2160,34 @@ fun BlockedAppRowItem(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    scopeSetting = "full"
-                                    app.scope = "full"
-                                    scope.launch(Dispatchers.IO) {
-                                        blockedAppDao?.update(app)
-                                        syncModPackagesLocal(app)
-                                        withContext(Dispatchers.Main) {
-                                            notifyService()
+                                    if (scopeSetting == "section") {
+                                        val settingsLockMgr = SettingsLockManager(context)
+                                        val activityContext = context as? FragmentActivity
+                                        if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                            settingsLockMgr.authenticate(activityContext, "Change Blocking Scope", object : SettingsLockManager.AuthCallback {
+                                                override fun onSuccess() {
+                                                    scopeSetting = "full"
+                                                    app.scope = "full"
+                                                    scope.launch(Dispatchers.IO) {
+                                                        blockedAppDao?.update(app)
+                                                        syncModPackagesLocal(app)
+                                                        withContext(Dispatchers.Main) {
+                                                            notifyService()
+                                                        }
+                                                    }
+                                                }
+                                                override fun onFailure(reason: String?) {}
+                                            })
+                                        } else {
+                                            scopeSetting = "full"
+                                            app.scope = "full"
+                                            scope.launch(Dispatchers.IO) {
+                                                blockedAppDao?.update(app)
+                                                syncModPackagesLocal(app)
+                                                withContext(Dispatchers.Main) {
+                                                    notifyService()
+                                                }
+                                            }
                                         }
                                     }
                                 },
@@ -1923,13 +2213,44 @@ fun BlockedAppRowItem(
                     Checkbox(
                         checked = useModSetting,
                         onCheckedChange = { checked ->
-                            useModSetting = checked
-                            app.useMod = checked
-                            scope.launch(Dispatchers.IO) {
-                                blockedAppDao?.update(app)
-                                syncModPackagesLocal(app)
-                                withContext(Dispatchers.Main) {
-                                    notifyService()
+                            if (checked) {
+                                useModSetting = true
+                                app.useMod = true
+                                scope.launch(Dispatchers.IO) {
+                                    blockedAppDao?.update(app)
+                                    syncModPackagesLocal(app)
+                                    withContext(Dispatchers.Main) {
+                                        notifyService()
+                                    }
+                                }
+                            } else {
+                                val settingsLockMgr = SettingsLockManager(context)
+                                val activityContext = context as? FragmentActivity
+                                if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                                    settingsLockMgr.authenticate(activityContext, "Change Mod Client Blocking", object : SettingsLockManager.AuthCallback {
+                                        override fun onSuccess() {
+                                            useModSetting = false
+                                            app.useMod = false
+                                            scope.launch(Dispatchers.IO) {
+                                                blockedAppDao?.update(app)
+                                                syncModPackagesLocal(app)
+                                                withContext(Dispatchers.Main) {
+                                                    notifyService()
+                                                }
+                                            }
+                                        }
+                                        override fun onFailure(reason: String?) {}
+                                    })
+                                } else {
+                                    useModSetting = false
+                                    app.useMod = false
+                                    scope.launch(Dispatchers.IO) {
+                                        blockedAppDao?.update(app)
+                                        syncModPackagesLocal(app)
+                                        withContext(Dispatchers.Main) {
+                                            notifyService()
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -1978,12 +2299,12 @@ fun AppIconImage(packageName: String) {
                 drawableIcon!!.intrinsicWidth.coerceAtLeast(1),
                 drawableIcon!!.intrinsicHeight.coerceAtLeast(1)
             )
-            val canvas = android.graphics.Canvas(bitmap)
+            val canvas = Canvas(bitmap)
             drawableIcon!!.setBounds(0, 0, canvas.width, canvas.height)
             drawableIcon!!.draw(canvas)
             bitmap.asImageBitmap()
         }
-        androidx.compose.foundation.Image(
+        Image(
             bitmap = imageBitmap,
             contentDescription = "App Icon",
             modifier = Modifier
@@ -2063,7 +2384,7 @@ fun BlockerControlScreenPreview() {
 fun SettingsLockTypeSelectorSection(
     sharedPrefs: SharedPreferences,
     settingsLockMgr: SettingsLockManager,
-    activityContext: androidx.fragment.app.FragmentActivity?,
+    activityContext: FragmentActivity?,
     PoppinsFamily: FontFamily,
     InterFamily: FontFamily,
     brandPink: Color,
@@ -2094,12 +2415,28 @@ fun SettingsLockTypeSelectorSection(
         ) {
             options.forEachIndexed { index, type ->
                 val isSelected = selectedType == type
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(if (isSelected) brandPink.copy(alpha = 0.15f) else Color.Transparent)
-                        .clickable {
+                val handleTypeSelection = {
+                    if (selectedType != type) {
+                        if (settingsLockMgr.isLockEnabled && activityContext != null) {
+                            settingsLockMgr.authenticate(activityContext, "Change Settings Lock Type", object : SettingsLockManager.AuthCallback {
+                                override fun onSuccess() {
+                                    if (type == "custom" && !settingsLockMgr.hasCustomPin()) {
+                                        settingsLockMgr.showSetCustomPinDialog(activityContext, false) {
+                                            if (settingsLockMgr.hasCustomPin()) {
+                                                sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "custom") }
+                                                selectedType = "custom"
+                                                onChanged()
+                                            }
+                                        }
+                                    } else {
+                                        sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, type) }
+                                        selectedType = type
+                                        onChanged()
+                                    }
+                                }
+                                override fun onFailure(reason: String?) {}
+                            })
+                        } else {
                             if (type == "custom" && !settingsLockMgr.hasCustomPin() && activityContext != null) {
                                 settingsLockMgr.showSetCustomPinDialog(activityContext, false) {
                                     if (settingsLockMgr.hasCustomPin()) {
@@ -2114,26 +2451,20 @@ fun SettingsLockTypeSelectorSection(
                                 onChanged()
                             }
                         }
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSelected) brandPink.copy(alpha = 0.15f) else Color.Transparent)
+                        .clickable { handleTypeSelection() }
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
                         selected = isSelected,
-                        onClick = {
-                            if (type == "custom" && !settingsLockMgr.hasCustomPin() && activityContext != null) {
-                                settingsLockMgr.showSetCustomPinDialog(activityContext, false) {
-                                    if (settingsLockMgr.hasCustomPin()) {
-                                        sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, "custom") }
-                                        selectedType = "custom"
-                                        onChanged()
-                                    }
-                                }
-                            } else {
-                                sharedPrefs.edit { putString(ChallengeLockManager.PREF_SETTINGS_LOCK_TYPE, type) }
-                                selectedType = type
-                                onChanged()
-                            }
-                        },
+                        onClick = { handleTypeSelection() },
                         colors = RadioButtonDefaults.colors(selectedColor = brandPink)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -2168,7 +2499,7 @@ fun SettingsLockTypeSelectorSection(
 @Composable
 fun themeColor(attr: Int, default: Color): Color {
     val context = LocalContext.current
-    val typedValue = remember { android.util.TypedValue() }
+    val typedValue = remember { TypedValue() }
     val resolved = context.theme.resolveAttribute(attr, typedValue, true)
     return if (resolved) {
         Color(typedValue.data)

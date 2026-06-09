@@ -29,6 +29,7 @@ public class ChallengeLockManager {
     public static final String PREF_BLOCKER_ONEDAY_LOCK_START_ELAPSED_PREFIX = "pref_blocker_oneday_lock_start_elapsed_";
 
     public static final String PREF_BLOCKER_10MIN_WINDOW_DATE_PREFIX = "pref_blocker_10min_window_date_";
+    private static final String PREF_10MIN_WINDOW_GRANT_ELAPSED_PREFIX = "pref_10min_window_grant_elapsed_";
 
     private final SharedPreferences prefs;
     private final SharedPreferences appDataPrefs;
@@ -223,12 +224,36 @@ public class ChallengeLockManager {
 
     // --- 10-Min Window blocker tracker ---
 
+    /**
+     * Returns true if the 10-min bypass window has already been used today.
+     * Uses both wall-clock date AND elapsed-realtime to prevent clock-advance tampering:
+     * - Rewind detection: isClockTampered(0,0) checks the maxSeen timestamp.
+     * - Forward detection: if < 24h of real elapsed time has passed since the grant, still locked.
+     */
     public boolean hasUsed10MinWindowToday(String packageName, String todayDateString) {
+        // 1. Clock-rewind tamper check
+        if (isClockTampered(0, 0)) return true;
+
+        // 2. Forward-clock tamper check via elapsed realtime
+        //    (SystemClock.elapsedRealtime() cannot be faked without a reboot)
+        long grantElapsed = prefs.getLong(PREF_10MIN_WINDOW_GRANT_ELAPSED_PREFIX + packageName, 0L);
+        if (grantElapsed > 0) {
+            long elapsedSinceGrant = SystemClock.elapsedRealtime() - grantElapsed;
+            if (elapsedSinceGrant < 24L * 60 * 60 * 1000) {
+                return true; // Less than 24h of real time has elapsed since the grant
+            }
+        }
+
+        // 3. Normal date-string check
         String lastUsedDate = prefs.getString(PREF_BLOCKER_10MIN_WINDOW_DATE_PREFIX + packageName, "");
         return todayDateString.equals(lastUsedDate);
     }
 
     public void mark10MinWindowUsed(String packageName, String todayDateString) {
-        prefs.edit().putString(PREF_BLOCKER_10MIN_WINDOW_DATE_PREFIX + packageName, todayDateString).apply();
+        updateMaxSeenTime(); // Ensure maxSeen is current before granting
+        prefs.edit()
+                .putString(PREF_BLOCKER_10MIN_WINDOW_DATE_PREFIX + packageName, todayDateString)
+                .putLong(PREF_10MIN_WINDOW_GRANT_ELAPSED_PREFIX + packageName, SystemClock.elapsedRealtime())
+                .apply();
     }
 }

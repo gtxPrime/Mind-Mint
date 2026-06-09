@@ -103,6 +103,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
     private var recordingThread: Thread? = null
     private var screamSustainedMs = 0.0
     private val SCREAM_TARGET_MS = 3000.0
+    private var lastScreamUpdateMs: Long = 0L  // B6: tracks actual timestamp between updates
 
     // Scream States
     private val screamVolume = mutableIntStateOf(0)
@@ -111,6 +112,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
     // Breath Hold States
     private val breathRemainingMs = mutableDoubleStateOf(10000.0)
     private val isHoldingBreath = mutableStateOf(false)
+    private var breathSucceeded = false  // E7: race-condition guard
 
     // Shake Challenge States
     private val shakeProgress = mutableFloatStateOf(0f)
@@ -131,6 +133,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
     // One Day Lock States
     private val oneDayCountdownText = mutableStateOf("24h 00m remaining")
+    private var oneDayRunnable: Runnable? = null  // E3: stored for cancellation
 
     // Permission Launcher for Microphone (Scream challenge)
     private val micPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -510,8 +513,13 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
         screamVolume.intValue = currentVolume
 
+        // B6: Use actual elapsed time between updates instead of a fixed 100ms increment
+        val now = System.currentTimeMillis()
+        val delta = if (lastScreamUpdateMs > 0L) (now - lastScreamUpdateMs).toDouble() else 100.0
+        lastScreamUpdateMs = now
+
         if (currentVolume >= 80) {
-            screamSustainedMs += 100.0
+            screamSustainedMs += delta
             val timeLeft = Math.max(0.0, (SCREAM_TARGET_MS - screamSustainedMs) / 1000.0)
             screamTimeLeft.value = String.format(Locale.US, "Hold it: %.1fs", timeLeft)
 
@@ -521,6 +529,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
             }
         } else {
             screamSustainedMs = 0.0
+            lastScreamUpdateMs = 0L  // Reset tracking when interrupted
             screamTimeLeft.value = "Hold it: 3.0s"
         }
     }
@@ -592,10 +601,11 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 if (!isHoldingBreath.value) return
 
                 breathRemainingMs.doubleValue -= 100.0
-                val displaySec = Math.max(0.0, breathRemainingMs.doubleValue / 1000.0)
-                
+                // B9: removed dead `val displaySec` — composable reads breathRemainingMs directly
+
                 if (breathRemainingMs.doubleValue <= 0) {
                     isHoldingBreath.value = false
+                    breathSucceeded = true  // E7: set flag before triggerSuccess
                     triggerSuccess()
                 } else {
                     handler.postDelayed(this, 100)
@@ -645,7 +655,8 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                             }
                             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                                 isHoldingBreath.value = false
-                                if (breathRemainingMs.doubleValue > 0) {
+                                // E7: check breathSucceeded flag to avoid reset-after-success race
+                                if (breathRemainingMs.doubleValue > 0 && !breathSucceeded) {
                                     vibrate(120)
                                     Toast.makeText(this@LockChallengeActivity, "Don't let go! Resetting...", Toast.LENGTH_SHORT).show()
                                     breathRemainingMs.doubleValue = 10000.0
@@ -688,6 +699,12 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         textPrimary: Color,
         textSecondary: Color
     ) {
+        // F2/F3: Compute live match stats for progress feedback
+        val typed = typedInputText.value
+        val target = quoteToType.value
+        val matchedChars = typed.zip(target).count { (a, b) -> a == b }
+        val progressFraction = if (target.isNotEmpty()) matchedChars.toFloat() / target.length else 0f
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
@@ -700,7 +717,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                     .padding(16.dp)
             ) {
                 Text(
-                    text = quoteToType.value,
+                    text = target,
                     fontFamily = interFamily,
                     fontSize = 15.sp,
                     color = textSecondary,
@@ -708,14 +725,36 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // F3: Progress bar + match counter
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LinearProgressIndicator(
+                    progress = { progressFraction },
+                    modifier = Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)),
+                    color = if (progressFraction >= 1f) Color(0xFF22C55E) else brandPink,
+                    trackColor = themeColor(R.attr.surface_nested, Color(0xFFF1F5F9))
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "$matchedChars / ${target.length}",
+                    fontFamily = interFamily,
+                    fontSize = 12.sp,
+                    color = if (progressFraction >= 1f) Color(0xFF22C55E) else textSecondary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = typedInputText.value,
                 onValueChange = { typedInputText.value = it },
-                label = { Text("Type here...", fontFamily = interFamily) },
+                label = { Text("Type the text above exactly...", fontFamily = interFamily) },
                 modifier = Modifier.fillMaxWidth(),
-                maxLines = 4,
+                maxLines = 5,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = brandPink,
@@ -827,7 +866,8 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
     // ================= 6. 1-DAY LOCKOUT =================
 
     private fun setupOneDayLockout() {
-        handler.post(object : Runnable {
+        // E3: Store runnable reference so it can be cancelled in onDestroy
+        val runnable = object : Runnable {
             override fun run() {
                 var isLockActive = false
                 var remainingMs = 0L
@@ -857,7 +897,9 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 oneDayCountdownText.value = String.format(Locale.US, "%02dh %02dm %02ds remaining", hours, minutes, seconds)
                 handler.postDelayed(this, 1000)
             }
-        })
+        }
+        oneDayRunnable = runnable
+        handler.post(runnable)
     }
 
     @Composable
@@ -948,56 +990,139 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         textPrimary: Color,
         textSecondary: Color
     ) {
+        // F1: Show a live countdown if the cooldown is already active
+        var cooldownActive by remember { mutableStateOf(challengeLockMgr.isPinResetCooldownActive()) }
+        var cooldownText by remember { mutableStateOf("") }
+        var showCooldownConfirm by remember { mutableStateOf(false) }  // F5
+
+        LaunchedEffect(cooldownActive) {
+            if (cooldownActive) {
+                while (true) {
+                    val remaining = challengeLockMgr.pinResetRemainingMs
+                    if (remaining <= 0) { cooldownActive = false; break }
+                    val h = remaining / 3_600_000L
+                    val m = (remaining / 60_000L) % 60
+                    val s = (remaining / 1_000L) % 60
+                    cooldownText = "%02dh %02dm %02ds".format(h, m, s)
+                    delay(1000L)
+                }
+            }
+        }
+
+        // F5: Confirmation dialog for starting cooldown
+        if (showCooldownConfirm) {
+            AlertDialog(
+                onDismissRequest = { showCooldownConfirm = false },
+                title = { Text("Start 24h Cooldown?", fontFamily = poppinsFamily, fontWeight = FontWeight.Bold) },
+                text = {
+                    Text(
+                        "This will lock PIN reset for 24 hours. You will not be able to reset your PIN until the cooldown expires. Are you sure?",
+                        fontFamily = interFamily, fontSize = 14.sp
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showCooldownConfirm = false
+                            challengeLockMgr.startPinResetCooldown()
+                            cooldownActive = true
+                            Toast.makeText(this@LockChallengeActivity, "24-Hour Cooldown started. Check back tomorrow.", Toast.LENGTH_LONG).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = brandPink)
+                    ) { Text("Start Cooldown", color = Color.White) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCooldownConfirm = false }) { Text("Cancel", color = brandPink) }
+                }
+            )
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Choose to start a 24-hour wait, or bypass it by typing a very long paragraph correctly.",
-                fontFamily = interFamily,
-                fontSize = 14.sp,
-                color = textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
+            if (cooldownActive) {
+                // F1: Show countdown-only screen when cooldown is already running
+                Icon(
+                    painter = painterResource(R.drawable.shield),
+                    contentDescription = null,
+                    tint = brandPink,
+                    modifier = Modifier.size(52.dp)
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = "PIN Reset Cooldown Active",
+                    fontFamily = poppinsFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = brandPink
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = cooldownText,
+                    fontFamily = poppinsFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    color = textPrimary
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = "Your PIN reset cooldown is in progress. Please wait until it completes, or type the bypass paragraph below.",
+                    fontFamily = interFamily,
+                    fontSize = 13.sp,
+                    color = textSecondary,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(20.dp))
+                Button(
+                    onClick = { lockType = "text"; setupTextChallenge(true) },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = themeColor(R.attr.surface_nested, Color(0xFFF1F5F9))),
+                    border = BorderStroke(1.dp, brandPink)
+                ) {
+                    Text("Type Bypass Paragraph Instead", fontFamily = poppinsFamily, fontSize = 15.sp, color = brandPink)
+                }
+            } else {
+                Text(
+                    text = "Choose to start a 24-hour wait, or bypass it by typing a very long paragraph correctly.",
+                    fontFamily = interFamily,
+                    fontSize = 14.sp,
+                    color = textSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
 
-            Button(
-                onClick = {
-                    challengeLockMgr.startPinResetCooldown()
-                    Toast.makeText(this@LockChallengeActivity, "24-Hour Cooldown started! Please wait until tomorrow.", Toast.LENGTH_LONG).show()
-                    setResult(RESULT_CANCELED)
-                    finish()
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = brandPink)
-            ) {
-                Text("Start 24h Cooldown", fontFamily = poppinsFamily, fontSize = 16.sp, color = Color.White)
-            }
+                Button(
+                    onClick = { showCooldownConfirm = true },  // F5: show confirm dialog
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = brandPink)
+                ) {
+                    Text("Start 24h Cooldown", fontFamily = poppinsFamily, fontSize = 16.sp, color = Color.White)
+                }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "— OR —",
-                fontFamily = poppinsFamily,
-                fontSize = 12.sp,
-                color = textSecondary,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+                Text(
+                    text = "— OR —",
+                    fontFamily = poppinsFamily,
+                    fontSize = 12.sp,
+                    color = textSecondary,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = {
-                    lockType = "text"
-                    setupTextChallenge(true)
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = themeColor(R.attr.surface_nested, Color(0xFFF1F5F9))),
-                border = BorderStroke(1.dp, brandPink)
-            ) {
-                Text("Type Bypass Paragraph", fontFamily = poppinsFamily, fontSize = 16.sp, color = brandPink)
+                Button(
+                    onClick = { lockType = "text"; setupTextChallenge(true) },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = themeColor(R.attr.surface_nested, Color(0xFFF1F5F9))),
+                    border = BorderStroke(1.dp, brandPink)
+                ) {
+                    Text("Type Bypass Paragraph", fontFamily = poppinsFamily, fontSize = 16.sp, color = brandPink)
+                }
             }
         }
     }
@@ -1027,15 +1152,26 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
             }
             "text" -> {
                 val input = typedInputText.value.trim()
-                if (input == quoteToType.value) {
+                if (input == quoteToType.value.trim()) {  // B7: trim both sides
                     if (isPinResetTypingMode.value) {
+                        // F6: Clear PIN then immediately prompt for a new one
                         val lockMgr = SettingsLockManager(this)
-                        lockMgr.isLockEnabled = false
                         lockMgr.clearCustomPin()
                         challengeLockMgr.clearPinResetCooldown()
-                        Toast.makeText(this, "PIN successfully reset!", Toast.LENGTH_LONG).show()
-                        setResult(RESULT_OK)
-                        finish()
+                        Toast.makeText(this, "Old PIN cleared. Please set a new PIN to re-enable your lock.", Toast.LENGTH_SHORT).show()
+                        // Show set-PIN dialog; on completion re-enable the lock
+                        lockMgr.showSetCustomPinDialog(this@LockChallengeActivity, false, {
+                            lockMgr.isLockEnabled = true
+                            lockMgr.setLockType(SettingsLockManager.LOCK_TYPE_CUSTOM)
+                            Toast.makeText(this@LockChallengeActivity, "New PIN set! Settings lock re-enabled.", Toast.LENGTH_SHORT).show()
+                            setResult(RESULT_OK)
+                            finish()
+                        }, {
+                            // User cancelled PIN setup — lock stays disabled
+                            Toast.makeText(this@LockChallengeActivity, "PIN not set. Settings lock has been disabled.", Toast.LENGTH_LONG).show()
+                            setResult(RESULT_OK)
+                            finish()
+                        })
                     } else {
                         triggerSuccess()
                     }
@@ -1117,5 +1253,11 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         super.onStop()
         stopScreamDetection()
         sensorManager?.unregisterListener(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // E3: Cancel the one-day countdown loop to prevent handler leaks
+        oneDayRunnable?.let { handler.removeCallbacks(it) }
     }
 }

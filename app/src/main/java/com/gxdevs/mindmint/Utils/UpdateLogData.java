@@ -10,9 +10,10 @@ public class UpdateLogData {
                 List<UpdateLogItem> list = new ArrayList<>();
 
                 addVersion(list, "Pumpkin 14 (Current)",
+                                "Fixed bugs of new Blocker Control",
                                 "Upgraded Focus & Locked-In mode notifications to support Android 16 Live Updates.",
                                 "Ticking progress bar in ongoing notifications now moves in real-time",
-                                "Fixed and updated notification icons to use custom app logo instead of placeholder icons",
+                                "Fixed and updated notification icons.",
                                 "Bug fixes and performance improvements");
 
                 addVersion(list, "Pumpkin 13",

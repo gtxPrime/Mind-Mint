@@ -9,7 +9,13 @@ public class UpdateLogData {
         public static List<UpdateLogItem> getLogs() {
                 List<UpdateLogItem> list = new ArrayList<>();
 
-                addVersion(list, "Pumpkin 13 (Current)",
+                addVersion(list, "Pumpkin 14 (Current)",
+                                "Upgraded Focus & Locked-In mode notifications to support Android 16 Live Updates.",
+                                "Ticking progress bar in ongoing notifications now moves in real-time",
+                                "Fixed and updated notification icons to use custom app logo instead of placeholder icons",
+                                "Bug fixes and performance improvements");
+
+                addVersion(list, "Pumpkin 13",
                                 "Redesigned the Blocker Control and Lock Challenge screens for a cleaner look",
                                 "Unified the App Blocker settings for better reliability",
                                 "Added different challenge types: Scream, Shake, Maths and Breathing",

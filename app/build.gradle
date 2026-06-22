@@ -15,8 +15,8 @@ android {
         applicationId "com.gxdevs.mindmint"
         minSdk 28
         targetSdk 37
-        versionCode 17
-        versionName 'Pumpkin 12'
+        versionCode 19
+        versionName 'Pumpkin 14'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

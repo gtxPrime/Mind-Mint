@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace 'com.gxdevs.mindmint'
-    compileSdk 36
+    compileSdk 37
 
     defaultConfig {
         applicationId "com.gxdevs.mindmint"

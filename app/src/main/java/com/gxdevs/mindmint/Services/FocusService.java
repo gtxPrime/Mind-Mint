@@ -55,6 +55,8 @@ public class FocusService extends Service {
     public static final String PREF_LOCK_IN_TOTAL_MS = "pref_lock_in_total_ms";
     public static final String ACTION_START_FOREGROUND_SERVICE = "com.gxdevs.mindmint.Services.action.START_FOREGROUND";
     public static final String ACTION_STOP_TIMER = "com.gxdevs.mindmint.Services.action.STOP_TIMER";
+    public static final String ACTION_PAUSE_TIMER = "com.gxdevs.mindmint.Services.action.PAUSE_TIMER";
+    public static final String ACTION_RESUME_TIMER = "com.gxdevs.mindmint.Services.action.RESUME_TIMER";
 
     // Persistent state for robust background handling
     private static final String STATE_PREFS = "FOCUS_TIMER_STATE";
@@ -277,8 +279,28 @@ public class FocusService extends Service {
                     break;
                 case ACTION_STOP_TIMER:
                     Log.d(TAG, "ACTION_STOP_TIMER received");
+                    if (isLockedIn) {
+                        Log.w(TAG, "Ignoring ACTION_STOP_TIMER because Locked-In Mode is active.");
+                        break;
+                    }
                     stopTimer();
                     return START_NOT_STICKY;
+                case ACTION_PAUSE_TIMER:
+                    Log.d(TAG, "ACTION_PAUSE_TIMER received");
+                    if (isLockedIn) {
+                        Log.w(TAG, "Ignoring ACTION_PAUSE_TIMER because Locked-In Mode is active.");
+                        break;
+                    }
+                    pauseTimer();
+                    break;
+                case ACTION_RESUME_TIMER:
+                    Log.d(TAG, "ACTION_RESUME_TIMER received");
+                    if (isLockedIn) {
+                        Log.w(TAG, "Ignoring ACTION_RESUME_TIMER because Locked-In Mode is active.");
+                        break;
+                    }
+                    resumeTimer();
+                    break;
             }
         }
         return START_STICKY;
@@ -538,6 +560,36 @@ public class FocusService extends Service {
         notificationHandler.post(updateNotificationTask);
 
         Toast.makeText(this, "Focus Resumed!", Toast.LENGTH_SHORT).show();
+    }
+
+    public void pauseTimer() {
+        if (!isRunning || isPaused)
+            return;
+
+        long now = SystemClock.elapsedRealtime();
+
+        // Accumulate focus time spent in current segment
+        if (!isBreak) {
+            accumulatedFocusTime += (now - currentSegmentStartMillis);
+        }
+
+        isPaused = true;
+        idleTimeoutStart = now;
+        currentSegmentStartMillis = now; // Reset segment start for duration math after resume
+
+        // Cancel stop alarms and timers
+        durationHandler.removeCallbacksAndMessages(null);
+        cancelStopAlarm();
+
+        persistState();
+        scheduleIdleTimeout(); // Auto-kills session after 20 minutes of inactivity if idle
+        startForegroundWithType(createNotification(getElapsedMillis()));
+        updateWidgets();
+
+        notificationHandler.removeCallbacks(updateNotificationTask);
+        notificationHandler.post(updateNotificationTask);
+
+        Toast.makeText(this, "Focus Paused!", Toast.LENGTH_SHORT).show();
     }
 
     public boolean isPaused() {
@@ -856,54 +908,182 @@ public class FocusService extends Service {
     private Notification createNotification(long elapsedMillis) {
         Intent stopIntent = new Intent(this, FocusService.class);
         stopIntent.setAction(ACTION_STOP_TIMER);
-        PendingIntent stopPendingIntent = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent stopPendingIntent = PendingIntent.getService(this, 1001, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Intent pauseIntent = new Intent(this, FocusService.class);
+        pauseIntent.setAction(ACTION_PAUSE_TIMER);
+        PendingIntent pausePendingIntent = PendingIntent.getService(this, 1002, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Intent resumeIntent = new Intent(this, FocusService.class);
+        resumeIntent.setAction(ACTION_RESUME_TIMER);
+        PendingIntent resumePendingIntent = PendingIntent.getService(this, 1003, resumeIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
         Intent notificationIntent = new Intent(this, FocusMode.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        String title;
-        String timeString;
+
+        String title = "Focus Mode Active";
+        String contentText = "";
+        String subText = "Focus";
+        boolean isInfinite = currentDurationInMillis == Long.MAX_VALUE || isOpenEnded;
+        long remainingMillis = currentDurationInMillis - elapsedMillis;
+        if (remainingMillis < 0) remainingMillis = 0;
+        String timeStr = isInfinite ? formatTime(elapsedMillis) : formatTime(remainingMillis);
 
         if (isPaused && isBreak) {
-            // BREAK_PAUSED state
             title = "Focus Paused - Take a Break";
             long breakRemaining = getBreakRemainingMillis();
-            timeString = "Break: " + formatTime(breakRemaining);
+            contentText = "Break: " + formatTime(breakRemaining);
+            subText = "Break Paused";
         } else if (isPaused) {
-            // WAITING_USER state
             title = "Focus Paused";
-            timeString = "Tap to Resume";
+            contentText = "Tap Resume to continue";
+            subText = "Paused";
+        } else if (isBreak) {
+            title = "Take a Break";
+            long breakRemaining = getBreakRemainingMillis();
+            contentText = "Break: " + formatTime(breakRemaining);
+            subText = "On Break";
         } else {
-            // FOCUS_RUNNING state
             if (isLockedIn) {
-                title = "Locked In: Eliminating distractions";
+                title = "Locked In Mode Active";
+                contentText = timeStr + " • Eliminating distractions";
+                subText = "Locked In";
             } else if (linkedTaskId != null) {
                 title = "Focusing on Task";
+                subText = "Task Focus";
                 if (currentTopicName != null && !currentTopicName.trim().isEmpty()) {
-                    title = "Focusing on: " + currentTopicName;
+                    contentText = timeStr + " • Task: " + currentTopicName;
+                } else {
+                    contentText = timeStr + " • Focusing on Task";
                 }
             } else {
                 title = "Focus Mode Active";
-            }
-            if (currentDurationInMillis == Long.MAX_VALUE || isOpenEnded) {
-                timeString = "Focusing: " + formatTime(elapsedMillis);
-            } else {
-                long remainingMillis = currentDurationInMillis - elapsedMillis;
-                if (remainingMillis < 0)
-                    remainingMillis = 0;
-                timeString = "Time left: " + formatTime(remainingMillis);
+                subText = "Deep Focus";
+                if (currentTopicName != null && !currentTopicName.trim().isEmpty()) {
+                    contentText = timeStr + " • Tag: " + currentTopicName;
+                } else {
+                    contentText = timeStr + " • Focus Active";
+                }
             }
         }
 
+        // --- Android 16 (API 36) Native Live Update Branch ---
+        if (android.os.Build.VERSION.SDK_INT >= 37 || 
+                (Build.VERSION.SDK_INT == 36 &&
+                 android.os.ext.SdkExtensions.getExtensionVersion(Build.VERSION_CODES.BAKLAVA) >= 1)) {
+            Notification.Builder nativeBuilder = new Notification.Builder(this, CHANNEL_ID)
+                    .setContentTitle(title)
+                    .setContentText(contentText)
+                    .setSubText(subText)
+                    .setSmallIcon(R.drawable.brain)
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true)
+                    .setCategory(Notification.CATEGORY_ALARM)
+                    .setVisibility(Notification.VISIBILITY_PUBLIC);
+
+            try {
+                if (Build.VERSION.SDK_INT_FULL >= Build.VERSION_CODES_FULL.BAKLAVA_1) {
+                    nativeBuilder.setRequestPromotedOngoing(true);
+                }
+            } catch (NoSuchMethodError e) {
+                Log.w(TAG, "Notification.Builder.setRequestPromotedOngoing not available at runtime on this device", e);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed calling setRequestPromotedOngoing", e);
+            }
+
+            if (!isPaused) {
+                nativeBuilder.setUsesChronometer(true);
+                if (isInfinite) {
+                    long startTime = System.currentTimeMillis() - elapsedMillis;
+                    nativeBuilder.setWhen(startTime);
+                    nativeBuilder.setChronometerCountDown(false);
+                } else {
+                    long targetTime = System.currentTimeMillis() + remainingMillis;
+                    nativeBuilder.setWhen(targetTime);
+                    nativeBuilder.setChronometerCountDown(true);
+                }
+            } else {
+                nativeBuilder.setUsesChronometer(false);
+            }
+
+            // Set progress style for Android 16
+            Notification.ProgressStyle progressStyle = new Notification.ProgressStyle();
+            if (currentDurationInMillis != Long.MAX_VALUE) {
+                progressStyle.setProgress((int) elapsedMillis);
+                progressStyle.addProgressSegment(new Notification.ProgressStyle.Segment((int) currentDurationInMillis));
+            }
+            nativeBuilder.setStyle(progressStyle);
+
+            // Add native actions
+            if (!isLockedIn) {
+                Notification.Action stopAction = new Notification.Action.Builder(
+                        android.graphics.drawable.Icon.createWithResource(this, R.drawable.ic_minus), "Stop", stopPendingIntent).build();
+                nativeBuilder.addAction(stopAction);
+
+                if (isPaused) {
+                    Notification.Action resumeAction = new Notification.Action.Builder(
+                            android.graphics.drawable.Icon.createWithResource(this, R.drawable.ic_play), "Resume", resumePendingIntent).build();
+                    nativeBuilder.addAction(resumeAction);
+                } else {
+                    Notification.Action pauseAction = new Notification.Action.Builder(
+                            android.graphics.drawable.Icon.createWithResource(this, R.drawable.ic_pause), "Pause", pausePendingIntent).build();
+                    nativeBuilder.addAction(pauseAction);
+                }
+            } else {
+                Notification.Action viewAction = new Notification.Action.Builder(
+                        android.graphics.drawable.Icon.createWithResource(this, R.drawable.brain), "View", pendingIntent).build();
+                nativeBuilder.addAction(viewAction);
+            }
+
+            return nativeBuilder.build();
+        }
+
+        // --- Fallback Branch (API < 36) ---
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(title)
-                .setContentText(timeString)
-                .setSmallIcon(R.drawable.focus_yoga)
+                .setContentText(contentText)
+                .setSubText(subText)
+                .setSmallIcon(R.drawable.brain)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
-                .setOnlyAlertOnce(true);
+                .setOnlyAlertOnce(true)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
+        // Configure Live Ticking Chronometer and Progress for OEM Now Bar / Live Alerts
+        if (!isPaused) {
+            builder.setUsesChronometer(true);
+            if (isInfinite) {
+                long startTime = System.currentTimeMillis() - elapsedMillis;
+                builder.setWhen(startTime);
+                builder.setChronometerCountDown(false);
+            } else {
+                long targetTime = System.currentTimeMillis() + remainingMillis;
+                builder.setWhen(targetTime);
+                builder.setChronometerCountDown(true);
+                // Set progress so Samsung/OnePlus can draw progress circles
+                builder.setProgress((int) currentDurationInMillis, (int) elapsedMillis, false);
+            }
+        } else {
+            builder.setUsesChronometer(false);
+            if (!isInfinite) {
+                builder.setProgress((int) currentDurationInMillis, (int) elapsedMillis, false);
+            }
+        }
+
+        // Action buttons
+        // Action buttons
         if (!isLockedIn) {
-            builder.addAction(R.drawable.ic_pause, "Stop Focus", stopPendingIntent);
+            builder.addAction(R.drawable.ic_minus, "Stop", stopPendingIntent);
+            if (isPaused) {
+                builder.addAction(R.drawable.ic_play, "Resume", resumePendingIntent);
+            } else {
+                builder.addAction(R.drawable.ic_pause, "Pause", pausePendingIntent);
+            }
+        } else {
+            builder.addAction(R.drawable.brain, "View", pendingIntent);
         }
 
         return builder.build();
@@ -924,7 +1104,7 @@ public class FocusService extends Service {
         Notification notification = new NotificationCompat.Builder(this, COMPLETION_CHANNEL_ID)
                 .setContentTitle("Focus Complete")
                 .setContentText(content)
-                .setSmallIcon(R.drawable.focus_yoga)
+                .setSmallIcon(R.drawable.brain)
                 .setLargeIcon(large)
                 .setContentIntent(openPendingIntent)
                 .setAutoCancel(true)
@@ -1002,7 +1182,7 @@ public class FocusService extends Service {
         NotificationChannel serviceChannel = new NotificationChannel(
                 CHANNEL_ID,
                 "Focus Timer Service Channel",
-                NotificationManager.IMPORTANCE_LOW);
+                NotificationManager.IMPORTANCE_DEFAULT);
         serviceChannel.setDescription("Channel for Focus Timer foreground service notification");
 
         NotificationChannel completionChannel = new NotificationChannel(

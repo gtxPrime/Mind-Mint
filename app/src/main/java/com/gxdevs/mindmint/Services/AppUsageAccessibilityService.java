@@ -222,6 +222,27 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private String lastSeenPillAppTag = null;
     private String lastSeenPillPackageName = null;
     private final android.os.Handler scrollPillHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final android.os.Handler timeLimitHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable timeLimitCheckerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (currentPackage != null && serviceStatus) {
+                boolean isLockedInPref = sharedPreferences.getBoolean(FocusService.PREF_IS_LOCKED_IN, false);
+                boolean isFocusRunning = FocusService.isPublicFocusRun || isLockedInPref;
+                boolean isLockedInActive = isFocusRunning && isLockedInPref;
+                boolean isPaused = !isLockedInActive && sharedPreferences.getBoolean("isServicePaused", false);
+
+                if (!isPaused) {
+                    int intensity = sharedPreferences.getInt(com.gxdevs.mindmint.Utils.ChallengeLockManager.PREF_BLOCKER_INTENSITY, 0);
+                    if (intensity == 3 && isDailyLimitExceeded(currentPackage)) {
+                        Log.d(TAG, "timeLimitChecker: limit exceeded for " + currentPackage + " — triggering strict lockout");
+                        triggerStrictLockout(currentPackage);
+                    }
+                }
+                timeLimitHandler.postDelayed(this, 1000);
+            }
+        }
+    };
     private final Runnable hideScrollPillRunnable = () -> {
         if (scrollPillOverlayView != null) {
             // First, double check if it's actually gone by requesting the root node
@@ -506,11 +527,14 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     appTotalWastedTimeToday.put(this.currentPackage,
                             (long) sharedPreferences.getInt(this.currentPackage + "_time", 0));
                 }
+                timeLimitHandler.removeCallbacks(timeLimitCheckerRunnable);
+                timeLimitHandler.postDelayed(timeLimitCheckerRunnable, 1000);
             }
         } else {
             if (this.currentPackage != null || this.startTimeMillis != 0L) {
                 this.currentPackage = null;
                 this.startTimeMillis = 0L;
+                timeLimitHandler.removeCallbacks(timeLimitCheckerRunnable);
             }
         }
     }
@@ -692,6 +716,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             reminderHandler.removeCallbacksAndMessages(null);
             reminderHandler = null;
         }
+        timeLimitHandler.removeCallbacksAndMessages(null);
         // Schedule a restart to keep the service alive
         AlarmUtils.scheduleAlarm(this);
     }
@@ -791,11 +816,38 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             }
 
             rootNode = getRootInActiveWindow();
+            if (rootNode == null) {
+                AccessibilityNodeInfo source = event.getSource();
+                if (source != null) {
+                    AccessibilityNodeInfo current = AccessibilityNodeInfo.obtain(source);
+                    AccessibilityNodeInfo parent = current.getParent();
+                    while (parent != null) {
+                        current.recycle();
+                        current = parent;
+                        parent = current.getParent();
+                    }
+                    rootNode = current;
+                    source.recycle();
+                }
+            }
             
             // 1. Manage Scroll Counter Pill (runs on all event types, including scroll)
             if (scrollCounterEnabled && eventPackageName != null) {
                 String appTagForPill = getAppTagFromAllPackages(eventPackageName);
-                if (appTagForPill != null && !isAppTagBlocked(appTagForPill)) {
+                
+                // Fallback to active/foreground window package if event is from background/overlay
+                if (appTagForPill == null && rootNode != null) {
+                    CharSequence activePkg = rootNode.getPackageName();
+                    if (activePkg != null) {
+                        String activePkgStr = activePkg.toString();
+                        appTagForPill = getAppTagFromAllPackages(activePkgStr);
+                        if (appTagForPill != null) {
+                            eventPackageName = activePkgStr;
+                        }
+                    }
+                }
+
+                if (appTagForPill != null) {
                     String pillViewId = getReminderViewIdForAppTag(appTagForPill);
                     boolean isPillViewVisible = pillViewId != null && isReminderViewVisible(rootNode, eventPackageName, pillViewId);
                     
@@ -899,6 +951,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                             appTotalWastedTimeToday.put(currentPackage,
                                     (long) sharedPreferences.getInt(currentPackage + "_time", 0));
                         }
+                        timeLimitHandler.removeCallbacks(timeLimitCheckerRunnable);
+                        timeLimitHandler.postDelayed(timeLimitCheckerRunnable, 1000);
                     } else {
                         clearCurrentPackageTracking();
                     }
@@ -906,6 +960,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     if (Utils.ALL_PACKAGES.containsKey(currentPackage)) {
                         if (startTimeMillis == 0L) { // If it was cleared, restart
                             startTimeMillis = System.currentTimeMillis();
+                            timeLimitHandler.removeCallbacks(timeLimitCheckerRunnable);
+                            timeLimitHandler.postDelayed(timeLimitCheckerRunnable, 1000);
                         }
                     } else { // Should not happen if currentPackage is set, but good for safety
                         clearCurrentPackageTracking();
@@ -954,7 +1010,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             return;
         }
 
-        if (!scrollCounterEnabled) {
+        String limitType = sharedPreferences.getString("pref_temp_lock_limit_type", "both");
+        int intensity = sharedPreferences.getInt("pref_blocker_intensity", 0);
+        boolean isScrollLimitActive = (intensity == 3) && ("scroll".equals(limitType) || "both".equals(limitType));
+
+        if (!scrollCounterEnabled && !isScrollLimitActive) {
             return;
         }
 
@@ -1005,9 +1065,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
 
         if (isReminderViewVisible(rootNode, packageName, viewId)) {
-            if (rootNode != null) {
-                rootNode.recycle();
-            }
+            rootNode.recycle();
 
             long currentTime = System.currentTimeMillis();
             Long lastTimeValue = lastScrollEventTimestamp.get(appTag);
@@ -1015,6 +1073,34 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             if (currentTime - lastTime > debounceMs) {
                 lastScrollEventTimestamp.put(appTag, currentTime);
                 incrementScrollCount(packageName);
+
+                if (intensity == 3 && isDailyLimitExceeded(packageName)) {
+                    Log.d(TAG, "handleScrollCounting: scroll limit exceeded for " + packageName + " — triggering strict lockout");
+                    triggerStrictLockout(packageName);
+                } else {
+                    AccessibilityNodeInfo freshRoot = getRootInActiveWindow();
+                    if (freshRoot == null) {
+                        AccessibilityNodeInfo source = event.getSource();
+                        if (source != null) {
+                            AccessibilityNodeInfo current = AccessibilityNodeInfo.obtain(source);
+                            AccessibilityNodeInfo parent = current.getParent();
+                            while (parent != null) {
+                                current.recycle();
+                                current = parent;
+                                parent = current.getParent();
+                            }
+                            freshRoot = current;
+                            source.recycle();
+                        }
+                    }
+                    try {
+                        checkBlockerPipeline(packageName, freshRoot);
+                    } finally {
+                        if (freshRoot != null) {
+                            freshRoot.recycle();
+                        }
+                    }
+                }
             }
         } else {
             if (rootNode != null)
@@ -1054,6 +1140,19 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         sendBroadcast(intent);
     }
 
+    private boolean hasLauncherIntent(String packageName) {
+        if (packageName == null) return false;
+        try {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            intent.setPackage(packageName);
+            List<ResolveInfo> activities = getPackageManager().queryIntentActivities(intent, 0);
+            return activities != null && !activities.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private boolean isPackageAllowedInLockedIn(String packageName) {
         if (packageName == null)
             return true;
@@ -1065,6 +1164,18 @@ public class AppUsageAccessibilityService extends AccessibilityService {
             return true;
         if (isSystemNavigationPackage(packageName))
             return true;
+
+        // Dynamic system package check: if it is a system package and does not have a launcher activity, allow it.
+        try {
+            ApplicationInfo info = getPackageManager().getApplicationInfo(packageName, 0);
+            boolean isSystem = (info.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                    || (info.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0;
+            if (isSystem && !hasLauncherIntent(packageName)) {
+                return true;
+            }
+        } catch (PackageManager.NameNotFoundException ignored) {
+        }
+
         Set<String> extraWhitelist = sharedPreferences.getStringSet(
                 PREF_LOCKED_IN_EXTRA_WHITELIST, new HashSet<>());
         return extraWhitelist.contains(packageName);
@@ -1084,9 +1195,20 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                 || p.contains("inputmethod")
                 || p.contains("honeyboard")
                 || p.contains("keyboard")
+                || p.contains("gboard")
+                || p.contains("ime")
+                || p.contains("keyguard")
+                || p.contains("lockscreen")
+                || p.contains("guard")
+                || p.contains("engine")
+                || p.contains("gesture")
+                || p.contains("biometrics")
+                || p.contains("overlay")
+                || p.contains("framework")
                 || p.contains("camera")
                 || p.contains("launcher")
                 || p.contains("systemui")
+                || p.contains("system")
                 || p.contains("packageinstaller")
                 || p.contains("permissioncontroller")
                 || p.contains("emergency")
@@ -1690,8 +1812,8 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         String blockScope = (config != null) ? config.scope : "full";
 
         Intent intent;
-        if ("none".equals(challengeType) || "oneday".equals(challengeType)) {
-            // Overlay-based blocking (auto-close or countdown)
+        if ("none".equals(challengeType) || "oneday".equals(challengeType) || "permanent".equals(challengeType)) {
+            // Overlay-based blocking (auto-close, countdown, or permanent)
             intent = new Intent(this, BlockingOverlayDisplayActivity.class);
             intent.putExtra(EXTRA_IS_FOCUS, isFocus);
             intent.putExtra(EXTRA_BLOCKED_PACKAGE_NAME, packageName);
@@ -2257,6 +2379,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
         currentPackage = null;
         startTimeMillis = 0L;
+        timeLimitHandler.removeCallbacks(timeLimitCheckerRunnable);
     }
 
     private void resetUsageAndTimersForPackage(String packageName) {
@@ -2605,8 +2728,15 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         if ("time".equals(limitType) || "both".equals(limitType)) {
             if (blockAfterWastedTimeEnabled) {
                 long currentGlobalDailyWastedTimeMs = 0;
-                for (long timeInSeconds : appTotalWastedTimeToday.values()) {
-                    currentGlobalDailyWastedTimeMs += (timeInSeconds * 1000);
+                for (String pkg : Utils.ALL_PACKAGES.keySet()) {
+                    long timeInSeconds = sharedPreferences.getInt(pkg + "_time", 0);
+                    if (pkg.equals(currentPackage) && startTimeMillis != 0L) {
+                        long activeSessionSec = (System.currentTimeMillis() - startTimeMillis) / 1000L;
+                        if (activeSessionSec > 0) {
+                            timeInSeconds += activeSessionSec;
+                        }
+                    }
+                    currentGlobalDailyWastedTimeMs += (timeInSeconds * 1000L);
                 }
                 long globalBlockThresholdMs = (long) (blockAfterWastedTimeHours * 3600 * 1000);
                 if (currentGlobalDailyWastedTimeMs >= globalBlockThresholdMs) {
@@ -2626,11 +2756,43 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         return false;
     }
 
+    /**
+     * Intensity 4 — PERMANENT block. Fires the overlay every time the app is opened.
+     * No lock timer is started; blocking persists as long as intensity == 4 in settings.
+     */
+    private void triggerPermanentBlock(String packageName) {
+        long now = System.currentTimeMillis();
+        Long lastTime = lastLockInOverlayTimeMs.get(packageName);
+        if (lastTime == null || (now - lastTime) > LOCK_IN_OVERLAY_DEBOUNCE_MS) {
+            lastLockInOverlayTimeMs.put(packageName, now);
+            Intent intent = buildBlockingIntent(packageName, "permanent", false);
+            startActivity(intent);
+        }
+    }
+
+    /**
+     * Intensity 3 — TEMP LOCK strict lockout. Fires when daily limit is exceeded.
+     * Flushes the active session before reset so isDailyLimitExceeded remains true
+     * on the next reopen (preventing bypass via in-memory-only session time).
+     */
     private void triggerStrictLockout(String packageName) {
         long now = System.currentTimeMillis();
         Long lastTime = lastLockInOverlayTimeMs.get(packageName);
         if (lastTime == null || (now - lastTime) > LOCK_IN_OVERLAY_DEBOUNCE_MS) {
             lastLockInOverlayTimeMs.put(packageName, now);
+
+            // Flush the active in-progress session to SharedPreferences NOW.
+            // The timer fires without a window-switch event, so updateAppTimeSpent
+            // would never be called — leaving the final session unsaved. Without this,
+            // isDailyLimitExceeded returns false on the next reopen, breaking lockout.
+            if (packageName.equals(currentPackage) && startTimeMillis != 0L) {
+                int timeSpent = (int) Math.max(0L, (now - startTimeMillis) / 1000L);
+                if (timeSpent > 0) {
+                    updateAppTimeSpent(packageName, timeSpent);
+                    startTimeMillis = now; // Advance so double-flush doesn't happen
+                }
+            }
+
             Intent intent = buildBlockingIntent(packageName, "oneday", false);
             startActivity(intent);
             resetUsageAndTimersForPackage(packageName);
@@ -2731,7 +2893,7 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
 
         if (intensity == 4) {
-            triggerStrictLockout(eventPackageName);
+            triggerPermanentBlock(eventPackageName);
             return;
         }
 

@@ -23,6 +23,7 @@ import com.gxdevs.mindmint.Services.FocusService;
 import com.gxdevs.mindmint.Utils.HabitManager;
 import com.gxdevs.mindmint.Utils.MintCrystals;
 import com.gxdevs.mindmint.Utils.TaskManager;
+import androidx.preference.PreferenceManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -123,6 +124,15 @@ public class HomeTaskAdapter extends RecyclerView.Adapter<HomeTaskAdapter.TaskVi
         };
 
         if (FocusService.isPublicFocusRun) {
+            boolean isLockedIn = PreferenceManager.getDefaultSharedPreferences(ctx).getBoolean(FocusService.PREF_IS_LOCKED_IN, false);
+            if (isLockedIn) {
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx, R.style.AlertDialogTheme)
+                    .setTitle("Locked In Mode Active")
+                    .setMessage("You cannot stop or switch sessions while Locked In Mode is active.")
+                    .setPositiveButton("OK", null)
+                    .show();
+                return;
+            }
             // Another session is running — ask what to do
             new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx, R.style.AlertDialogTheme)
                 .setTitle("Focus Session Running")

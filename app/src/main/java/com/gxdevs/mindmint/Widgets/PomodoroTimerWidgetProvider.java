@@ -11,6 +11,7 @@ import android.widget.RemoteViews;
 import com.gxdevs.mindmint.Activities.WidgetActionActivity;
 import com.gxdevs.mindmint.R;
 import com.gxdevs.mindmint.Services.FocusService;
+import androidx.preference.PreferenceManager;
 
 public class PomodoroTimerWidgetProvider extends AppWidgetProvider {
 
@@ -53,11 +54,21 @@ public class PomodoroTimerWidgetProvider extends AppWidgetProvider {
 
             views.setTextViewText(R.id.widget_status, statusText);
 
+            boolean isLockedIn = PreferenceManager.getDefaultSharedPreferences(context)
+                    .getBoolean(FocusService.PREF_IS_LOCKED_IN, false);
+
             if (isRunning) {
-                Intent stopIntent = new Intent(context, FocusService.class);
-                stopIntent.setAction(FocusService.ACTION_STOP_TIMER);
-                PendingIntent stopPendingIntent = PendingIntent.getService(context, 200 + appWidgetId, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                views.setOnClickPendingIntent(R.id.widget_root, stopPendingIntent);
+                if (isLockedIn) {
+                    Intent openIntent = new Intent(context, com.gxdevs.mindmint.Activities.FocusMode.class);
+                    openIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    PendingIntent openPendingIntent = PendingIntent.getActivity(context, 200 + appWidgetId, openIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    views.setOnClickPendingIntent(R.id.widget_root, openPendingIntent);
+                } else {
+                    Intent stopIntent = new Intent(context, FocusService.class);
+                    stopIntent.setAction(FocusService.ACTION_STOP_TIMER);
+                    PendingIntent stopPendingIntent = PendingIntent.getService(context, 200 + appWidgetId, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    views.setOnClickPendingIntent(R.id.widget_root, stopPendingIntent);
+                }
             } else {
                 Intent startIntent = new Intent(context, WidgetActionActivity.class);
                 startIntent.putExtra("MODE", "FOCUS_POMODORO");

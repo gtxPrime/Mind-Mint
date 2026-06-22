@@ -883,6 +883,21 @@ public class TasksFragment extends Fragment implements TaskAdapter.OnTaskClickLi
     public void onTaskClick(Task task, int position) {
         if (task.isCompleted()) return;
 
+        if (FocusService.isPublicFocusRun) {
+            boolean isLockedIn = androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext())
+                    .getBoolean(FocusService.PREF_IS_LOCKED_IN, false);
+            if (isLockedIn) {
+                CustomDialogUtils.showCustomDialog(requireContext(),
+                    "Locked In Mode Active",
+                    "You cannot stop or switch sessions while Locked In Mode is active.",
+                    "OK",
+                    null,
+                    null,
+                    null);
+                return;
+            }
+        }
+
         Runnable startNewFocus = () -> {
             // Stop any existing session just in case
             Intent stopIntent = new Intent(requireContext(), FocusService.class);

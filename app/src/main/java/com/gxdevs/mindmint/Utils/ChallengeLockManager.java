@@ -207,7 +207,20 @@ public class ChallengeLockManager {
         }
 
         long elapsedMs = System.currentTimeMillis() - startWall;
-        long targetMs = 24 * 60 * 60 * 1000L;
+        
+        int intensity = prefs.getInt(PREF_BLOCKER_INTENSITY, 0);
+        long targetMs;
+        if (intensity == 3) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTimeInMillis(startWall);
+            cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+            cal.set(java.util.Calendar.MINUTE, 59);
+            cal.set(java.util.Calendar.SECOND, 59);
+            cal.set(java.util.Calendar.MILLISECOND, 999);
+            targetMs = cal.getTimeInMillis() - startWall;
+        } else {
+            targetMs = 24 * 60 * 60 * 1000L;
+        }
         
         return elapsedMs < targetMs;
     }
@@ -217,7 +230,20 @@ public class ChallengeLockManager {
         if (startWall <= 0) return 0;
         
         long elapsedMs = System.currentTimeMillis() - startWall;
-        long targetMs = 24 * 60 * 60 * 1000L;
+        
+        int intensity = prefs.getInt(PREF_BLOCKER_INTENSITY, 0);
+        long targetMs;
+        if (intensity == 3) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTimeInMillis(startWall);
+            cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+            cal.set(java.util.Calendar.MINUTE, 59);
+            cal.set(java.util.Calendar.SECOND, 59);
+            cal.set(java.util.Calendar.MILLISECOND, 999);
+            targetMs = cal.getTimeInMillis() - startWall;
+        } else {
+            targetMs = 24 * 60 * 60 * 1000L;
+        }
         
         return Math.max(0, targetMs - elapsedMs);
     }

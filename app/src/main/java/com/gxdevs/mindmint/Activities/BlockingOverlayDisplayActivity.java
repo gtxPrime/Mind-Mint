@@ -217,6 +217,19 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
                     handler.postDelayed(this, 1000);
                 }
             });
+
+        } else if ("permanent".equals(challengeType)) {
+            // Permanent block: stays blocked until the user changes intensity in settings.
+            // No timer, no lock management — the service re-fires this overlay on every open.
+            btnGoBack.setVisibility(View.VISIBLE);
+            btnGoBack.setOnClickListener(v -> handleBackPress());
+
+            TextView tv_blocking_subtitle = findViewById(R.id.tv_blocking_subtitle);
+            if (tv_blocking_subtitle != null) {
+                tv_blocking_subtitle.setText(
+                    "This app is permanently blocked.\nChange your Blocker Intensity in Settings to unlock.");
+            }
+
         } else {
             // "none" or any fallback → standard auto-close + HOME after popup duration.
             setupStandardAutoCloseTimer();

@@ -760,7 +760,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             icon.setImageResource(item.getIconRes());
             
             if (labelNone != null) {
-                labelNone.setText("Normal");
+                labelNone.setText("None");
             }
             
             seekBar.setMax(4);
@@ -829,7 +829,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     tintColor = 0xFFE74C3C; // Red
                     break;
                 default:
-                    subtitleText = "Normal";
+                    subtitleText = "None";
                     tintColor = 0xFF95A5A6; // Gray
                     break;
             }

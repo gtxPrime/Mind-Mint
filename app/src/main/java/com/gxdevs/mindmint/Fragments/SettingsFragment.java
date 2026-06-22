@@ -898,8 +898,8 @@ public class SettingsFragment extends Fragment {
         MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
         MaterialButton btnConfirm = dialogView.findViewById(R.id.btnConfirm);
 
-        tvTitle.setText("⚠️ Strict 1-Day Lockout");
-        tvMessage.setText("WARNING: Enabling the Permanent (1-Day) Lock will strictly lock you out of your blocked apps for 24 hours. "
+        tvTitle.setText("⚠️ Enable Permanent Block");
+        tvMessage.setText("WARNING: Enabling the Permanent Block will strictly lock you out of your blocked apps. "
                 + "This is system-enforced and CANNOT be undone, paused, or bypassed by changing the device clock or resetting PINs.\n\n"
                 + "Do you want to proceed?");
 

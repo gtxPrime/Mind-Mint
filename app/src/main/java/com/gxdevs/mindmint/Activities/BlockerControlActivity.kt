@@ -81,6 +81,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
 import com.gxdevs.mindmint.Utils.AdultDomainListManager
 import com.gxdevs.mindmint.Utils.BlockedSitesManager
+import kotlin.time.Duration.Companion.milliseconds
 
 class BlockerControlActivity : AppCompatActivity() {
 
@@ -321,10 +322,6 @@ fun BlockerControlScreen(
             }
         }
         blockerIntensity = level
-        if (level == 4) {
-            // U8: Also lock settings for 24h when PERMANENT is activated
-            ChallengeLockManager(context).startSettingsOneDayLock()
-        }
         notifyServiceConfigChanged()
     }
 
@@ -471,7 +468,7 @@ fun BlockerControlScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = when (blockerIntensity) {
-                            0 -> "NORMAL: Blocker is completely inactive."
+                            0 -> "NONE: Blocker is completely inactive."
                             1 -> "FRICTION: Complete a challenge to unlock temporarily."
                             2 -> "REMINDER: Popup warnings show periodically."
                             3 -> "TEMP LOCK: Hard lock when daily limit is reached."
@@ -592,7 +589,7 @@ fun BlockerControlScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val labels = listOf("NORMAL", "FRICTION", "REMINDER", "TEMP LOCK", "PERMANENT")
+                            val labels = listOf("NONE", "FRICTION", "REMINDER", "TEMP LOCK", "PERMANENT")
                             labels.forEachIndexed { index, label ->
                                 val isSelected = blockerIntensity == index
                                 Box(
@@ -719,7 +716,7 @@ fun BlockerControlScreen(
                                 }
                                 4 -> { // PERMANENT
                                     Text(
-                                        text = "⚠️ WARNING: Selected apps are locked. You cannot bypass or disable blocker features until the 24h cooldown timer finishes.",
+                                        text = "⚠️ WARNING: Selected apps are permanently locked. You cannot bypass or disable blocker features while this mode is active.",
                                         fontFamily = InterFamily,
                                         fontSize = 13.sp,
                                         color = brandPink,
@@ -945,7 +942,21 @@ fun BlockerControlScreen(
                         )
                     }
 
-                    if (settingsLockEnabled) {
+                    AnimatedVisibility(
+                        visible = settingsLockEnabled,
+                        enter = expandVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            )
+                        ) + fadeIn(animationSpec = tween(200)),
+                        exit = shrinkVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessMedium
+                            )
+                        ) + fadeOut(animationSpec = tween(150))
+                    ) {
                         Box(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 18.dp)) {
                             SettingsLockTypeSelectorSection(
                                 sharedPrefs = sharedPrefs,
@@ -1195,7 +1206,7 @@ fun BlockerControlScreen(
             var warnSecondsLeft by remember { mutableIntStateOf(5) }
             LaunchedEffect(Unit) {
                 while (warnSecondsLeft > 0) {
-                    delay(1000L)
+                    delay(1000L.milliseconds)
                     warnSecondsLeft--
                 }
             }
@@ -1229,7 +1240,7 @@ fun BlockerControlScreen(
                         )
 
                         Text(
-                            text = "Are you sure? Once Permanent lock level is active, you CANNOT bypass any locks, pauses, or change control settings for the next 24 hours.",
+                            text = "Are you sure? Once Permanent lock level is active, you CANNOT bypass any locks, pauses, or change control settings. This lock is permanent until you manually change the intensity level.",
                             fontFamily = InterFamily,
                             fontSize = 14.sp,
                             color = themeColor(R.attr.text_secondary, Color(0xFF64748B)),
@@ -1574,14 +1585,26 @@ fun TempLockSliders(
                                 if (settingsLockMgr.isLockEnabled && activityContext != null) {
                                     settingsLockMgr.authenticate(activityContext, "Change Temp Lock Trigger Type", object : SettingsLockManager.AuthCallback {
                                         override fun onSuccess() {
-                                            sharedPrefs.edit { putString("pref_temp_lock_limit_type", key) }
+                                            sharedPrefs.edit {
+                                                putString("pref_temp_lock_limit_type", key)
+                                                // Auto-enable scroll counting when scroll limit is active
+                                                if (key == "scroll" || key == "both") {
+                                                    putBoolean("pref_scroll_counter_enabled", true)
+                                                }
+                                            }
                                             limitType = key
                                             onChanged()
                                         }
                                         override fun onFailure(reason: String?) {}
                                     })
                                 } else {
-                                    sharedPrefs.edit { putString("pref_temp_lock_limit_type", key) }
+                                    sharedPrefs.edit {
+                                        putString("pref_temp_lock_limit_type", key)
+                                        // Auto-enable scroll counting when scroll limit is active
+                                        if (key == "scroll" || key == "both") {
+                                            putBoolean("pref_scroll_counter_enabled", true)
+                                        }
+                                    }
                                     limitType = key
                                     onChanged()
                                 }
@@ -1635,7 +1658,7 @@ fun TempLockSliders(
             title = "Daily Time Limit",
             subtitle = "Time usage allowed per day (Combined across all blocked apps)",
             value = timeLimitMinutes,
-            valueRange = 5f..240f,
+            valueRange = 1f..240f,
             unit = "m",
             brandPink = brandPink,
             textPrimary = textPrimary,

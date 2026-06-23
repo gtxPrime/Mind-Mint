@@ -1,11 +1,12 @@
 <div align="center">
+    <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Mind Mint Logo" width="120" height="120" />
+    <h1><b>Mind Mint</b></h1>
+    <p><b>Reclaim Your Focus. Master Your Time.</b></p>
+    <a href="https://play.google.com/store/apps/details?id=com.gxdevs.mindmint"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="96" alt="Get it on Google Play" /></a>
+    <a href="https://github.com/gtxPrime/Mind-Mint/releases/latest"><img src="docs/assets/github_badge.png" height="96" alt="Get it on GitHub" /></a>
+</div>
 
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Mind Mint Logo" width="120" height="120" />
-
-# Mind Mint
-
-**Reclaim Your Focus. Master Your Time.**
-
+<div align="center">
   <p>
     <a href="https://github.com/gtxPrime/Mind-Mint/stargazers">
       <img src="https://img.shields.io/github/stars/gtxPrime/Mind-Mint?style=for-the-badge&color=yellow" alt="Stars" />
@@ -22,8 +23,11 @@
     <a href="#">
       <img src="https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white&style=for-the-badge" alt="Platform" />
     </a>
+    <a href="https://github.com/gtxPrime/Mind-Mint/releases/latest">
+      <img src="https://img.shields.io/github/downloads/gtxPrime/Mind-Mint/total?label=Downloads&logo=github&style=for-the-badge&color=brightgreen" alt="GitHub Downloads" />
+    </a>
     <a href="https://play.google.com/store/apps/details?id=com.gxdevs.mindmint">
-      <img src="https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=google-play&logoColor=white" alt="Get it on Google Play" />
+      <img src="https://img.shields.io/endpoint?color=40bb12&label=Downloads&logo=google-play&style=for-the-badge&url=https%3A%2F%2Fplay.cuzi.workers.dev%2Fplay%3Fi%3Dcom.gxdevs.mindmint%26l%3Ddownloads%26m%3D%24totalinstalls" alt="Google Play Downloads" />
     </a>
   </p>
 
@@ -45,97 +49,180 @@
 
 ## 📱 About Mind Mint
 
-**Mind Mint** is a comprehensive productivity ecosystem that helps you break free from the doomscrolling cycle. It combines a robust app blocker, an immersive focus timer, a habit tracker, and a task manager, all tied together with gamification and deep analytics to make staying focused genuinely rewarding.
+**Mind Mint** is a comprehensive productivity ecosystem designed to help you break free from the doomscrolling cycle. It combines a robust app blocker, an immersive focus timer, a habit tracker, and a task manager, all tied together with gamification and deep analytics to make staying focused genuinely rewarding.
 
+> [!TIP]
 > "Productivity is not about doing more. It's about doing what matters."
 
 ---
 
-## <a id="-features"></a>🚀 Features
+## <a id="-features"></a>🚀 Core Ecosystem Features
 
-### 🧘 Immersive Focus Mode
-
-Transform your work sessions into a visual journey.
-
-- **Crystal Progression:** Watch your Focus Crystal grow and evolve across rarity tiers (Ruby, Emerald, Amethyst, and more) as you accumulate deep work time.
-- **Pomodoro Timer:** Built-in Pomodoro support with configurable work and break intervals, plus an optional auto-start break switch.
-- **Nebula Ambience:** A calming animated starfield eases you into a flow state.
-- **Session Tagging:** Tag sessions by topic (Study, Work, Reading, etc.) to understand where your time actually goes.
-- **Task-Linked Focus:** Attach a focus session directly to a specific task for end-to-end accountability.
-- **Scheduled Sessions:** Plan focus blocks in advance with 12-hour time format support.
-- **Dedicated Settings:** A focused settings sheet to tune every aspect of your focus experience.
-
-### 🔒 Lock-In Mode
-
-A hardened, distraction-proof session mode for when you need maximum discipline.
-
-- **Strict App Blocking:** Accessibility-service-powered blocking that intercepts and redirects distracting apps the moment they are opened.
-- **Browser Blocking:** Blocks distracting content directly inside mobile browsers, not just app launchers.
-- **Adult Content Filter:** Keyword-aware host-level blocking for adult content across all browsers.
-- **Whitelist Support:** Configure a per-session whitelist so permitted apps (e.g. navigation, calls) stay accessible even during Lock-In.
-- **Robust Re-Entry Guard:** Intelligent debounce and suppression logic prevents the blocker from misfiring on OS-generated background events.
-- **Overlay Shield:** A firm but non-intrusive overlay prevents bypassing the blocker without ending your session.
-
-### 🛡️ Prevent Uninstall
-
-Stop anyone from deleting Mind Mint without your explicit permission.
-
-- **Device Admin Guard:** Activates Android's Device Administrator to block unauthorized uninstall attempts.
-- **Settings Lock:** Secure your app settings with Biometric Authentication or a PIN so your configuration cannot be tampered with mid-session.
-
-### 📵 Intelligent App Blocker
-
-Stop doomscrolling before it starts, outside of focus sessions too.
-
-- **Selective Blocking:** Block specific apps (Instagram, YouTube Shorts, TikTok, etc.) on a per-app basis.
-- **Usage Limits:** Set daily time allowances per app. Once the limit is hit, the app locks for the rest of the day.
-- **Live Scroll Counter:** A real-time overlay counts how much you scroll, surfacing the behavior so you can change it.
-- **Pause Blocker:** Temporarily suspend blocking for a defined grace period without fully disabling the service.
-
-### ✅ Integrated Task Manager
-
-- **Quick Add:** Capture tasks instantly from the home screen without navigating away.
-- **Priority & Due Dates:** Organize to-dos with due dates and priority levels.
-- **Focus Integration:** Link any task to a focus session so completion feels concrete.
-- **Widget Support:** View and check off tasks directly from your Android home screen.
-
-### 📅 Habit Tracker
-
-Build lasting routines with deep insight into your behavior.
-
-- **Streak System:** Daily streaks with visual feedback keep your consistency front and center.
-- **Goal Setting:** Define targets for each habit and track progress toward them.
-- **Mood & Emotion Logging:** Attach how you felt to each habit entry for richer self-reflection.
-- **Per-Habit Stats:** Tap any habit to open its dedicated statistics view.
-
-### 📊 Deep Analytics
-
-Understand your patterns with data, not guesswork.
-
-- **Habit Heatmaps:** GitHub-style activity heatmaps visualize your consistency across the year at a glance.
-- **Focus Charts:** Bar and pie charts break down focus time by topic, session length, and time of day.
-- **Task Analytics:** Completion rates, overdue trends, and priority breakdowns in one view.
-- **Insights:** Weekly summaries highlighting your most productive days and biggest distractions.
-
-### 💰 Gamification & Rewards
-
-Make productivity motivating.
-
-- **Mint Crystals:** Earn in-app currency for every minute of successful focus time.
-- **Custom Themes:** Unlock and switch between curated visual themes.
-- **Shop** *(Coming Soon)*: Spend Mint Crystals on new crystal styles, themes, and companions.
-
-### 📱 App Experience
-
-- **Swipe Navigation:** Fluid swipe gestures for seamless screen transitions.
-- **Home Screen Widgets:** 5 widgets covering focus, tasks, and habits for at-a-glance access.
-- **Subtle Animations:** Micro-animations throughout the UI make interactions feel polished and alive.
-- **Push Notifications:** Firebase Cloud Messaging with deep-link routing keeps you in the loop.
-- **Keep Service Alive:** Optional setting to ensure the blocking service stays running in the background.
+<table width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🧘 Immersive Focus Mode</h3>
+      <p>Transform work sessions into a rewarding gamified journey.</p>
+      <ul>
+        <li><b>Crystal Evolution:</b> Watch focus crystals grow from Ruby to Amethyst.</li>
+        <li><b>Nebula Ambience:</b> Calming starfield animations trigger flow states.</li>
+        <li><b>Linked Tasks:</b> Link focus sessions to explicit priorities.</li>
+        <li><b>Configurable Pomodoro:</b> Smooth intervals with automatic transitions.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🔒 Lock-In Mode</h3>
+      <p>Hardened committing mechanisms for maximum discipline.</p>
+      <ul>
+        <li><b>Accessibility Shield:</b> Intercepts and redirects distracting launchers.</li>
+        <li><b>Universal Web Blocker:</b> Stop doomscrolling inside mobile browsers.</li>
+        <li><b>Adult Content Filter:</b> Keyword-aware hosts-level blocking.</li>
+        <li><b>Uninstall Protection:</b> Device Admin guard blocks unauthorized app deletion.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>📅 Habit & Task Center</h3>
+      <p>Build routines and keep your to-dos highly visual.</p>
+      <ul>
+        <li><b>Activity Heatmaps:</b> GitHub-style calendars track consistency.</li>
+        <li><b>Streak Systems:</b> Visual badges and cues keep momentum high.</li>
+        <li><b>Quick Capture:</b> Add tasks instantly right from the home dashboard.</li>
+        <li><b>Widgets Support:</b> Control tasks and habits from the launcher.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>📊 Deep Analytics & Rewards</h3>
+      <p>Actionable data paired with tangible motivation.</p>
+      <ul>
+        <li><b>Focus Charts:</b> Visualise sessions by category, time, and length.</li>
+        <li><b>Mint Crystals:</b> Earn custom in-app currency for every focused minute.</li>
+        <li><b>Themes Shop:</b> Unlock custom visual styling and crystal shapes.</li>
+        <li><b>Weekly Summaries:</b> Discover biggest distractions and peak hours.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## <a id="-screenshots"></a>📸 Screenshots
+## 🔒 Security & Commitment Center
+
+> [!IMPORTANT]  
+> Protect your focus configurations with multi-tiered security options, custom blocker intensities, and sensory-based bypass challenges.
+
+### 🔑 Settings Lock Profiles
+<table width="100%">
+  <tr>
+    <th width="30%">Lock Type</th>
+    <th width="70%">Description</th>
+  </tr>
+  <tr>
+    <td><b>Fingerprint / Biometric</b></td>
+    <td>Uses system Face Unlock or Fingerprint scanner to verify identity.</td>
+  </tr>
+  <tr>
+    <td><b>Custom 6-Digit PIN</b></td>
+    <td>A custom PIN secured via SHA-256 with progressive lockout brute-force cooldowns.</td>
+  </tr>
+  <tr>
+    <td><b>1-Day Lockout</b></td>
+    <td>Locks all settings, app updates, and configuration parameters for a full 24 hours.</td>
+  </tr>
+</table>
+
+### ⚡ Blocker Intensity Levels
+<table width="100%">
+  <tr>
+    <th width="20%">Level</th>
+    <th width="30%">Name</th>
+    <th width="50%">Behavior</th>
+  </tr>
+  <tr>
+    <td><b>Level 0</b></td>
+    <td><b>NONE</b></td>
+    <td>The blocker and scroll trackers are inactive.</td>
+  </tr>
+  <tr>
+    <td><b>Level 1</b></td>
+    <td><b>FRICTION</b></td>
+    <td>Complete a mindfulness challenge to get a temporary bypass.</td>
+  </tr>
+  <tr>
+    <td><b>Level 2</b></td>
+    <td><b>REMINDER</b></td>
+    <td>Non-blocking warnings pop up periodically during app usage.</td>
+  </tr>
+  <tr>
+    <td><b>Level 3</b></td>
+    <td><b>TEMP LOCK</b></td>
+    <td>Hard lock blocks the app once scroll limits or daily time limits are reached.</td>
+  </tr>
+  <tr>
+    <td><b>Level 4</b></td>
+    <td><b>PERMANENT</b></td>
+    <td>Absolute lock. Settings adjustments and bypass challenges are locked out.</td>
+  </tr>
+</table>
+
+### 📳 Bypass Challenges (Frictions)
+To unlock a temporary bypass window, choose one of the following sensory challenges:
+* 🧮 **Math:** Solve randomly generated equations to reset focus.
+* 📳 **Shake:** Vigorously shake the phone to stimulate physical activity.
+* 🗣️ **Scream:** Vocalize out loud to trigger auditory feedback and release dopamine.
+* 💨 **Breath:** Take a guided 10-second deep breathing pause to restore mindfulness.
+
+---
+
+## 📵 Supported Apps to Block
+
+Mind Mint supports precise blocking and scroll tracking for the following **8 major platforms**:
+
+<table align="center" width="100%">
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/youtube-play.png" width="48" height="48" alt="YouTube" /><br/>
+      <sub><b>YouTube Shorts</b></sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/instagram-new.png" width="48" height="48" alt="Instagram" /><br/>
+      <sub><b>Instagram Reels</b></sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/facebook-new.png" width="48" height="48" alt="Facebook" /><br/>
+      <sub><b>Facebook Reels</b></sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/snapchat.png" width="48" height="48" alt="Snapchat" /><br/>
+      <sub><b>Snapchat Spotlights</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/tiktok.png" width="48" height="48" alt="TikTok" /><br/>
+      <sub><b>TikTok</b></sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/reddit.png" width="48" height="48" alt="Reddit" /><br/>
+      <sub><b>Reddit Watch</b></sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/linkedin.png" width="48" height="48" alt="LinkedIn" /><br/>
+      <sub><b>LinkedIn</b></sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.icons8.com/color/48/twitterx--v2.png" width="48" height="48" alt="X" /><br/>
+      <sub><b>X (Twitter) Reels</b></sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><i>...with support for more apps coming soon!</i> 🚀</p>
+
+---
+
+## 📸 Screenshots
 
 <div align="center">
 <table>
@@ -156,9 +243,7 @@ Make productivity motivating.
 
 ---
 
-## <a id="-tech-stack"></a>🛠 Tech Stack
-
-Mind Mint is built with modern Android development practices for a smooth, responsive experience.
+## 🛠 Tech Stack
 
 <div align="center">
 
@@ -176,7 +261,7 @@ Mind Mint is built with modern Android development practices for a smooth, respo
 </div>
 
 <details>
-<summary>Full dependency list</summary>
+<summary>📦 Full dependency list</summary>
 
 - `androidx.core:core-ktx`
 - `androidx.appcompat:appcompat`
@@ -191,9 +276,7 @@ Mind Mint is built with modern Android development practices for a smooth, respo
 
 </details>
 
----
-
-## 📈 Repository Stats
+## 📈 Repository Stats & Star History
 
 <div align="center">
 
@@ -205,35 +288,26 @@ Mind Mint is built with modern Android development practices for a smooth, respo
 | :---: | :---: |
 | ![Language](https://img.shields.io/github/languages/top/gtxPrime/Mind-Mint?style=for-the-badge&color=blueviolet) | ![Code Size](https://img.shields.io/github/languages/code-size/gtxPrime/Mind-Mint?style=for-the-badge&color=orange) |
 
-</div>
-
----
-
-## 🌟 Star History
+<br/>
 
 <a href="https://star-history.com/#gtxPrime/Mind-Mint&Date">
   <img src="https://api.star-history.com/svg?repos=gtxPrime/Mind-Mint&type=Date&theme=dark" alt="Star History Chart" />
 </a>
 
----
-
-## 🗺 Roadmap
-
-- [ ] **Lock Types** - More ways to protect your settings and enforce your commitments.
-- [ ] **Companions** - Friendly AI-driven companions to motivate and coach you.
-- [ ] **Friendly Battles** - Challenge friends to focus streaks and see who lasts longer.
-- [ ] **Cloud Sync** - Back up your data and restore it across devices.
-- [ ] **Web Dashboard** - Review your full stats on a desktop browser.
+</div>
 
 ---
 
-## 📚 Documentation
+<details>
+<summary>📚 Documentation Index</summary>
 
 - **[⚡ Quick Start](docs/QUICK_START.md)** - Get the app running in 5 minutes.
 - **[🔧 Build & Run](docs/BUILD_AND_RUN.md)** - Detailed setup instructions.
 - **[🏛️ Architecture](docs/ARCHITECTURE.md)** - High-level overview of the code structure.
 - **[🔑 Key Components](docs/KEY_COMPONENTS.md)** - Deep dive into critical files and services.
 - **[📂 Documentation Index](docs/SUMMARY.md)** - Full list of available docs.
+
+</details>
 
 ---
 
@@ -252,11 +326,13 @@ Mind Mint is currently in active development. Build it from source:
    ```
 4. **Sync Gradle** and hit **Run**
 
+> [!NOTE]  
 > A release APK will be available in the [Releases](https://github.com/gtxPrime/Mind-Mint/releases) section soon.
 
 ---
 
-## <a id="-contributing"></a>🤝 How to Contribute
+<details>
+<summary>🤝 How to Contribute</summary>
 
 Contributions are welcome, whether it's a bug fix, a new feature, or a documentation improvement.
 
@@ -267,6 +343,8 @@ Contributions are welcome, whether it's a bug fix, a new feature, or a documenta
 5. **Open a Pull Request**
 
 > Current focus areas: UI animations (Lottie), widget improvements, and the upcoming Lock Types system.
+
+</details>
 
 ---
 

@@ -10,6 +10,8 @@ public class UpdateLogData {
                 List<UpdateLogItem> list = new ArrayList<>();
 
                 addVersion(list, "Pumpkin 14 (Current)",
+                                "Added new platforms to App Blocker list: Facebook, LinkedIn, Reddit, TikTok, and Twitter",
+                                "Added automatic support for modded/lite packages (e.g. Facebook Lite, Instagram Lite, Twitter Lite) grouped under main apps",
                                 "Fixed bugs of new Blocker Control",
                                 "Upgraded Focus & Locked-In mode notifications to support Android 16 Live Updates.",
                                 "Ticking progress bar in ongoing notifications now moves in real-time",

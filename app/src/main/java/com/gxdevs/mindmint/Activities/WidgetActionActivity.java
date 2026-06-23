@@ -3,6 +3,8 @@ package com.gxdevs.mindmint.Activities;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,9 +25,11 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.gxdevs.mindmint.Models.Habit;
 import com.gxdevs.mindmint.R;
+import com.gxdevs.mindmint.Services.FocusService;
 import com.gxdevs.mindmint.Utils.HabitManager;
 import com.gxdevs.mindmint.Utils.MintCrystals;
 import com.gxdevs.mindmint.Utils.StreakManager;
+import com.gxdevs.mindmint.Utils.Utils;
 import com.gxdevs.mindmint.Widgets.HabitListWidgetProvider;
 import com.gxdevs.mindmint.db.MindMintRoomDatabase;
 import com.gxdevs.mindmint.db.entities.FocusTopicEntity;
@@ -311,27 +315,24 @@ public class WidgetActionActivity extends AppCompatActivity {
                     chip.setCheckedIconVisible(true);
 
                     // Styling to match FocusMode.java
-                    chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this, R.color.transparent)));
-                    chip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this, R.color.glass_stroke)));
-                    chip.setChipStrokeWidth(com.gxdevs.mindmint.Utils.Utils.dpToPx(1, this));
-                    chip.setChipCornerRadius(com.gxdevs.mindmint.Utils.Utils.dpToPx(20, this));
+                    chip.setChipBackgroundColor(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.transparent)));
+                    chip.setChipStrokeColor(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.glass_stroke)));
+                    chip.setChipStrokeWidth(Utils.dpToPx(1, this));
+                    chip.setChipCornerRadius(Utils.dpToPx(20, this));
                     chip.setChipBackgroundColorResource(R.color.white_10); // 10% white for glass effect
                     chip.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
 
                     if (selectedTopicId == topic.id) {
                         chip.setChecked(true);
-                        chip.setChipBackgroundColor(android.content.res.ColorStateList
-                                .valueOf(ContextCompat.getColor(this, R.color.brainColor)));
-                        chip.setTextColor(android.graphics.Color.WHITE);
+                        chip.setChipBackgroundColor(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brainColor)));
+                        chip.setTextColor(Color.WHITE);
                     }
 
                     chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                         if (isChecked) {
                             selectedTopicId = topic.id;
-                            chip.setChipBackgroundColor(
-                                    android.content.res.ColorStateList
-                                            .valueOf(ContextCompat.getColor(this, R.color.brainColor)));
-                            chip.setTextColor(android.graphics.Color.WHITE);
+                            chip.setChipBackgroundColor(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brainColor)));
+                            chip.setTextColor(Color.WHITE);
                         } else if (selectedTopicId == topic.id) {
                             selectedTopicId = -1;
                             chip.setChipBackgroundColorResource(R.color.white_10);
@@ -345,8 +346,8 @@ public class WidgetActionActivity extends AppCompatActivity {
     }
 
     private void startFocusService(long duration, boolean isPomodoro, long pomodoroFocus, long pomodoroBreak) {
-        Intent serviceIntent = new Intent(this, com.gxdevs.mindmint.Services.FocusService.class);
-        serviceIntent.setAction(com.gxdevs.mindmint.Services.FocusService.ACTION_START_FOREGROUND_SERVICE);
+        Intent serviceIntent = new Intent(this, FocusService.class);
+        serviceIntent.setAction(FocusService.ACTION_START_FOREGROUND_SERVICE);
         serviceIntent.putExtra("durationInMillis", duration);
         serviceIntent.putExtra("isPomodoroEnabled", isPomodoro);
         if (isPomodoro) {
@@ -391,16 +392,16 @@ public class WidgetActionActivity extends AppCompatActivity {
         // Apply tint
         icon.setColorFilter(habit.getIconTint());
         icon.setBackgroundResource(R.drawable.widget_circle_bg); // Ensuring background exists
-        icon.setBackgroundTintList(android.content.res.ColorStateList.valueOf(habit.getIconBackgroundTint()));
+        icon.setBackgroundTintList(ColorStateList.valueOf(habit.getIconBackgroundTint()));
 
         // Initial UI State
         updateGoalUI(current, target, unit, pb, helperText);
 
         int brandColor = getColor(R.color.brand_pink);
-        btnPlus.setImageTintList(android.content.res.ColorStateList.valueOf(brandColor));
-        btnMinus.setImageTintList(android.content.res.ColorStateList.valueOf(brandColor));
-        pb.setProgressTintList(android.content.res.ColorStateList.valueOf(habit.getIconTint()));
-        pb.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(habit.getIconBackgroundTint()));
+        btnPlus.setImageTintList(ColorStateList.valueOf(brandColor));
+        btnMinus.setImageTintList(ColorStateList.valueOf(brandColor));
+        pb.setProgressTintList(ColorStateList.valueOf(habit.getIconTint()));
+        pb.setProgressBackgroundTintList(ColorStateList.valueOf(habit.getIconBackgroundTint()));
 
         btnPlus.setOnClickListener(v -> {
             if (habit.getCurrentProgress() >= habit.getTargetCount())

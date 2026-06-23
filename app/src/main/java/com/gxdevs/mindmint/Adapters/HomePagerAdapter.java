@@ -10,17 +10,6 @@ import com.gxdevs.mindmint.Fragments.HomeFragment;
 import com.gxdevs.mindmint.Fragments.SettingsFragment;
 import com.gxdevs.mindmint.Fragments.TasksFragment;
 
-/**
- * ViewPager2 adapter for the main bottom-nav tabs.
- *
- * Page order (intentionally):
- *   0 → Tasks
- *   1 → Home       ← default start page
- *   2 → Habits
- *   3 → Settings
- *
- * This matches the visual layout of the bottom bar so swiping feels natural.
- */
 public class HomePagerAdapter extends FragmentStateAdapter {
 
     public static final int PAGE_TASKS    = 0;
@@ -36,13 +25,12 @@ public class HomePagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        switch (position) {
-            case PAGE_TASKS:    return new TasksFragment();
-            case PAGE_HABITS:   return new HabitFragment();
-            case PAGE_SETTINGS: return new SettingsFragment();
-            case PAGE_HOME:
-            default:            return new HomeFragment();
-        }
+        return switch (position) {
+            case PAGE_TASKS -> new TasksFragment();
+            case PAGE_HABITS -> new HabitFragment();
+            case PAGE_SETTINGS -> new SettingsFragment();
+            default -> new HomeFragment();
+        };
     }
 
     @Override

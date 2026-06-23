@@ -35,7 +35,6 @@ import android.provider.Settings;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.HapticFeedbackConstants;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.AlphaAnimation;
@@ -103,7 +102,6 @@ public class FocusMode extends AppCompatActivity {
 
     private static final String TAG = "FocusMode";
     private static final float REVEAL_COMPLETE_AT = 0.95f;
-    /** Intent extra: when true, FocusMode shakes any visible permission cards on entry. */
     public static final String EXTRA_SHAKE_PERM_CARDS = "extra_shake_perm_cards";
     private ActivityResultLauncher<String> requestNotificationPermissionLauncher;
     private TextView timerText, instructionText;
@@ -128,22 +126,13 @@ public class FocusMode extends AppCompatActivity {
     private TextView pomodoroIndicator;
     private View topicsContainer;
     private final boolean isTestMode = false;
-    // Activity-level cache of the locked-in state so it survives stopTimer() clearing the pref
     private boolean wasLockedInSession = false;
-    // Tracks whether the crystal reveal-complete event has already been fired this session
     private boolean revealCompleteNotified = false;
-    // Break seekbar on main screen
     private android.widget.SeekBar breakDurationSeekBar;
     private TextView breakSeekbarLabel;
     private View breakSeekbarCard;
-    // Notification permission card on main screen
     private View notificationPermCard;
-    /**
-     * Single background thread for all DB writes — shut down in onDestroy.
-     */
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
-
-    // Task-Linked Mode Views
     private View taskCardOverlay;
     private TextView linkedTaskName;
     private Button markTaskCompleteBtn;
@@ -159,7 +148,6 @@ public class FocusMode extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Apply local night mode for this Activity only if user saved a nebula override
         SharedPreferences prefsInit = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefsInit.contains("nebula_theme_override")) {
             boolean dark = prefsInit.getBoolean("nebula_theme_override", false);
@@ -179,22 +167,14 @@ public class FocusMode extends AppCompatActivity {
         setupCircularSeekBar();
         loadTopics();
 
-        // Check if started from Task click
         linkedTaskIdExtra = getIntent().getStringExtra(FocusService.EXTRA_TASK_ID);
         linkedTopicNameExtra = getIntent().getStringExtra("topicName");
         isOpenEndedExtra = getIntent().getBooleanExtra(FocusService.EXTRA_IS_OPEN_ENDED, false);
 
-        // If extras are missing (app killed/restored), they will be filled in onServiceConnected
         setupTaskCardIfLinked();
-
-        // Setup blur on permission card and update its visibility
         checkPermissionAndMoveOn();
     }
 
-    /**
-     * Restores session context from a running FocusService when the activity is
-     * recreated without Intent extras (e.g. app was killed and user re-opens).
-     */
     private void restoreStateFromService() {
         if (focusService == null) return;
         if (linkedTaskIdExtra == null || linkedTaskIdExtra.isEmpty()) {
@@ -203,7 +183,6 @@ public class FocusMode extends AppCompatActivity {
         if (!isOpenEndedExtra) {
             isOpenEndedExtra = focusService.isOpenEnded();
         }
-        // Restore task name from TaskManager if it was not passed via Intent (app killed/restored)
         if (linkedTopicNameExtra == null || linkedTopicNameExtra.isEmpty()) {
             if (linkedTaskIdExtra != null && !linkedTaskIdExtra.isEmpty()) {
                 try {
@@ -213,7 +192,6 @@ public class FocusMode extends AppCompatActivity {
                 }
             }
         }
-        // Re-run setup so the task card and open-ended UI show correctly
         setupTaskCardIfLinked();
     }
 
@@ -225,12 +203,10 @@ public class FocusMode extends AppCompatActivity {
             topicsContainer.setVisibility(View.GONE);
             settingsBtn.setVisibility(View.GONE);
 
-            // Always hide coin UI for task-linked sessions
             findViewById(R.id.coinImg).setVisibility(View.GONE);
             mintCrystalsTxt.setVisibility(View.GONE);
 
             if (isOpenEndedExtra) {
-                // Open Ended Mode setup: hide crystal/seekbar/coins, center timer text
                 circularSeekBar.setVisibility(View.GONE);
                 lottieAnimation.setVisibility(View.GONE);
                 crystalBase.setVisibility(View.GONE);
@@ -239,7 +215,6 @@ public class FocusMode extends AppCompatActivity {
                 if (progressContainer != null) progressContainer.setVisibility(View.GONE);
                 instructionText.setText("Open Ended Focus");
 
-                // Center the timer text by disconnecting it from progressContainer
                 ConstraintLayout mainLayout = findViewById(R.id.main);
                 ConstraintSet set = new ConstraintSet();
                 set.clone(mainLayout);
@@ -254,7 +229,6 @@ public class FocusMode extends AppCompatActivity {
                 finish();
             });
         } else {
-            // Non-task-linked: check if locked-in to hide coins
             boolean isLockedInExt = getIntent().getBooleanExtra(FocusService.EXTRA_IS_LOCKED_IN, false) ||
                     PreferenceManager.getDefaultSharedPreferences(this).getBoolean(FocusService.PREF_IS_LOCKED_IN, false);
             if (isLockedInExt) {
@@ -269,7 +243,6 @@ public class FocusMode extends AppCompatActivity {
                 ? linkedTaskIdExtra
                 : (focusService != null ? focusService.getLinkedTaskId() : null);
         if (activeTaskId == null || activeTaskId.isEmpty()) {
-            // No task linked — just stop normally
             if (isBound && focusService != null) focusService.stopService();
             finish();
             return;

@@ -71,6 +71,8 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
@@ -154,8 +156,8 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         enableEdgeToEdge()
 
         challengeLockMgr = ChallengeLockManager(this)
-        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+        vibrator = getSystemService(VIBRATOR_SERVICE) as? Vibrator
+        sensorManager = getSystemService(SENSOR_SERVICE) as? SensorManager
         sensorManager?.let {
             accelerometer = it.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         }
@@ -472,7 +474,6 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
     private fun setupScreamChallenge() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            // Request permissions using standard compose/accessibility utils
             Utils.showPermissionSheet(this, Utils.PermissionType.AUDIO,
                 object : Utils.PermissionLauncher {
                     override fun launchAccessibility(intent: Intent?) {}
@@ -520,8 +521,8 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                     for (i in 0 until readSize) {
                         sum += (buffer[i] * buffer[i]).toDouble()
                     }
-                    val amplitude = Math.sqrt(sum / readSize)
-                    val progress = Math.min(100, ((amplitude / 4000.0) * 100).toInt())
+                    val amplitude = sqrt(sum / readSize)
+                    val progress = 100.coerceAtMost(((amplitude / 4000.0) * 100).toInt())
 
                     handler.post { updateScreamProgress(progress) }
                 }
@@ -543,7 +544,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
         if (currentVolume >= 92) {
             screamSustainedMs += delta
-            val timeLeft = Math.max(0.0, (SCREAM_TARGET_MS - screamSustainedMs) / 1000.0)
+            val timeLeft = 0.0.coerceAtLeast((SCREAM_TARGET_MS - screamSustainedMs) / 1000.0)
             screamTimeLeft.value = String.format(Locale.US, "Hold it: %.1fs", timeLeft)
 
             if (screamSustainedMs >= SCREAM_TARGET_MS) {
@@ -577,22 +578,17 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
     private fun requestMuteBackgroundAudio() {
         try {
-            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val attributes = android.media.AudioAttributes.Builder()
-                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-                val request = android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-                    .setAudioAttributes(attributes)
-                    .setOnAudioFocusChangeListener { }
-                    .build()
-                audioFocusRequest = request
-                audioManager.requestAudioFocus(request)
-            } else {
-                @Suppress("DEPRECATION")
-                audioManager.requestAudioFocus(null, android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-            }
+            val audioManager = getSystemService(AUDIO_SERVICE) as? AudioManager ?: return
+            val attributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+            val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                .setAudioAttributes(attributes)
+                .setOnAudioFocusChangeListener { }
+                .build()
+            audioFocusRequest = request
+            audioManager.requestAudioFocus(request)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to request audio focus", e)
         }
@@ -600,16 +596,11 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
 
     private fun abandonMuteBackgroundAudio() {
         try {
-            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val request = audioFocusRequest as? android.media.AudioFocusRequest
-                if (request != null) {
-                    audioManager.abandonAudioFocusRequest(request)
-                    audioFocusRequest = null
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                audioManager.abandonAudioFocus(null)
+            val audioManager = getSystemService(AUDIO_SERVICE) as? android.media.AudioManager ?: return
+            val request = audioFocusRequest as? android.media.AudioFocusRequest
+            if (request != null) {
+                audioManager.abandonAudioFocusRequest(request)
+                audioFocusRequest = null
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to abandon audio focus", e)
@@ -653,8 +644,6 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // ================= 3. HOLD BREATH CHALLENGE =================
-
     private fun setupBreathChallenge() {
         breathRemainingMs.doubleValue = 10000.0
         isHoldingBreath.value = false
@@ -666,7 +655,6 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 if (!isHoldingBreath.value) return
 
                 breathRemainingMs.doubleValue -= 100.0
-                // B9: removed dead `val displaySec` — composable reads breathRemainingMs directly
 
                 if (breathRemainingMs.doubleValue <= 0) {
                     isHoldingBreath.value = false
@@ -686,7 +674,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         brandPink: Color,
         textPrimary: Color
     ) {
-        val displaySec = Math.max(0.0, breathRemainingMs.doubleValue / 1000.0)
+        val displaySec = 0.0.coerceAtLeast(breathRemainingMs.doubleValue / 1000.0)
         val buttonScale by animateFloatAsState(
             targetValue = if (isHoldingBreath.value) 0.9f else 1.0f,
             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
@@ -742,8 +730,6 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
-
-    // ================= 4. TEXT TYPING CHALLENGE =================
 
     private fun setupTextChallenge(pinResetMode: Boolean) {
         isPinResetTypingMode.value = pinResetMode
@@ -888,8 +874,6 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // ================= 5. SHAKE TO UNLOCK CHALLENGE =================
-
     private fun setupShakeChallenge() {
         shakeProgress.floatValue = 0f
         sensorManager?.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
@@ -898,7 +882,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         handler.post(object : Runnable {
             override fun run() {
                 if (lockType == "shake" && shakeProgress.floatValue > 0) {
-                    shakeProgress.floatValue = Math.max(0f, shakeProgress.floatValue - 0.5f)
+                    shakeProgress.floatValue = 0f.coerceAtLeast(shakeProgress.floatValue - 0.5f)
                 }
                 handler.postDelayed(this, 100)
             }
@@ -918,10 +902,10 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                 val y = event.values[1]
                 val z = event.values[2]
 
-                val speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000
+                val speed = abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000
 
                 if (speed > 800) {
-                    shakeProgress.floatValue = Math.min(100.0f, shakeProgress.floatValue + 8.0f)
+                    shakeProgress.floatValue = 100.0f.coerceAtMost(shakeProgress.floatValue + 8.0f)
 
                     if (shakeProgress.floatValue >= 100.0f) {
                         sensorManager?.unregisterListener(this)
@@ -1115,7 +1099,7 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                     val m = (remaining / 60_000L) % 60
                     val s = (remaining / 1_000L) % 60
                     cooldownText = "%02dh %02dm %02ds".format(h, m, s)
-                    delay(1000L)
+                    delay(1000L.milliseconds)
                 }
             }
         }
@@ -1246,8 +1230,6 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // ================= VERIFICATION & LIFECYCLE =================
-
     private fun verifyAndSubmit() {
         when (lockType) {
             "math" -> {
@@ -1278,15 +1260,13 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
                         lockMgr.clearCustomPin()
                         challengeLockMgr.clearPinResetCooldown()
                         Toast.makeText(this, "Old PIN cleared. Please set a new PIN to re-enable your lock.", Toast.LENGTH_SHORT).show()
-                        // Show set-PIN dialog; on completion re-enable the lock
                         lockMgr.showSetCustomPinDialog(this@LockChallengeActivity, false, {
                             lockMgr.isLockEnabled = true
-                            lockMgr.setLockType(SettingsLockManager.LOCK_TYPE_CUSTOM)
+                            lockMgr.lockType = SettingsLockManager.LOCK_TYPE_CUSTOM
                             Toast.makeText(this@LockChallengeActivity, "New PIN set! Settings lock re-enabled.", Toast.LENGTH_SHORT).show()
                             setResult(RESULT_OK)
                             finish()
                         }, {
-                            // User cancelled PIN setup — lock stays disabled
                             Toast.makeText(this@LockChallengeActivity, "PIN not set. Settings lock has been disabled.", Toast.LENGTH_LONG).show()
                             setResult(RESULT_OK)
                             finish()
@@ -1313,7 +1293,6 @@ class LockChallengeActivity : AppCompatActivity(), SensorEventListener {
         } else {
             targetPackage?.let { pkg ->
                 val durationMinutes = challengeLockMgr.bypassDurationMinutes
-                // Grant bypass synchronously first to prevent race conditions during activity transition
                 AppUsageAccessibilityService.grantBypass(pkg, durationMinutes)
                 val intent = Intent("com.gxdevs.mindmint.action.APP_BYPASS_GRANTED").apply {
                     putExtra("package_name", pkg)

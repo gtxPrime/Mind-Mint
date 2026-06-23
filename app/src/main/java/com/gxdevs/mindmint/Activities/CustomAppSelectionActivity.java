@@ -57,7 +57,6 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
         Utils.setPad(findViewById(R.id.main), "bottom", this);
         findViewById(R.id.backBtn).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
-        // Resolve mode from intent
         String intentMode = getIntent().getStringExtra(EXTRA_MODE);
         if (MODE_WHITELIST.equals(intentMode)) {
             mode = MODE_WHITELIST;
@@ -66,7 +65,6 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
                 ? AppUsageAccessibilityService.PREF_LOCKED_IN_EXTRA_WHITELIST
                 : AppUsageAccessibilityService.PREF_CUSTOM_BLOCKED_APPS;
 
-        // Update toolbar text and accent to reflect mode
         applyModeVisuals();
 
         recyclerViewApps = findViewById(R.id.rv_apps_list);
@@ -82,17 +80,14 @@ public class CustomAppSelectionActivity extends AppCompatActivity implements App
         loadInstalledApps();
     }
 
-    /** Adjusts the toolbar title, subtitle pill, and progress indicator color to match the mode. */
     private void applyModeVisuals() {
         boolean isWhitelist = MODE_WHITELIST.equals(mode);
 
-        // Toolbar title
         TextView toolbarTitle = findViewById(R.id.toolbarTitle);
         if (toolbarTitle != null) {
             toolbarTitle.setText(isWhitelist ? "Strict Focus Whitelist" : "Custom App Blocking");
         }
 
-        // Mode badge (tag below title)
         View modeBadge = findViewById(R.id.modeBadge);
         TextView modeBadgeText = findViewById(R.id.modeBadgeText);
         if (modeBadge != null && modeBadgeText != null) {

@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
@@ -26,6 +27,7 @@ import androidx.preference.PreferenceManager;
 import com.gxdevs.mindmint.R;
 import com.gxdevs.mindmint.Services.AppUsageAccessibilityService;
 import com.gxdevs.mindmint.Services.FocusService;
+import com.gxdevs.mindmint.Utils.ChallengeLockManager;
 
 public class BlockingOverlayDisplayActivity extends AppCompatActivity {
 
@@ -39,8 +41,7 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
 
     private Button btnUnlockApp;
     private Button btnGoBack;
-    private com.gxdevs.mindmint.Utils.ChallengeLockManager challengeLockMgr;
-    private androidx.activity.result.ActivityResultLauncher<Intent> challengeLauncher;
+    private ChallengeLockManager challengeLockMgr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,10 +64,10 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
         ivBlockedAppIcon = findViewById(R.id.iv_blocked_app_icon);
         btnUnlockApp = findViewById(R.id.btn_unlock_app);
         btnGoBack = findViewById(R.id.btn_go_back);
-        challengeLockMgr = new com.gxdevs.mindmint.Utils.ChallengeLockManager(this);
+        challengeLockMgr = new ChallengeLockManager(this);
 
-        challengeLauncher = registerForActivityResult(
-                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+        registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK) {
                         finish();
@@ -157,8 +158,6 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
     private void setupTimer() {
         handler.removeCallbacksAndMessages(null);
         Log.d(TAG, "setupTimer: Removed any existing handler callbacks.");
-
-        // Reset the HOME-dispatch guard for every new blocking event.
         homeActionDispatched = false;
 
         btnUnlockApp.setVisibility(View.GONE);
@@ -175,7 +174,7 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
         }
         if (challengeType == null) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-            challengeType = sp.getString(com.gxdevs.mindmint.Utils.ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
+            challengeType = sp.getString(ChallengeLockManager.PREF_BLOCKER_CHALLENGE_TYPE, "none");
         }
 
         if ("oneday".equals(challengeType)) {
@@ -219,8 +218,6 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
             });
 
         } else if ("permanent".equals(challengeType)) {
-            // Permanent block: stays blocked until the user changes intensity in settings.
-            // No timer, no lock management — the service re-fires this overlay on every open.
             btnGoBack.setVisibility(View.VISIBLE);
             btnGoBack.setOnClickListener(v -> handleBackPress());
 
@@ -231,7 +228,6 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
             }
 
         } else {
-            // "none" or any fallback → standard auto-close + HOME after popup duration.
             setupStandardAutoCloseTimer();
         }
     }
@@ -258,11 +254,6 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
         }, popupDurationSeconds * 1000L);
     }
 
-
-    /**
-     * Dispatch a global HOME action via the accessibility service so the user lands
-     * on the launcher instead of being dropped back into the blocked app.
-     */
     private void dispatchHomeAction() {
         if (!homeActionDispatched) {
             homeActionDispatched = true;
@@ -278,8 +269,6 @@ public class BlockingOverlayDisplayActivity extends AppCompatActivity {
             Log.d(TAG, "onBackPressed: Back press allowed for reminder. Finishing activity.");
             finish();
         } else {
-            // Blocking mode: always go home so the user is NOT dropped back into the
-            // blocked app when they press Go Back / hardware back.
             Log.d(TAG, "onBackPressed: Blocking mode — dispatching HOME before finishing.");
             dispatchHomeAction();
             if (!isFinishing() && !isDestroyed()) {

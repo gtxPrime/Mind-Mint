@@ -1,7 +1,14 @@
 package com.gxdevs.mindmint.Activities;
 
+import android.Manifest;
+import android.app.AlarmManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -21,7 +28,9 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.play.core.review.ReviewManager;
 import com.google.android.play.core.review.ReviewManagerFactory;
 import com.gxdevs.mindmint.Adapters.HomePagerAdapter;
+import com.gxdevs.mindmint.Common.IntentActions;
 import com.gxdevs.mindmint.Fragments.HabitFragment;
+import com.gxdevs.mindmint.Fragments.HomeFragment;
 import com.gxdevs.mindmint.Fragments.SettingsFragment;
 import com.gxdevs.mindmint.Fragments.TasksFragment;
 import com.gxdevs.mindmint.R;
@@ -38,6 +47,10 @@ import android.widget.TextView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.gxdevs.mindmint.Services.FocusService;
+import com.skydoves.balloon.ArrowOrientation;
+import com.skydoves.balloon.Balloon;
+import com.skydoves.balloon.BalloonAnimation;
+import com.skydoves.balloon.BalloonSizeSpec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -202,28 +215,23 @@ public class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         MidnightResetManager.checkAndPerformReset(this);
-        // Re-check accessibility permission so the Lock In pill shows/hides instantly
         updateLockInPillLabel();
 
         lockInPill.postDelayed(this::checkAndShowLockInTutorial, 500);
 
-        // Bug 4 fix: listen for alarm-triggered session ends while activity is visible
-        focusSessionEndedReceiver = new android.content.BroadcastReceiver() {
+        focusSessionEndedReceiver = new BroadcastReceiver() {
             @Override
-            public void onReceive(android.content.Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent) {
                 updateLockInPillLabel();
-                // Also refresh the home fragment's play/pause button state
-                androidx.fragment.app.Fragment f = getSupportFragmentManager()
+                Fragment f = getSupportFragmentManager()
                         .findFragmentByTag("f" + HomePagerAdapter.PAGE_HOME);
-                if (f instanceof com.gxdevs.mindmint.Fragments.HomeFragment) {
-                    ((com.gxdevs.mindmint.Fragments.HomeFragment) f).refreshPauseButtonState();
+                if (f instanceof HomeFragment) {
+                    ((HomeFragment) f).refreshPauseButtonState();
                 }
             }
         };
-        androidx.core.content.ContextCompat.registerReceiver(this, focusSessionEndedReceiver,
-                new android.content.IntentFilter(
-                        com.gxdevs.mindmint.Common.IntentActions.getActionFocusSessionEnded(this)),
-                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+        ContextCompat.registerReceiver(this, focusSessionEndedReceiver,
+                new IntentFilter(IntentActions.getActionFocusSessionEnded(this)), ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     @Override
@@ -407,14 +415,14 @@ public class HomeActivity extends AppCompatActivity {
 
     private boolean hasLockInPermissions() {
         // Exact alarm — required on Android 12+
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            android.app.AlarmManager am = (android.app.AlarmManager) getSystemService(ALARM_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
             if (am == null || !am.canScheduleExactAlarms()) return false;
         }
         // Notification — required on Android 13+
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return ContextCompat.checkSelfPermission(this,
-                    android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+                    Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
         }
         return true;
     }
@@ -588,12 +596,12 @@ public class HomeActivity extends AppCompatActivity {
         if (prefs.getBoolean("lock_in_tutorial_shown", false))
             return;
 
-        com.skydoves.balloon.Balloon balloon = new com.skydoves.balloon.Balloon.Builder(this)
+        Balloon balloon = new Balloon.Builder(this)
                 .setArrowSize(10)
-                .setArrowOrientation(com.skydoves.balloon.ArrowOrientation.BOTTOM)
+                .setArrowOrientation(ArrowOrientation.BOTTOM)
                 .setArrowPosition(0.5f)
                 .setWidthRatio(0.7f)
-                .setHeight(com.skydoves.balloon.BalloonSizeSpec.WRAP)
+                .setHeight(BalloonSizeSpec.WRAP)
                 .setTextSize(14f)
                 .setCornerRadius(10f)
                 .setAlpha(0.95f)
@@ -601,7 +609,7 @@ public class HomeActivity extends AppCompatActivity {
                 .setText("Tap to lock in and block distractive apps!")
                 .setTextColor(ContextCompat.getColor(this, R.color.white))
                 .setBackgroundColor(ContextCompat.getColor(this, R.color.brainColor))
-                .setBalloonAnimation(com.skydoves.balloon.BalloonAnimation.ELASTIC)
+                .setBalloonAnimation(BalloonAnimation.ELASTIC)
                 .setDismissWhenClicked(true)
                 .setLifecycleOwner(this)
                 .setOnBalloonDismissListener(() -> prefs.edit().putBoolean("lock_in_tutorial_shown", true).apply())

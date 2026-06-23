@@ -11,6 +11,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -307,10 +308,10 @@ public class SiteBlockerActivity extends AppCompatActivity {
     }
 
     private class SiteVH extends RecyclerView.ViewHolder {
-        private final android.widget.ImageView icon;
-        private final android.widget.TextView name;
-        private final android.widget.TextView text;
-        private final android.widget.ImageView action;
+        private final ImageView icon;
+        private final TextView name;
+        private final TextView text;
+        private final ImageView action;
 
         SiteVH(View itemView) {
             super(itemView);

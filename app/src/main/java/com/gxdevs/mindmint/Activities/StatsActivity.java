@@ -104,14 +104,11 @@ public class StatsActivity extends AppCompatActivity {
         @NonNull
         @Override
         public Fragment createFragment(int position) {
-            switch (position) {
-                case 1:
-                    return new StatsFocusFragment();
-                case 2:
-                    return new StatsTasksFragment();
-                default:
-                    return new StatsHabitsFragment();
-            }
+            return switch (position) {
+                case 1 -> new StatsFocusFragment();
+                case 2 -> new StatsTasksFragment();
+                default -> new StatsHabitsFragment();
+            };
         }
 
         @Override

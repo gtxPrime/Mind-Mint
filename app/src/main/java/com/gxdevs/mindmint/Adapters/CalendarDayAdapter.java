@@ -19,9 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Adapter for the calendar grid showing habit completion days.
- */
 public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.DayViewHolder> {
 
     public interface OnDayClickListener {

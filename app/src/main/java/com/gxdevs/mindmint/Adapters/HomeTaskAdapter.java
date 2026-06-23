@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.gxdevs.mindmint.Activities.FocusMode;
 import com.gxdevs.mindmint.Models.Habit;
 import com.gxdevs.mindmint.Models.Task;
@@ -110,11 +111,7 @@ public class HomeTaskAdapter extends RecyclerView.Adapter<HomeTaskAdapter.TaskVi
             startIntent.putExtra(FocusService.EXTRA_TASK_ID, task.getId());
             startIntent.putExtra(FocusService.EXTRA_IS_OPEN_ENDED, isOpenEnded);
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                ctx.startForegroundService(startIntent);
-            } else {
-                ctx.startService(startIntent);
-            }
+            ctx.startForegroundService(startIntent);
 
             Intent focusIntent = new Intent(ctx, FocusMode.class);
             focusIntent.putExtra(FocusService.EXTRA_TASK_ID, task.getId());
@@ -126,7 +123,7 @@ public class HomeTaskAdapter extends RecyclerView.Adapter<HomeTaskAdapter.TaskVi
         if (FocusService.isPublicFocusRun) {
             boolean isLockedIn = PreferenceManager.getDefaultSharedPreferences(ctx).getBoolean(FocusService.PREF_IS_LOCKED_IN, false);
             if (isLockedIn) {
-                new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx, R.style.AlertDialogTheme)
+                new MaterialAlertDialogBuilder(ctx, R.style.AlertDialogTheme)
                     .setTitle("Locked In Mode Active")
                     .setMessage("You cannot stop or switch sessions while Locked In Mode is active.")
                     .setPositiveButton("OK", null)
@@ -134,7 +131,7 @@ public class HomeTaskAdapter extends RecyclerView.Adapter<HomeTaskAdapter.TaskVi
                 return;
             }
             // Another session is running — ask what to do
-            new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx, R.style.AlertDialogTheme)
+            new MaterialAlertDialogBuilder(ctx, R.style.AlertDialogTheme)
                 .setTitle("Focus Session Running")
                 .setMessage("Another focus session is already running. Stop it and start this task?")
                 .setPositiveButton("Stop & Start", (dialog, which) -> startFocus.run())
@@ -196,27 +193,19 @@ public class HomeTaskAdapter extends RecyclerView.Adapter<HomeTaskAdapter.TaskVi
     }
 
     private int getPriorityColor(Task task) {
-        switch (task.getPriority()) {
-            case HIGH:
-                return Color.parseColor("#4e2A35");
-            case MEDIUM:
-                return Color.parseColor("#3C3020");
-            case LOW:
-            default:
-                return Color.parseColor("#1B3D37");
-        }
+        return switch (task.getPriority()) {
+            case HIGH -> Color.parseColor("#4e2A35");
+            case MEDIUM -> Color.parseColor("#3C3020");
+            default -> Color.parseColor("#1B3D37");
+        };
     }
 
     private int getPriorityTxtColor(Task task) {
-        switch (task.getPriority()) {
-            case HIGH:
-                return Color.parseColor("#FB7185");
-            case MEDIUM:
-                return Color.parseColor("#E3AE24");
-            case LOW:
-            default:
-                return Color.parseColor("#34D399");
-        }
+        return switch (task.getPriority()) {
+            case HIGH -> Color.parseColor("#FB7185");
+            case MEDIUM -> Color.parseColor("#E3AE24");
+            default -> Color.parseColor("#34D399");
+        };
     }
 
     private String formatTime(Date date) {

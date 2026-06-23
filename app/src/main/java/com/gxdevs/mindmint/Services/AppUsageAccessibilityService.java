@@ -2918,7 +2918,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         }
 
         if (intensity == 4) {
-            triggerPermanentBlock(eventPackageName);
+            if ("section".equals(config.scope)) {
+                performThrottledGlobalAction(GLOBAL_ACTION_BACK);
+            } else {
+                triggerPermanentBlock(eventPackageName);
+            }
             return;
         }
 

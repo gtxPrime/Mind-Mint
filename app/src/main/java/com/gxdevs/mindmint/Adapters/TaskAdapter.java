@@ -2,6 +2,7 @@ package com.gxdevs.mindmint.Adapters;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.graphics.Paint;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +23,6 @@ import com.gxdevs.mindmint.Utils.AnimUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -168,9 +168,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         ObjectAnimator.ofFloat(holder.taskIcon, "alpha", holder.taskIcon.getAlpha(), alpha).start();
 
         if (isCompleted) {
-            holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
         } else {
-            holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() & (~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.taskName.setPaintFlags(holder.taskName.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         }
     }
 
@@ -183,7 +183,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         String passedPrefix = isPassed ? "(passed) " : "";
 
         if (DateUtils.isToday(taskTime)) {
-            // For today, always show time
             SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
             return passedPrefix + "Today " + timeFormat.format(date);
         } else if (DateUtils.isToday(taskTime + DateUtils.DAY_IN_MILLIS)) {

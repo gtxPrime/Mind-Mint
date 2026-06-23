@@ -2,6 +2,7 @@ package com.gxdevs.mindmint.Adapters;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.gxdevs.mindmint.Models.SettingsItem;
 import com.gxdevs.mindmint.R;
+import com.gxdevs.mindmint.Utils.SettingsLockManager;
 
 import java.util.List;
 
@@ -42,9 +44,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     public interface OnLockTabActionListener {
-        /** Called when user REQUESTS to change the lock type */
         void onRequestLockTypeChange(String newLockType, Runnable onSuccess);
-        /** Called when user long-presses on the Custom PIN row to edit the PIN. */
         void onEditCustomPin();
     }
 
@@ -272,8 +272,8 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 icon.setBackgroundResource(0); // clear any recycled background
             }
 
+            Drawable bg = icon.getBackground();
             if (item.getIconBgTint() != 0) {
-                Drawable bg = icon.getBackground();
                 if (bg != null) {
                     bg = DrawableCompat.wrap(bg).mutate();
                     DrawableCompat.setTint(bg, item.getIconBgTint());
@@ -281,7 +281,6 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 }
             } else {
                 // Clear any tint left over from a recycled cell
-                Drawable bg = icon.getBackground();
                 if (bg != null) {
                     DrawableCompat.setTintList(DrawableCompat.wrap(bg).mutate(), null);
                 }
@@ -375,15 +374,14 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             } else {
                 icon.setBackgroundResource(0);
             }
+            Drawable bg = icon.getBackground();
             if (item.getIconBgTint() != 0) {
-                Drawable bg = icon.getBackground();
                 if (bg != null) {
                     bg = DrawableCompat.wrap(bg).mutate();
                     DrawableCompat.setTint(bg, item.getIconBgTint());
                     icon.setBackground(bg);
                 }
             } else {
-                Drawable bg = icon.getBackground();
                 if (bg != null) {
                     DrawableCompat.setTintList(DrawableCompat.wrap(bg).mutate(), null);
                 }
@@ -480,13 +478,13 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             desc.setText(item.getSubtitle());
 
             if (item.getCardBgColor() != 0) {
-                root.setBackgroundTintList(android.content.res.ColorStateList.valueOf(item.getCardBgColor()));
+                root.setBackgroundTintList(ColorStateList.valueOf(item.getCardBgColor()));
             } else {
                 root.setBackgroundTintList(null);
             }
 
             if (item.getCardIconColor() != 0) {
-                icon.setImageTintList(android.content.res.ColorStateList.valueOf(item.getCardIconColor()));
+                icon.setImageTintList(ColorStateList.valueOf(item.getCardIconColor()));
             }
 
             if (item.getCardTitleColor() != 0) {
@@ -502,13 +500,13 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             }
 
             if (item.getIconBgTint() != 0) {
-                icon.setBackgroundTintList(android.content.res.ColorStateList.valueOf(item.getIconBgTint()));
+                icon.setBackgroundTintList(ColorStateList.valueOf(item.getIconBgTint()));
             } else {
                 icon.setBackgroundTintList(null);
             }
 
             if (item.getCardArrowColor() != 0 && arrow != null) {
-                arrow.setImageTintList(android.content.res.ColorStateList.valueOf(item.getCardArrowColor()));
+                arrow.setImageTintList(ColorStateList.valueOf(item.getCardArrowColor()));
             }
 
             if (item.getOnClickListener() != null) {
@@ -674,20 +672,20 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         void bind(SettingsItem item) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             String lockType = prefs.getString(
-                    com.gxdevs.mindmint.Utils.SettingsLockManager.PREF_LOCK_TYPE,
-                    com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM);
-            boolean isCustom = com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM.equals(lockType);
+                    SettingsLockManager.PREF_LOCK_TYPE,
+                    SettingsLockManager.LOCK_TYPE_CUSTOM);
+            boolean isCustom = SettingsLockManager.LOCK_TYPE_CUSTOM.equals(lockType);
             applyTabStyle(isCustom);
 
             tabDevice.setOnClickListener(v -> {
-                if (!com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM.equals(lockType)) return;
+                if (!SettingsLockManager.LOCK_TYPE_CUSTOM.equals(lockType)) return;
                 if (onLockTabActionListener != null) {
                     onLockTabActionListener.onRequestLockTypeChange(
-                            com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_DEVICE,
+                            SettingsLockManager.LOCK_TYPE_DEVICE,
                             () -> {
                                 prefs.edit().putString(
-                                        com.gxdevs.mindmint.Utils.SettingsLockManager.PREF_LOCK_TYPE,
-                                        com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_DEVICE).apply();
+                                        SettingsLockManager.PREF_LOCK_TYPE,
+                                        SettingsLockManager.LOCK_TYPE_DEVICE).apply();
                                 applyTabStyle(false);
                             });
                 }
@@ -695,16 +693,16 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             tabCustomPin.setOnClickListener(v -> {
                 // If it is already custom, don't change
-                String current = prefs.getString(com.gxdevs.mindmint.Utils.SettingsLockManager.PREF_LOCK_TYPE, com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM);
-                if (com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM.equals(current)) return;
+                String current = prefs.getString(SettingsLockManager.PREF_LOCK_TYPE, SettingsLockManager.LOCK_TYPE_CUSTOM);
+                if (SettingsLockManager.LOCK_TYPE_CUSTOM.equals(current)) return;
 
                 if (onLockTabActionListener != null) {
                     onLockTabActionListener.onRequestLockTypeChange(
-                            com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM,
+                            SettingsLockManager.LOCK_TYPE_CUSTOM,
                             () -> {
                                 prefs.edit().putString(
-                                        com.gxdevs.mindmint.Utils.SettingsLockManager.PREF_LOCK_TYPE,
-                                        com.gxdevs.mindmint.Utils.SettingsLockManager.LOCK_TYPE_CUSTOM).apply();
+                                        SettingsLockManager.PREF_LOCK_TYPE,
+                                        SettingsLockManager.LOCK_TYPE_CUSTOM).apply();
                                 applyTabStyle(true);
                             });
                 }
@@ -787,13 +785,13 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             View.OnClickListener clickListener = v -> {
                 int progress = 0;
-                if (v == labelNone) progress = 0;
-                else if (v == labelFriction) progress = 1;
+                if (v == labelFriction) progress = 1;
                 else if (v == labelReminder) progress = 2;
                 else if (v == labelTempLock) progress = 3;
                 else if (v == labelPermanent) progress = 4;
-                
-                seekBar.setProgress(progress);
+
+
+                    seekBar.setProgress(progress);
                 updateIntensityUI(progress);
                 if (onBlockerIntensityChangeListener != null) {
                     onBlockerIntensityChangeListener.onIntensityChanged(item.getId(), progress);
@@ -809,31 +807,29 @@ public class SettingsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         private void updateIntensityUI(int progress) {
             String subtitleText;
-            int tintColor;
-            
-            switch (progress) {
-                case 1:
+            int tintColor = switch (progress) {
+                case 1 -> {
                     subtitleText = "Friction";
-                    tintColor = 0xFF4A90E2; // Blue
-                    break;
-                case 2:
+                    yield 0xFF4A90E2;
+                }
+                case 2 -> {
                     subtitleText = "Reminder";
-                    tintColor = 0xFF2ECC71; // Green
-                    break;
-                case 3:
+                    yield 0xFF2ECC71;
+                }
+                case 3 -> {
                     subtitleText = "Temp Lock";
-                    tintColor = 0xFFE67E22; // Orange
-                    break;
-                case 4:
+                    yield 0xFFE67E22;
+                }
+                case 4 -> {
                     subtitleText = "Permanent";
-                    tintColor = 0xFFE74C3C; // Red
-                    break;
-                default:
+                    yield 0xFFE74C3C;
+                }
+                default -> {
                     subtitleText = "None";
-                    tintColor = 0xFF95A5A6; // Gray
-                    break;
-            }
-            
+                    yield 0xFF95A5A6;
+                }
+            };
+
             subtitle.setText(subtitleText);
             subtitle.setTextColor(tintColor);
             seekBar.setProgressTintList(android.content.res.ColorStateList.valueOf(tintColor));

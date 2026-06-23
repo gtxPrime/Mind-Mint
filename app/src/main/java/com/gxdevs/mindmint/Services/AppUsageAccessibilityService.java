@@ -129,6 +129,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private static final String PREF_HOME_YT_SWITCH_STATE = "ytSwitchState";
     private static final String PREF_HOME_INSTA_SWITCH_STATE = "instaSwitchState";
     private static final String PREF_HOME_SNAP_SWITCH_STATE = "snapSwitchState";
+    private static final String PREF_HOME_FACEBOOK_SWITCH_STATE = "facebookSwitchState";
+    private static final String PREF_HOME_LINKEDIN_SWITCH_STATE = "linkedinSwitchState";
+    private static final String PREF_HOME_REDDIT_SWITCH_STATE = "redditSwitchState";
+    private static final String PREF_HOME_TIKTOK_SWITCH_STATE = "tiktokSwitchState";
+    private static final String PREF_HOME_TWITTER_SWITCH_STATE = "twitterSwitchState";
     private static final String EXTRA_HOME_YT_SWITCH_ON = "home_yt_switch_on";
     private static final String EXTRA_HOME_INSTA_SWITCH_ON = "home_insta_switch_on";
     private static final String EXTRA_HOME_SNAP_SWITCH_ON = "home_snap_switch_on";
@@ -148,6 +153,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
     private boolean isYtHomeSwitchOn = false;
     private boolean isInstaHomeSwitchOn = false;
     private boolean isSnapHomeSwitchOn = false;
+    private boolean isFacebookSwitchOn = false;
+    private boolean isLinkedInSwitchOn = false;
+    private boolean isRedditSwitchOn = false;
+    private boolean isTikTokSwitchOn = false;
+    private boolean isTwitterSwitchOn = false;
 
     // --- Variables for Custom Blocking (Focus Mode) ---
     private Set<String> customBlockedApps = new HashSet<>();
@@ -430,6 +440,11 @@ public class AppUsageAccessibilityService extends AccessibilityService {
                     case PREF_HOME_YT_SWITCH_STATE:
                     case PREF_HOME_INSTA_SWITCH_STATE:
                     case PREF_HOME_SNAP_SWITCH_STATE:
+                    case PREF_HOME_FACEBOOK_SWITCH_STATE:
+                    case PREF_HOME_LINKEDIN_SWITCH_STATE:
+                    case PREF_HOME_REDDIT_SWITCH_STATE:
+                    case PREF_HOME_TIKTOK_SWITCH_STATE:
+                    case PREF_HOME_TWITTER_SWITCH_STATE:
                         restoreBlockingState();
                         break;
                 }
@@ -550,9 +565,14 @@ public class AppUsageAccessibilityService extends AccessibilityService {
 
     private void restoreBlockingState() {
         ensurePreferenceStores();
-        isYtHomeSwitchOn = sharedPreferences.getBoolean(PREF_HOME_YT_SWITCH_STATE, false);
+        isYtHomeSwitchOn    = sharedPreferences.getBoolean(PREF_HOME_YT_SWITCH_STATE, false);
         isInstaHomeSwitchOn = sharedPreferences.getBoolean(PREF_HOME_INSTA_SWITCH_STATE, false);
-        isSnapHomeSwitchOn = sharedPreferences.getBoolean(PREF_HOME_SNAP_SWITCH_STATE, false);
+        isSnapHomeSwitchOn  = sharedPreferences.getBoolean(PREF_HOME_SNAP_SWITCH_STATE, false);
+        isFacebookSwitchOn  = sharedPreferences.getBoolean(PREF_HOME_FACEBOOK_SWITCH_STATE, false);
+        isLinkedInSwitchOn  = sharedPreferences.getBoolean(PREF_HOME_LINKEDIN_SWITCH_STATE, false);
+        isRedditSwitchOn    = sharedPreferences.getBoolean(PREF_HOME_REDDIT_SWITCH_STATE, false);
+        isTikTokSwitchOn    = sharedPreferences.getBoolean(PREF_HOME_TIKTOK_SWITCH_STATE, false);
+        isTwitterSwitchOn   = sharedPreferences.getBoolean(PREF_HOME_TWITTER_SWITCH_STATE, false);
     }
 
     /**
@@ -563,10 +583,15 @@ public class AppUsageAccessibilityService extends AccessibilityService {
         if (appTag == null)
             return false;
         return switch (appTag) {
-            case "yt" -> isYtHomeSwitchOn;
-            case "insta" -> isInstaHomeSwitchOn;
-            case "snap" -> isSnapHomeSwitchOn;
-            default -> false;
+            case "yt"        -> isYtHomeSwitchOn;
+            case "insta"     -> isInstaHomeSwitchOn;  // covers instagram.lite too
+            case "snap"      -> isSnapHomeSwitchOn;
+            case "facebook"  -> isFacebookSwitchOn;
+            case "linkedin"  -> isLinkedInSwitchOn;
+            case "reddit"    -> isRedditSwitchOn;
+            case "tiktok"    -> isTikTokSwitchOn;
+            case "twitter"   -> isTwitterSwitchOn;
+            default          -> false;
         };
     }
 

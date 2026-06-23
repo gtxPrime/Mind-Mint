@@ -1931,6 +1931,22 @@ fun BlockedAppRowItem(
                             match = true
                         } else if (parentApp.packageName == "com.instagram.android" && (a.packageName.contains("insta") || a.packageName.contains("honista"))) {
                             match = true
+                        } else if (parentApp.packageName == "com.facebook.katana" && a.packageName == "com.facebook.lite") {
+                            match = true
+                        } else if (parentApp.packageName == "com.ss.android.ugc.trill" &&
+                            (a.packageName == "com.zhiliaoapp.musically" ||
+                             a.packageName == "com.ss.android.ugc.aweme" ||
+                             a.packageName == "com.ss.android.ugc.aweme.lite")) {
+                            match = true
+                        } else if (parentApp.packageName == "com.reddit.frontpage" &&
+                            (a.packageName == "com.andrewshu.android.reddit" ||
+                             a.packageName == "ml.docilealligator.infinityforreddit" ||
+                             a.packageName == "free.reddit.news" ||
+                             a.packageName == "com.laurencedawson.reddit_sync" ||
+                             a.packageName == "com.reddit.frontpage.lite")) {
+                            match = true
+                        } else if (parentApp.packageName == "com.twitter.android" && a.packageName == "com.twitter.android.lite") {
+                            match = true
                         }
                         if (match) {
                             a.isRestricted = parentApp.isRestricted && parentApp.useMod
@@ -1989,12 +2005,17 @@ fun BlockedAppRowItem(
                                 "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
                                     putBoolean("ytSwitchState", true)
                                 }
-                                "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
+                                "com.instagram.android", "com.instagram.lite", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
                                     putBoolean("instaSwitchState", true)
                                 }
                                 "com.snapchat.android" -> {
                                     putBoolean("snapSwitchState", true)
                                 }
+                                "com.facebook.katana" -> { putBoolean("facebookSwitchState", true) }
+                                "com.linkedin.android" -> { putBoolean("linkedinSwitchState", true) }
+                                "com.reddit.frontpage" -> { putBoolean("redditSwitchState", true) }
+                                "com.ss.android.ugc.trill" -> { putBoolean("tiktokSwitchState", true) }
+                                "com.twitter.android" -> { putBoolean("twitterSwitchState", true) }
                             }
                         }
                         scope.launch(Dispatchers.IO) {
@@ -2017,12 +2038,17 @@ fun BlockedAppRowItem(
                                             "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
                                                 putBoolean("ytSwitchState", false)
                                             }
-                                            "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
+                                            "com.instagram.android", "com.instagram.lite", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
                                                 putBoolean("instaSwitchState", false)
                                             }
                                             "com.snapchat.android" -> {
                                                 putBoolean("snapSwitchState", false)
                                             }
+                                            "com.facebook.katana" -> { putBoolean("facebookSwitchState", false) }
+                                            "com.linkedin.android" -> { putBoolean("linkedinSwitchState", false) }
+                                            "com.reddit.frontpage" -> { putBoolean("redditSwitchState", false) }
+                                            "com.ss.android.ugc.trill" -> { putBoolean("tiktokSwitchState", false) }
+                                            "com.twitter.android" -> { putBoolean("twitterSwitchState", false) }
                                         }
                                     }
                                     scope.launch(Dispatchers.IO) {
@@ -2043,12 +2069,17 @@ fun BlockedAppRowItem(
                                     "com.google.android.youtube", "com.rvx.android.youtube", "com.revance.android.youtube", "app.morphe.android.youtube" -> {
                                         putBoolean("ytSwitchState", false)
                                     }
-                                    "com.instagram.android", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
+                                    "com.instagram.android", "com.instagram.lite", "com.myinsta.android", "com.instafel.android", "com.instander.android", "com.instagold.android", "com.instapro2.android", "com.instaflow.android", "cc.honista.app", "com.instaprime.android" -> {
                                         putBoolean("instaSwitchState", false)
                                     }
                                     "com.snapchat.android" -> {
                                         putBoolean("snapSwitchState", false)
                                     }
+                                    "com.facebook.katana" -> { putBoolean("facebookSwitchState", false) }
+                                    "com.linkedin.android" -> { putBoolean("linkedinSwitchState", false) }
+                                    "com.reddit.frontpage" -> { putBoolean("redditSwitchState", false) }
+                                    "com.ss.android.ugc.trill" -> { putBoolean("tiktokSwitchState", false) }
+                                    "com.twitter.android" -> { putBoolean("twitterSwitchState", false) }
                                 }
                             }
                             scope.launch(Dispatchers.IO) {
@@ -2337,23 +2368,47 @@ fun AppIconImage(packageName: String) {
     } else {
         // Fallbacks
         val iconRes = when {
-            packageName.contains("youtube") -> R.drawable.youtube
-            packageName.contains("insta") -> R.drawable.instagram
-            packageName.contains("snap") -> R.drawable.snapchat
+            packageName.contains("youtube")   -> R.drawable.youtube
+            packageName.contains("insta")     -> R.drawable.instagram  // covers instagram.lite too
+            packageName.contains("snap")      -> R.drawable.snapchat
+            packageName.contains("katana") || packageName.contains("facebook") -> R.drawable.facebook
+            packageName.contains("linkedin")  -> R.drawable.linkedin
+            packageName.contains("reddit") || packageName.contains("andrewshu") ||
+                packageName.contains("infinityforreddit") || packageName.contains("reddit_sync") ||
+                packageName == "free.reddit.news" -> R.drawable.reddit
+            packageName.contains("trill") || packageName.contains("musically") ||
+                packageName.contains("ugc.aweme") -> R.drawable.tiktok
+            packageName.contains("twitter")  -> R.drawable.twitter
             else -> R.drawable.shield
         }
 
         val iconColor = when {
-            packageName.contains("youtube") -> Color(0xFFFF0000)
-            packageName.contains("insta") -> Color(0xFFE1306C)
-            packageName.contains("snap") -> Color(0xFFFFFC00)
+            packageName.contains("youtube")   -> Color(0xFFFF0000)
+            packageName.contains("insta")     -> Color(0xFFE1306C)
+            packageName.contains("snap")      -> Color(0xFFFFFC00)
+            packageName.contains("katana") || packageName.contains("facebook") -> Color(0xFF1877F2)
+            packageName.contains("linkedin")  -> Color(0xFF0A66C2)
+            packageName.contains("reddit") || packageName.contains("andrewshu") ||
+                packageName.contains("infinityforreddit") || packageName.contains("reddit_sync") ||
+                packageName == "free.reddit.news" -> Color(0xFFFF4500)
+            packageName.contains("trill") || packageName.contains("musically") ||
+                packageName.contains("ugc.aweme") -> Color(0xFF010101)
+            packageName.contains("twitter")  -> Color(0xFF1DA1F2)
             else -> themeColor(R.attr.text_secondary, Color(0xFF64748B))
         }
 
         val bgTint = when {
-            packageName.contains("youtube") -> Color(0xFFFF0000).copy(alpha = 0.2f)
-            packageName.contains("insta") -> Color(0xFFE1306C).copy(alpha = 0.2f)
-            packageName.contains("snap") -> Color(0xFFFFFC00).copy(alpha = 0.2f)
+            packageName.contains("youtube")   -> Color(0xFFFF0000).copy(alpha = 0.2f)
+            packageName.contains("insta")     -> Color(0xFFE1306C).copy(alpha = 0.2f)
+            packageName.contains("snap")      -> Color(0xFFFFFC00).copy(alpha = 0.2f)
+            packageName.contains("katana") || packageName.contains("facebook") -> Color(0xFF1877F2).copy(alpha = 0.15f)
+            packageName.contains("linkedin")  -> Color(0xFF0A66C2).copy(alpha = 0.15f)
+            packageName.contains("reddit") || packageName.contains("andrewshu") ||
+                packageName.contains("infinityforreddit") || packageName.contains("reddit_sync") ||
+                packageName == "free.reddit.news" -> Color(0xFFFF4500).copy(alpha = 0.15f)
+            packageName.contains("trill") || packageName.contains("musically") ||
+                packageName.contains("ugc.aweme") -> Color(0xFF69C9D0).copy(alpha = 0.2f)
+            packageName.contains("twitter")  -> Color(0xFF1DA1F2).copy(alpha = 0.15f)
             else -> Color.White.copy(alpha = 0.1f)
         }
 
@@ -2387,7 +2442,23 @@ private fun isModPackage(packageName: String?): Boolean {
            packageName == "com.instapro2.android" ||
            packageName == "com.instaflow.android" ||
            packageName == "cc.honista.app" ||
-           packageName == "com.instaprime.android"
+           packageName == "com.instaprime.android" ||
+           // Instagram Lite (grouped under main Instagram)
+           packageName == "com.instagram.lite" ||
+           // Facebook Lite (mod/lightweight variant of Facebook main)
+           packageName == "com.facebook.lite" ||
+           // TikTok legacy/regional variants
+           packageName == "com.zhiliaoapp.musically" ||
+           packageName == "com.ss.android.ugc.aweme" ||
+           packageName == "com.ss.android.ugc.aweme.lite" ||
+           // Reddit third-party clients
+           packageName == "com.andrewshu.android.reddit" ||
+           packageName == "ml.docilealligator.infinityforreddit" ||
+           packageName == "free.reddit.news" ||
+           packageName == "com.laurencedawson.reddit_sync" ||
+           packageName == "com.reddit.frontpage.lite" ||
+           // Twitter Lite
+           packageName == "com.twitter.android.lite"
 }
 
 @Preview(showBackground = true)

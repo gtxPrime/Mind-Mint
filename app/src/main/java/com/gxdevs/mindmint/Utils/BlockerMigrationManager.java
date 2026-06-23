@@ -51,9 +51,10 @@ public class BlockerMigrationManager {
                 defaultApps.add(app);
             }
 
-            // Instagram packages
+            // Instagram packages (includes Lite as a mod of the main app)
             String[] instaPkgs = {
                     "com.instagram.android",
+                    "com.instagram.lite",          // Instagram Lite (treated as mod of main)
                     "com.myinsta.android",
                     "com.instafel.android",
                     "com.instander.android",
@@ -86,6 +87,89 @@ public class BlockerMigrationManager {
                 app.scope = "section";
                 app.useMod = false;
                 app.sectionViewId = Utils.snapViewId;
+                defaultApps.add(app);
+            }
+
+            // Facebook — primary app + FB Lite (mod/lite variant)
+            BlockedAppEntity facebook = new BlockedAppEntity();
+            facebook.packageName = "com.facebook.katana";
+            facebook.appName = "Facebook";
+            facebook.isRestricted = false;
+            facebook.scope = "section";
+            facebook.useMod = false;
+            facebook.sectionViewId = Utils.facebookViewId;
+            defaultApps.add(facebook);
+
+            BlockedAppEntity fbLite = new BlockedAppEntity();
+            fbLite.packageName = "com.facebook.lite";
+            fbLite.appName = "Facebook Lite";
+            fbLite.isRestricted = false;
+            fbLite.scope = "full";
+            fbLite.useMod = false;
+            fbLite.sectionViewId = "";
+            defaultApps.add(fbLite);
+
+            // LinkedIn
+            BlockedAppEntity linkedin = new BlockedAppEntity();
+            linkedin.packageName = "com.linkedin.android";
+            linkedin.appName = "LinkedIn";
+            linkedin.isRestricted = false;
+            linkedin.scope = "section";
+            linkedin.useMod = false;
+            linkedin.sectionViewId = Utils.linkedinViewId;
+            defaultApps.add(linkedin);
+
+            // Reddit — official + popular third-party clients
+            String[] redditPkgs = {
+                    "com.reddit.frontpage",
+                    "com.andrewshu.android.reddit",        // Reddit is Fun (RiF)
+                    "ml.docilealligator.infinityforreddit", // Infinity for Reddit
+                    "free.reddit.news",                     // Relay for Reddit
+                    "com.laurencedawson.reddit_sync",       // Reddit Sync
+                    "com.reddit.frontpage.lite"             // Reddit Lite
+            };
+            for (String pkg : redditPkgs) {
+                BlockedAppEntity app = new BlockedAppEntity();
+                app.packageName = pkg;
+                app.appName = "Reddit";
+                app.isRestricted = false;
+                app.scope = "section";
+                app.useMod = false;
+                app.sectionViewId = Utils.redditViewId;
+                defaultApps.add(app);
+            }
+
+            // TikTok — official + legacy/regional packages
+            String[] tiktokPkgs = {
+                    "com.ss.android.ugc.trill",      // TikTok (global)
+                    "com.zhiliaoapp.musically",      // Legacy/global TikTok package
+                    "com.ss.android.ugc.aweme",      // Douyin (Chinese TikTok)
+                    "com.ss.android.ugc.aweme.lite"  // Douyin Lite
+            };
+            for (String pkg : tiktokPkgs) {
+                BlockedAppEntity app = new BlockedAppEntity();
+                app.packageName = pkg;
+                app.appName = "TikTok";
+                app.isRestricted = false;
+                app.scope = "section";
+                app.useMod = false;
+                app.sectionViewId = Utils.tiktokViewId;
+                defaultApps.add(app);
+            }
+
+            // Twitter / X — official + Lite
+            String[] twitterPkgs = {
+                    "com.twitter.android",
+                    "com.twitter.android.lite"  // Twitter Lite (official)
+            };
+            for (String pkg : twitterPkgs) {
+                BlockedAppEntity app = new BlockedAppEntity();
+                app.packageName = pkg;
+                app.appName = "Twitter";
+                app.isRestricted = false;
+                app.scope = "section";
+                app.useMod = false;
+                app.sectionViewId = Utils.twitterViewId;
                 defaultApps.add(app);
             }
 
@@ -164,8 +248,6 @@ public class BlockerMigrationManager {
             // Mark migration complete
             sharedPreferences.edit()
                     .putBoolean("pref_blocker_db_migrated", true)
-                    // Optionally clear the old values or keep them for safety?
-                    // It is safer to clear them to prevent any future clashing.
                     .remove("ytSwitchState")
                     .remove("instaSwitchState")
                     .remove("snapSwitchState")
@@ -180,17 +262,39 @@ public class BlockerMigrationManager {
             Log.d(TAG, "Legacy blocker config migration complete.");
         }
 
-        // 3. Ensure new YouTube Mod package is registered in database if missing
-        if (dao.getByPackageName("app.morphe.android.youtube") == null) {
+        // 3. Patch blocks — ensure new packages are present for users upgrading from older versions
+        patchInsertIfMissing(dao, "app.morphe.android.youtube", "YouTube Shorts", "section", Utils.YtViewId);
+        patchInsertIfMissing(dao, "com.facebook.katana",        "Facebook",       "section", Utils.facebookViewId);
+        patchInsertIfMissing(dao, "com.facebook.lite",          "Facebook Lite",  "full",    "");
+        patchInsertIfMissing(dao, "com.instagram.lite",         "Instagram Reels", "section", Utils.instaViewId);
+        patchInsertIfMissing(dao, "com.linkedin.android",       "LinkedIn",       "section", Utils.linkedinViewId);
+        patchInsertIfMissing(dao, "com.reddit.frontpage",       "Reddit",         "section", Utils.redditViewId);
+        patchInsertIfMissing(dao, "com.andrewshu.android.reddit",        "Reddit",         "section", Utils.redditViewId);
+        patchInsertIfMissing(dao, "ml.docilealligator.infinityforreddit", "Reddit",        "section", Utils.redditViewId);
+        patchInsertIfMissing(dao, "free.reddit.news",           "Reddit",         "section", Utils.redditViewId);
+        patchInsertIfMissing(dao, "com.laurencedawson.reddit_sync", "Reddit",     "section", Utils.redditViewId);
+        patchInsertIfMissing(dao, "com.reddit.frontpage.lite",  "Reddit",         "section", Utils.redditViewId);
+        patchInsertIfMissing(dao, "com.ss.android.ugc.trill",  "TikTok",         "section", Utils.tiktokViewId);
+        patchInsertIfMissing(dao, "com.zhiliaoapp.musically",  "TikTok",         "section", Utils.tiktokViewId);
+        patchInsertIfMissing(dao, "com.ss.android.ugc.aweme",  "TikTok",         "section", Utils.tiktokViewId);
+        patchInsertIfMissing(dao, "com.ss.android.ugc.aweme.lite", "TikTok",     "section", Utils.tiktokViewId);
+        patchInsertIfMissing(dao, "com.twitter.android",       "Twitter",        "section", Utils.twitterViewId);
+        patchInsertIfMissing(dao, "com.twitter.android.lite",  "Twitter",        "section", Utils.twitterViewId);
+    }
+
+    /** Inserts a BlockedAppEntity only if the package is not already in the DB. */
+    private static void patchInsertIfMissing(@NonNull BlockedAppDao dao, String pkg,
+                                              String name, String scope, String viewId) {
+        if (dao.getByPackageName(pkg) == null) {
             BlockedAppEntity app = new BlockedAppEntity();
-            app.packageName = "app.morphe.android.youtube";
-            app.appName = "YouTube Shorts";
+            app.packageName = pkg;
+            app.appName = name;
             app.isRestricted = false;
-            app.scope = "section";
+            app.scope = scope;
             app.useMod = false;
-            app.sectionViewId = Utils.YtViewId;
+            app.sectionViewId = viewId;
             dao.insert(app);
-            Log.d(TAG, "Inserted missing app.morphe.android.youtube package into database.");
+            Log.d(TAG, "Patched missing package into DB: " + pkg);
         }
     }
 }

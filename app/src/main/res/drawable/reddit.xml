@@ -1,0 +1,53 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Outer circle / head -->
+    <path
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeColor="#000000"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,2m-10,0 a10,10 0,1 1,20 0a10,10 0,1 1,-20 0"/>
+    <!-- Left eye -->
+    <path
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeColor="#000000"
+        android:fillColor="#000000"
+        android:pathData="M8.5,13m-1,0 a1,1 0,1 1,2 0a1,1 0,1 1,-2 0"/>
+    <!-- Right eye -->
+    <path
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeColor="#000000"
+        android:fillColor="#000000"
+        android:pathData="M15.5,13m-1,0 a1,1 0,1 1,2 0a1,1 0,1 1,-2 0"/>
+    <!-- Smile -->
+    <path
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeColor="#000000"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M8.5,16.5 Q12,19 15.5,16.5"/>
+    <!-- Antenna -->
+    <path
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeColor="#000000"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,2 L14.5,5"/>
+    <path
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeColor="#000000"
+        android:fillColor="#000000"
+        android:pathData="M15,5m-1.2,0 a1.2,1.2 0,1 1,2.4 0a1.2,1.2 0,1 1,-2.4 0"/>
+</vector>

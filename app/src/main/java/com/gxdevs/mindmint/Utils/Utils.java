@@ -41,6 +41,13 @@ public class Utils {
     public static String YtViewId = "reel_watch_player";
     public static String instaViewId = "clips_video_container";
     public static String snapViewId = "favorite";
+    // View IDs for newly added platforms (sourced from platforms_config.json)
+    public static String facebookViewId = "media_group";
+    public static String instaLiteViewId = "clips_video_container";
+    public static String linkedinViewId = "media_viewer_actor_bottom";
+    public static String redditViewId = "post_media_video";
+    public static String tiktokViewId = "desc";
+    public static String twitterViewId = "mediacontroller_progress";
     public static final Map<String, String> ALL_PACKAGES = new HashMap<>();
     public static final Map<String, String> ORIGINAL_PACKAGES = new HashMap<>();
     public static final Map<String, String> BROWSERS_PACKAGES = new HashMap<>();
@@ -63,10 +70,44 @@ public class Utils {
         ALL_PACKAGES.put("cc.honista.app", "insta");
         ALL_PACKAGES.put("com.instaprime.android", "insta");
 
+        // Facebook & Facebook Lite (Lite is treated as mod of main)
+        ALL_PACKAGES.put("com.facebook.katana", "facebook");
+        ALL_PACKAGES.put("com.facebook.lite", "facebook");
+
+        // Instagram Lite (grouped under main Instagram as a mod/lite variant)
+        ALL_PACKAGES.put("com.instagram.lite", "insta");
+
+        // LinkedIn
+        ALL_PACKAGES.put("com.linkedin.android", "linkedin");
+
+        // Reddit — official + popular third-party clients
+        ALL_PACKAGES.put("com.reddit.frontpage", "reddit");
+        ALL_PACKAGES.put("com.andrewshu.android.reddit", "reddit");        // Reddit is Fun (RiF)
+        ALL_PACKAGES.put("ml.docilealligator.infinityforreddit", "reddit"); // Infinity for Reddit
+        ALL_PACKAGES.put("free.reddit.news", "reddit");                     // Relay for Reddit
+        ALL_PACKAGES.put("com.laurencedawson.reddit_sync", "reddit");       // Reddit Sync
+        ALL_PACKAGES.put("com.reddit.frontpage.lite", "reddit");            // Reddit Lite
+
+        // TikTok — official + legacy/regional packages
+        ALL_PACKAGES.put("com.ss.android.ugc.trill", "tiktok");
+        ALL_PACKAGES.put("com.zhiliaoapp.musically", "tiktok");   // Legacy/global TikTok package
+        ALL_PACKAGES.put("com.ss.android.ugc.aweme", "tiktok");   // Douyin (Chinese TikTok)
+        ALL_PACKAGES.put("com.ss.android.ugc.aweme.lite", "tiktok"); // Douyin Lite
+
+        // Twitter / X — official + Lite
+        ALL_PACKAGES.put("com.twitter.android", "twitter");
+        ALL_PACKAGES.put("com.twitter.android.lite", "twitter"); // Twitter Lite (official)
+
         // Initialize the dictionary with only original packages
         ORIGINAL_PACKAGES.put("com.instagram.android", "insta");
         ORIGINAL_PACKAGES.put("com.google.android.youtube", "yt");
         ORIGINAL_PACKAGES.put("com.snapchat.android", "snap");
+        ORIGINAL_PACKAGES.put("com.facebook.katana", "facebook");
+        // Note: com.instagram.lite is a mod of Instagram main, not a separate original
+        ORIGINAL_PACKAGES.put("com.linkedin.android", "linkedin");
+        ORIGINAL_PACKAGES.put("com.reddit.frontpage", "reddit");
+        ORIGINAL_PACKAGES.put("com.ss.android.ugc.trill", "tiktok");
+        ORIGINAL_PACKAGES.put("com.twitter.android", "twitter");
 
         // Chrome browsers
         BROWSERS_PACKAGES.put("com.android.chrome", "url_bar");

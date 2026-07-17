@@ -294,9 +294,9 @@ Mind Mint supports precise blocking and scroll tracking for the following **8 ma
 
 <a href="https://www.star-history.com/?repos=gtxPrime%2FMind-Mint&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=gtxPrime/Mind-Mint&type=date&theme=dark&legend=top-left&sealed_token=9_9LNE5LiWLi_cZGpfw9D_KXIdkOy6wlGq7TPitcw0KcLcidZSGNPCMDvDY_O7H3fqmwXOaDmc3wsgOMI5RgybHxX5ppIaJRTMA-wcz-iG0ju82_xuOu5w" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=gtxPrime/Mind-Mint&type=date&legend=top-left&sealed_token=9_9LNE5LiWLi_cZGpfw9D_KXIdkOy6wlGq7TPitcw0KcLcidZSGNPCMDvDY_O7H3fqmwXOaDmc3wsgOMI5RgybHxX5ppIaJRTMA-wcz-iG0ju82_xuOu5w" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=gtxPrime/Mind-Mint&type=date&legend=top-left&sealed_token=9_9LNE5LiWLi_cZGpfw9D_KXIdkOy6wlGq7TPitcw0KcLcidZSGNPCMDvDY_O7H3fqmwXOaDmc3wsgOMI5RgybHxX5ppIaJRTMA-wcz-iG0ju82_xuOu5w" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=gtxPrime/Mind-Mint&type=date&theme=dark&legend=top-left&sealed_token=lYUWpGqcbyKiH80Nfugdq-p9a5jDVbWJf6luw3YmZ1AlWwhFQzePMi7E-9UFZSIl5UV3cpbVRI9lVD37ns4Rt3YMgzL_tWtnbf633cDP4RvQlGZpCruhug" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=gtxPrime/Mind-Mint&type=date&legend=top-left&sealed_token=lYUWpGqcbyKiH80Nfugdq-p9a5jDVbWJf6luw3YmZ1AlWwhFQzePMi7E-9UFZSIl5UV3cpbVRI9lVD37ns4Rt3YMgzL_tWtnbf633cDP4RvQlGZpCruhug" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=gtxPrime/Mind-Mint&type=date&legend=top-left&sealed_token=lYUWpGqcbyKiH80Nfugdq-p9a5jDVbWJf6luw3YmZ1AlWwhFQzePMi7E-9UFZSIl5UV3cpbVRI9lVD37ns4Rt3YMgzL_tWtnbf633cDP4RvQlGZpCruhug" />
  </picture>
 </a>
 
